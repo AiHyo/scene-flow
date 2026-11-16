@@ -1,0 +1,252 @@
+/* stylelint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    --background: 45 18% 96%;
+    --foreground: 240 3% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 3% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 3% 12%;
+    --primary: 235 76% 63%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 16% 93%;
+    --secondary-foreground: 240 3% 20%;
+    --muted: 45 14% 92%;
+    --muted-foreground: 225 8% 45%;
+    --accent: 235 100% 97%;
+    --accent-foreground: 235 76% 45%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 45 12% 88%;
+    --input: 45 12% 88%;
+    --ring: 235 76% 63%;
+    --chart-1: 235 76% 63%;
+    --chart-2: 262 83% 70%;
+    --chart-3: 199 89% 48%;
+    --chart-4: 160 84% 39%;
+    --chart-5: 38 92% 50%;
+    --sidebar-background: 45 16% 95%;
+    --sidebar-foreground: 240 3% 12%;
+    --sidebar-primary: 235 76% 63%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 235 100% 97%;
+    --sidebar-accent-foreground: 235 76% 45%;
+    --sidebar-border: 45 12% 88%;
+    --sidebar-ring: 235 76% 63%;
+    --gradient-primary: linear-gradient(135deg, hsl(235 76% 63%), hsl(262 83% 66%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(45 18% 96%));
+    --shadow-card: 0 1px 2px hsl(240 3% 12% / 0.04), 0 8px 24px hsl(235 30% 40% / 0.06);
+    --shadow-hover: 0 2px 8px hsl(240 3% 12% / 0.06), 0 14px 36px hsl(235 30% 40% / 0.12);
+  }
+
+  .dark {
+    --background: 240 10% 10%;
+    --foreground: 228 20% 92%;
+    --card: 240 8% 13%;
+    --card-foreground: 228 20% 92%;
+    --popover: 240 8% 13%;
+    --popover-foreground: 228 20% 92%;
+    --primary: 235 72% 66%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 8% 17%;
+    --secondary-foreground: 228 20% 92%;
+    --muted: 240 8% 16%;
+    --muted-foreground: 228 12% 62%;
+    --accent: 235 40% 22%;
+    --accent-foreground: 235 80% 80%;
+    --destructive: 0 62% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 8% 20%;
+    --input: 240 8% 20%;
+    --ring: 235 72% 66%;
+    --chart-1: 235 72% 66%;
+    --chart-2: 262 70% 72%;
+    --chart-3: 199 70% 56%;
+    --chart-4: 160 60% 46%;
+    --chart-5: 38 80% 56%;
+    --sidebar-background: 240 9% 12%;
+    --sidebar-foreground: 228 20% 92%;
+    --sidebar-primary: 235 72% 66%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 235 40% 22%;
+    --sidebar-accent-foreground: 235 80% 80%;
+    --sidebar-border: 240 8% 20%;
+    --sidebar-ring: 235 72% 66%;
+    --gradient-primary: linear-gradient(135deg, hsl(235 72% 66%), hsl(262 70% 70%));
+    --gradient-card: linear-gradient(180deg, hsl(240 8% 14%), hsl(240 10% 11%));
+    --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.3), 0 8px 24px hsl(0 0% 0% / 0.35);
+    --shadow-hover: 0 2px 8px hsl(0 0% 0% / 0.35), 0 14px 36px hsl(0 0% 0% / 0.45);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    /* 全局背景：统一浅暖灰纯色（深色主题为深灰纯色），不加光斑/渐变/噪点 */
+    background-color: hsl(var(--background));
+    @apply text-foreground antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(235 76% 63% / 0.16);
+  }
+}
+
+/* 全站中文展示字体栈：Noto Sans SC（OFL 开源 Web 字体，苹果式清晰排版）
+ * 主次靠字重（400/500/700/900）与字号比例区分，取消装饰体/宋体混搭与描边字 */
+/* 统一字体体系（动态文字海报 · 清晰优先）：主标题用 Noto Sans SC 900（宽阔有力、字形完整），
+ * 靠字号 / 字重 / 颜色 / 错位排版 / 运动形成设计感，不依赖难认的艺术字，也不混入毛笔 / 描边 / 落款。 */
+.font-display {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  letter-spacing: -0.01em;
+}
+.font-serif-display {
+  font-family: 'Noto Serif SC', 'Noto Sans SC', 'Songti SC', serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+
+
+
+/* 细滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* 全局页面背景：统一纯色（浅色=浅暖灰 #F6F5F2，深色=深灰），与 body 同源，滚动无断层 */
+.app-surface {
+  background-color: hsl(var(--background));
+}
+
+/* 品牌渐变文字 */
+.gradient-text {
+  background-image: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ===== 悬浮小猫 AI 助手（仅 transform/opacity 动画，性能友好；系统减少动态时由 JS 静态化） ===== */
+@keyframes ai-cat-bob {
+  0%, 100% { transform: translateY(0) rotate(-2.5deg); }
+  50%      { transform: translateY(-7px) rotate(2.5deg); }
+}
+@keyframes ai-cat-pop {
+  from { opacity: 0; transform: translateY(6px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ai-cat-idle {
+  animation: ai-cat-bob 3.4s ease-in-out infinite;
+  transform-origin: 50% 80%;
+  will-change: transform;
+}
+.ai-cat-paused {
+  animation: none;
+  transform: scale(1.06);
+  transition: transform 200ms ease-out;
+}
+.ai-cat-bubble {
+  animation: ai-cat-pop 200ms ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-cat-idle, .ai-cat-bubble { animation: none !important; }
+}
+
+/* 场景对比画布拖拽 */
+.compare-handle {
+  touch-action: none;
+  cursor: ew-resize;
+}
+
+/* ===== 活动安排 PDF 导出：平时隐藏，打印时仅显示 #print-root（浏览器「另存为 PDF」） ===== */
+#print-root {
+  display: none;
+}
+@media print {
+  body > *:not(#print-root) {
+    display: none !important;
+  }
+  #print-root {
+    display: block !important;
+  }
+}
+@page {
+  size: A4;
+  margin: 12mm;
+}
+.print-page {
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.print-page h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+.print-page h2 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid #d8d8d8;
+  break-after: avoid;
+}
+.print-page p,
+.print-page li,
+.print-page td,
+.print-page th {
+  font-size: 11px;
+}
+.print-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4px 0;
+}
+.print-page th,
+.print-page td {
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+.print-page img {
+  max-width: 100%;
+  height: auto;
+}
+.print-avoid-break {
+  break-inside: avoid;
+}
+.print-table thead {
+  display: table-header-group;
+}
+.print-table tr {
+  break-inside: avoid;
+}
+.print-page .print-meta {
+  color: #666;
+  margin: 0 0 10px;
+}
+.print-page .print-foot {
+  color: #666;
+  margin-top: 16px;
+  border-top: 1px solid #ddd;
+  padding-top: 6px;
+}

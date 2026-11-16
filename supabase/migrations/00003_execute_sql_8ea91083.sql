@@ -1,0 +1,1 @@
+DELETE FROM storage.objects WHERE name LIKE 'venue/verify-%';
