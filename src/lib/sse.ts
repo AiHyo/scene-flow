@@ -79,16 +79,16 @@ export function createSSEHook(options: SSEOptions): AfterResponseHook {
 export interface StreamRequestOptions {
   functionUrl: string;
   requestBody: unknown;
-  supabaseAnonKey: string;
+  authToken: string | null;
   onData: (data: string) => void;
   onComplete: () => void;
   onError?: (error: Error) => void;
   signal?: AbortSignal;
 }
 
-/** 向 Edge Function 发送流式请求（SSE） */
+/** 向后端 AI 接口发送流式请求（SSE） */
 export async function sendStreamRequest(options: StreamRequestOptions): Promise<void> {
-  const { functionUrl, requestBody, supabaseAnonKey, onData, onComplete, onError, signal } = options;
+  const { functionUrl, requestBody, authToken, onData, onComplete, onError, signal } = options;
 
   /* 等待流真正读完再 resolve：ky.post 在响应头到达即返回，
      若不包装 Promise，调用方会在流式内容接收完成前拿到空文本 */
@@ -115,8 +115,7 @@ export async function sendStreamRequest(options: StreamRequestOptions): Promise<
       .post(functionUrl, {
         json: requestBody,
         headers: {
-          Authorization: `Bearer ${supabaseAnonKey}`,
-          apikey: supabaseAnonKey,
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
           'Content-Type': 'application/json',
         },
         signal,

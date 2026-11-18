@@ -1,6 +1,5 @@
-import { supabase } from '@/lib/supabase';
-import { compressImage, uploadImage } from '@/services/api';
-import type { ProjectData, SceneState } from '@/types/types';
+import { apiRequest } from '@/lib/apiClient';
+import type { ProjectData } from '@/types/types';
 
 export interface SceneGenOptions {
   style?: string;
@@ -105,44 +104,17 @@ export async function submitSceneGeneration(
     image_list: [{ image: beforeUrl }],
   };
 
-  const { data: resp, error } = await supabase.functions.invoke<{
+  const resp = await apiRequest<{
     task_id?: string;
     task_status?: string;
-  }>('kling-omni-image-submit', { body });
+  }>('/api/v1/ai/scene/submit', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 
-  if (error || !resp?.task_id) {
-    throw new Error(await readInvokeError(resp?.task_status, error, '生图任务提交失败'));
+  if (!resp?.task_id) {
+    throw new Error(resp?.task_status || '生图任务提交失败');
   }
 
   return { taskId: resp.task_id, prompt };
-}
-
-/** 生图服务错误真实透传：FunctionsHttpError 的笼统文案「non-2xx status code」不含原因，
- * 具体错误在 error.context 响应体中（可灵错误码/额度/鉴权等）——提取并转成可理解中文，技术详情保留在括号内 */
-async function readInvokeError(statusText: string | undefined, error: unknown, fallback: string): Promise<string> {
-  if (statusText) return statusText;
-  try {
-    const ctx = (error as { context?: unknown } | null)?.context;
-    if (ctx && typeof (ctx as Response).text === 'function') {
-      const raw = await (ctx as Response).text();
-      if (raw) {
-        try {
-          const j = JSON.parse(raw) as Record<string, unknown>;
-          const upstream = (j.error_msg ?? j.msg ?? j.message ?? j.error ?? j.detail) as string | number | undefined;
-          if (upstream != null && String(upstream).trim() !== '') {
-            return `${fallback}（服务返回：${String(upstream).slice(0, 120)}）`;
-          }
-        } catch {
-          /* 非 JSON 响应体 */
-        }
-        return `${fallback}（服务返回：${raw.slice(0, 120)}）`;
-      }
-    }
-  } catch {
-    /* 读取失败退回 error.message */
-  }
-  const msg = error instanceof Error && error.message ? error.message : '';
-  if (/402|payment|quota|credit/i.test(msg)) return `${fallback}（额度不足或服务未开通，请联系管理员检查可灵服务配置）`;
-  if (/401|unauthorized|auth/i.test(msg)) return `${fallback}（服务鉴权失败，请检查接入配置）`;
-  return msg ? `${fallback}（${msg.slice(0, 120)}）` : fallback;
 }

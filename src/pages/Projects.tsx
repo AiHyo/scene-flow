@@ -75,9 +75,9 @@ function caseCoverFallback(p: ProjectListItem): string | undefined {
   return undefined;
 }
 
-/** 卡片封面：用户图片优先（cover_url → 效果图 → 原图 → 案例封面），无图渲染真实活动名称的文字封面 */
+/** 卡片封面：用户图片优先（coverUrl → 效果图 → 原图 → 案例封面），无图渲染真实活动名称的文字封面 */
 function Cover({ p, failedIds, onFail }: { p: ProjectListItem; failedIds: Set<string>; onFail: (id: string) => void }) {
-  const src = p.cover_url ?? p.data?.scene?.afterUrl ?? p.data?.scene?.beforeUrl ?? caseCoverFallback(p);
+  const src = p.coverUrl ?? p.data?.scene?.afterUrl ?? p.data?.scene?.beforeUrl ?? caseCoverFallback(p);
   if (src && !failedIds.has(p.id)) {
     return (
       <img
@@ -303,7 +303,7 @@ export default function Projects() {
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                     <span>
                       更新于{' '}
-                      {new Date(p.updated_at).toLocaleString('zh-CN', {
+                      {new Date(p.updateTime).toLocaleString('zh-CN', {
                         month: 'numeric',
                         day: 'numeric',
                         hour: '2-digit',

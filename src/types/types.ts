@@ -287,20 +287,20 @@ export interface ProjectData {
 
 export interface ProjectRow {
   id: string;
-  owner_id: string;
+  ownerId: string;
   title: string;
-  cover_url: string | null;
+  coverUrl: string | null;
   data: ProjectData;
-  created_at: string;
-  updated_at: string;
+  createTime: string;
+  updateTime: string;
 }
 
 export interface ProjectListItem {
   id: string;
   title: string;
-  cover_url: string | null;
-  updated_at: string;
-  created_at: string;
+  coverUrl: string | null;
+  updateTime: string;
+  createTime: string;
   /** 项目数据（列表页判断进度 / 封面回退 / 类型标签） */
   data?: ProjectData;
 }

@@ -30,7 +30,7 @@ import { PARTNER_CATALOG } from '@/data/partnerCatalog';
 import { MATERIAL_RESOURCES } from '@/data/resources';
 import { VENUE_SAMPLES, type VenueSample } from '@/data/venueSamples';
 import { usePendingImage } from '@/hooks/usePendingImage';
-import { supabase } from '@/lib/supabase';
+import { apiRequest } from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
 import { compressImage, uploadImage } from '@/services/api';
 import { normalizeTags } from '@/services/sceneTags';
@@ -271,11 +271,10 @@ export default function SceneModule({ data, patchNow, genSignal, onUploadAndChat
       let pollFails = 0; /* 连续失败计数：偶发网络错误容忍，连续失败才明确报错（不再永久静默） */
       pollRef.current = setInterval(async () => {
         try {
-          const { data: q, error: qErr } = await supabase.functions.invoke<QueryResp>(
-            'kling-omni-image-query',
-            { body: { task_id: taskId } }
-          );
-          if (qErr) throw new Error(qErr.message);
+          const q = await apiRequest<QueryResp>('/api/v1/ai/scene/query', {
+            method: 'POST',
+            body: JSON.stringify({ task_id: taskId }),
+          });
           pollFails = 0;
           if (!q) return;
 

@@ -19,10 +19,9 @@ import {
   deletePlazaComment,
   deletePlazaPost,
   formatPlazaTime,
-  listPlazaComments,
+  getPlazaPostDetail,
   plazaAuthorOf,
   plazaDisplayLikes,
-  removePlazaImages,
 } from '@/services/plazaApi';
 
 interface PostDetailDialogProps {
@@ -57,7 +56,6 @@ export default function PostDetailDialog({
   focusComments = false,
   onRequestLogin,
   onToggleLike,
-  onPostChange,
   onPostDeleted,
 }: PostDetailDialogProps) {
   const [comments, setComments] = useState<PlazaComment[] | null>(null);
@@ -72,7 +70,8 @@ export default function PostDetailDialog({
     setComments(null);
     setCommentsError(null);
     try {
-      setComments(await listPlazaComments(pid));
+      const detail = await getPlazaPostDetail(pid);
+      setComments(detail.commentList);
     } catch (e) {
       console.error(e);
       setCommentsError('评论加载失败');
@@ -98,8 +97,8 @@ export default function PostDetailDialog({
     return () => window.clearTimeout(t);
   }, [open, focusComments, comments]);
 
-  /* 仅本人内容显示删除入口（后端 RLS 同样仅允许本人删除，前后端双重校验；演示内容不可删） */
-  const isMine = !!(isAccount && userId && !post?.is_demo && post?.author_id === userId);
+  /* 仅本人内容显示删除入口（后端接口同样仅允许本人删除） */
+  const isMine = !!(isAccount && userId && post?.authorId === userId);
 
   const closeConfirm = () => setConfirm({ open: false, target: null });
 
@@ -111,7 +110,6 @@ export default function PostDetailDialog({
       toast.success('动态已删除');
       onOpenChange(false);
       onPostDeleted(post.id);
-      void removePlazaImages(post.images);
     } catch (e) {
       console.error(e);
       toast.error('删除失败，请重试');
@@ -124,7 +122,6 @@ export default function PostDetailDialog({
     try {
       await deletePlazaComment(commentId);
       setComments((arr) => (arr ? arr.filter((c) => c.id !== commentId) : arr));
-      onPostChange(post.id, { comment_count: Math.max(0, post.comment_count - 1) });
       toast.success('评论已删除');
     } catch (e) {
       console.error(e);
@@ -152,7 +149,6 @@ export default function PostDetailDialog({
       await addPlazaComment(post.id, text);
       setCommentText('');
       await loadComments(post.id);
-      onPostChange(post.id, { comment_count: post.comment_count + 1 });
     } catch (e) {
       console.error(e);
       toast.error('评论发送失败，内容已保留，请重试');
@@ -178,7 +174,7 @@ export default function PostDetailDialog({
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <PlazaAvatar author={author} className="h-6 w-6" />
                 <span className="font-medium text-foreground/80">{authorName}</span>
-                <span>{formatPlazaTime(post.created_at)} 发布</span>
+                <span>{formatPlazaTime(post.createTime)} 发布</span>
                 {isMine && (
                   <Button
                     variant="ghost"
@@ -195,11 +191,11 @@ export default function PostDetailDialog({
           </DialogHeader>
 
           {/* 完整图集 */}
-          {post.images.length > 0 && (
-            post.images.length === 1 ? (
+          {post.imgList.length > 0 && (
+            post.imgList.length === 1 ? (
               <div className="flex w-full justify-center overflow-hidden rounded-lg bg-muted">
                 <img
-                  src={post.images[0]}
+                  src={post.imgList[0]}
                   alt={`${post.title} 配图`}
                   className="max-h-[60vh] w-auto max-w-full object-contain"
                   loading="lazy"
@@ -207,7 +203,7 @@ export default function PostDetailDialog({
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                {post.images.map((url, i) => (
+                {post.imgList.map((url, i) => (
                   <div key={url} className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-muted">
                     <img
                       src={url}
@@ -240,7 +236,7 @@ export default function PostDetailDialog({
             </Button>
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <MessageCircle className="h-3.5 w-3.5" />
-              {post.comment_count} 条评论
+              {comments?.length ?? 0} 条评论
             </span>
           </div>
 
@@ -266,14 +262,14 @@ export default function PostDetailDialog({
             {comments?.map((c) => {
               const cAuthor = plazaAuthorOf(c);
               const cName = cAuthor.nickname?.trim() || '活动伙伴';
-              const isMineComment = !!(isAccount && userId && !c.is_demo && c.author_id === userId);
+              const isMineComment = !!(isAccount && userId && c.authorId === userId);
               return (
                 <div key={c.id} className="flex items-start gap-2.5 rounded-lg border bg-card p-3">
                   <PlazaAvatar author={cAuthor} className="mt-0.5 h-8 w-8 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-semibold text-foreground/90">{cName}</span>
-                      <span className="text-[11px] text-muted-foreground">{formatPlazaTime(c.created_at)}</span>
+                      <span className="text-[11px] text-muted-foreground">{formatPlazaTime(c.createTime)}</span>
                     </div>
                     <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{c.content}</p>
                   </div>

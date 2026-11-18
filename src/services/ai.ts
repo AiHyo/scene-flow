@@ -1,5 +1,6 @@
 import { INSPIRATIONS } from '@/data/inspiration';
 import { matchPartnerCatalog } from '@/data/partnerCatalog';
+import { apiUrl, getAuthToken } from '@/lib/apiClient';
 import { sendStreamRequest } from '@/lib/sse';
 import { knownTotal, unpricedItems } from '@/services/budgetMath';
 import { deriveTimeRange } from '@/services/deliverables';
@@ -13,8 +14,6 @@ import type {
 } from '@/types/types';
 
 export type AiMode = 'chat' | 'directions' | 'theme' | 'scheme' | 'copies';
-
-const FUNCTION_NAME = 'ai-planning-chat';
 
 const SYSTEM_PROMPT = `你是「SceneFlow AI」的活动策划伙伴，不仅是专业的活动企划顾问，更是用户身边的【贴心AI策划搭档】。语气温暖、和蔼可亲、积极有爱、善于互动：像一位既懂行又亲近的老朋友搭档，多给予用户肯定、鼓励与建议，简洁具体、善用共情。
 
@@ -358,9 +357,6 @@ export async function aiChat(
   vision?: string,
   opts?: { detail?: ReplyDetail; nickname?: string | null; memOnly?: boolean; noScene?: boolean }
 ): Promise<AiChatResult> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
   const modeInstruction = JSON_INSTRUCTIONS[mode];
   const userContent = [
     modeInstruction ? `【任务模式：${modeInstruction}】` : '',
@@ -410,9 +406,9 @@ export async function aiChat(
 
   let acc = '';
   await sendStreamRequest({
-    functionUrl: `${supabaseUrl}/functions/v1/${FUNCTION_NAME}`,
+    functionUrl: apiUrl('/api/v1/ai/chat'),
     requestBody: { messages },
-    supabaseAnonKey,
+    authToken: getAuthToken(),
     onData: (data) => {
       if (data === '[DONE]') return;
       try {

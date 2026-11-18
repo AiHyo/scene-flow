@@ -15,6 +15,10 @@ output
 .env
 .env.*
 !.env.example
+backend/.venv
+__pycache__
+*.pyc
+*.egg-info/
 package-lock.json
 playwright-report
 test-results

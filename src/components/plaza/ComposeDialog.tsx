@@ -101,7 +101,7 @@ export default function ComposeDialog({ open, onOpenChange, onPublished }: Compo
     if (submitting) return;
     setSubmitting(true);
     try {
-      await createPlazaPost({ title: t, content: c, images });
+      await createPlazaPost({ title: t, content: c, imgList: images });
       toast.success('发布成功，动态已出现在广场');
       resetForm();
       onOpenChange(false);

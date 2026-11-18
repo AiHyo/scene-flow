@@ -15,12 +15,10 @@ import {
   type PlazaPost,
   PLAZA_PAGE_SIZE,
   formatPlazaTime,
-  likePlazaPost,
-  listMyLikedPostIds,
   listPlazaPosts,
   plazaAuthorOf,
   plazaDisplayLikes,
-  unlikePlazaPost,
+  togglePlazaLike,
 } from '@/services/plazaApi';
 
 /** 动态流单条：作者 → 标题 → 正文摘要（可展开） → 图片 → 点赞/评论 */
@@ -40,7 +38,7 @@ function FeedItem({
   const authorName = author.nickname?.trim() || '活动伙伴';
   const content = post.content ?? '';
   const isLong = content.length > 96 || content.split('\n').length > 3;
-  const imgs = post.images ?? [];
+  const imgs = post.imgList ?? [];
   const likes = plazaDisplayLikes(post);
 
   return (
@@ -49,7 +47,7 @@ function FeedItem({
         <PlazaAvatar author={author} className="h-10 w-10 shrink-0" />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{authorName}</p>
-          <p className="text-xs text-muted-foreground">{formatPlazaTime(post.created_at)}</p>
+          <p className="text-xs text-muted-foreground">{formatPlazaTime(post.createTime)}</p>
         </div>
       </header>
 
@@ -140,7 +138,7 @@ function FeedItem({
           className="flex h-9 items-center gap-1.5 rounded-full px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <MessageCircle className="h-4 w-4" />
-          <span>{post.comment_count > 0 ? `${post.comment_count} 条评论` : '评论'}</span>
+          <span>评论</span>
         </button>
       </div>
     </article>
@@ -173,6 +171,7 @@ export default function Plaza() {
     try {
       const rows = await listPlazaPosts(0);
       setPosts(rows);
+      setLikedIds(new Set(rows.filter((r) => r.likedByMe).map((r) => r.id)));
       setHasMore(rows.length >= PLAZA_PAGE_SIZE);
     } catch (e) {
       console.error(e);
@@ -182,25 +181,7 @@ export default function Plaza() {
 
   useEffect(() => {
     void loadFirst();
-  }, [loadFirst]);
-
-  /* 已登录时拉取自己的点赞集合（未登录为空集；失败不阻塞浏览） */
-  const refreshLikes = useCallback(async () => {
-    if (!ready) return;
-    if (!isAccount || !userId) {
-      setLikedIds(new Set());
-      return;
-    }
-    try {
-      setLikedIds(await listMyLikedPostIds(userId));
-    } catch (e) {
-      console.warn('点赞状态加载失败，不影响浏览', e);
-    }
-  }, [ready, isAccount, userId]);
-
-  useEffect(() => {
-    void refreshLikes();
-  }, [refreshLikes]);
+  }, [loadFirst, isAccount, userId]);
 
   const handlePostChange = useCallback((id: string, patch: Partial<PlazaPost>) => {
     setPosts((arr) => (arr ? arr.map((p) => (p.id === id ? { ...p, ...patch } : p)) : arr));
@@ -224,10 +205,10 @@ export default function Plaza() {
       else next.add(post.id);
       return next;
     });
-    handlePostChange(post.id, { like_count: Math.max(0, post.like_count + (wasLiked ? -1 : 1)) });
+    handlePostChange(post.id, { likeCount: Math.max(0, post.likeCount + (wasLiked ? -1 : 1)) });
     try {
-      if (wasLiked) await unlikePlazaPost(post.id);
-      else await likePlazaPost(post.id);
+      const res = await togglePlazaLike(post.id);
+      handlePostChange(post.id, { likeCount: res.likeCount, likedByMe: res.liked });
     } catch (e) {
       console.error(e);
       setLikedIds((prev) => {
@@ -236,7 +217,7 @@ export default function Plaza() {
         else next.delete(post.id);
         return next;
       });
-      handlePostChange(post.id, { like_count: post.like_count });
+      handlePostChange(post.id, { likeCount: post.likeCount });
       toast.error('点赞操作失败，请重试');
     }
   };

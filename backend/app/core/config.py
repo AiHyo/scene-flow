@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     minio_bucket: str = "media"
 
     # JWT 鉴权
-    jwt_secret: str = "change-me-in-production"
+    jwt_secret: str = "sceneflow-dev-jwt-secret-change-in-prod-32b"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 10080
 
@@ -42,8 +42,10 @@ class Settings(BaseSettings):
     vision_model: str = ""
 
     # 场景生图
+    img_gen_provider: str = "openai"
     img_gen_base_url: str = ""
     img_gen_api_key: str = ""
+    img_gen_model: str = "gpt-image-2.6"
 
 
 settings = Settings()

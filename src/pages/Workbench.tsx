@@ -270,7 +270,7 @@ export default function Workbench() {
             void getProject(id)
               .then((row) => {
                 if (!row) return;
-                const serverTs = new Date(row.updated_at).getTime();
+                const serverTs = new Date(row.updateTime).getTime();
                 /* 本地无草稿且服务端版本新于直通写入（期间他端编辑）才覆盖 */
                 const draft = userId ? getDraft(userId, id) : null;
                 if (!draft && Date.now() > serverTs + 2000) {
@@ -293,7 +293,7 @@ export default function Workbench() {
         } else {
           /* 本地草稿恢复：仅当草稿比服务端版本新时使用（不无条件覆盖），恢复后标记待同步并自动重发保存 */
           const draft = userId ? getDraft(userId, id) : null;
-          const serverTs = new Date(row.updated_at).getTime();
+          const serverTs = new Date(row.updateTime).getTime();
           if (draft && draft.ts > serverTs) {
             setTitle(draft.title);
             /* 加载边界补列表稳定唯一 id（旧数据缺失/重复 id 的编辑串改修复；保留有效旧 id 与字段顺序） */
