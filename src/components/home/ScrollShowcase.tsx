@@ -114,7 +114,7 @@ export default function ScrollShowcase() {
     }
   }, []);
 
-  /** 启动幕4单次丝滑对比演示（强缓动快慢有致：50% → 16% → 84% → 50% 一气呵成后自然停稳，不循环晃眼） */
+  /** 启动幕4自动演示：严格还原原版手感（停顿 0.4s 后 50% → 30% [0.8s] → 70% [1.1s] → 50% [0.8s]，power2.inOut，共 2.7s 后自然停稳） */
   const tryStartAct4Demo = useCallback(() => {
     if (userInteractedRef.current || act4DemoPlayedRef.current || autoDemoTweenRef.current) {
       return;
@@ -139,6 +139,7 @@ export default function ScrollShowcase() {
     };
 
     const tl = gsap.timeline({
+      delay: 0.4,
       onComplete: () => {
         comparePosRef.current = 50;
         compareRef.current?.setPos(50);
@@ -148,21 +149,21 @@ export default function ScrollShowcase() {
     autoDemoTweenRef.current = tl;
 
     tl.to(proxy, {
-      pos: 16,
-      duration: 0.95,
-      ease: 'power3.inOut',
+      pos: 30,
+      duration: 0.8,
+      ease: 'power2.inOut',
       onUpdate: syncPos,
     })
       .to(proxy, {
-        pos: 84,
-        duration: 1.45,
-        ease: 'power3.inOut',
+        pos: 70,
+        duration: 1.1,
+        ease: 'power2.inOut',
         onUpdate: syncPos,
       })
       .to(proxy, {
         pos: 50,
-        duration: 1.05,
-        ease: 'power3.inOut',
+        duration: 0.8,
+        ease: 'power2.inOut',
         onUpdate: syncPos,
       });
   }, [isReducedMotion]);

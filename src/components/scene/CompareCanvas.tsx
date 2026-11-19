@@ -185,7 +185,7 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
         {/* 上层：布置前（clip-path 裁切，只改裁切不动图） */}
         <div
           ref={beforeClipRef}
-          className="absolute inset-0 overflow-hidden will-change-[clip-path]"
+          className="absolute inset-0 overflow-hidden"
           style={{ clipPath: `inset(0 ${100 - posRef.current}% 0 0)` }}
         >
           <img
@@ -210,7 +210,7 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
         {/* 分割线 */}
         <div
           ref={dividerRef}
-          className="pointer-events-none absolute inset-y-0 z-10 w-0.5 bg-white/90 shadow-[0_0_8px_rgba(0,0,0,0.4)] will-change-[left]"
+          className="pointer-events-none absolute inset-y-0 z-10 w-0.5 bg-white/90 shadow-[0_0_8px_rgba(0,0,0,0.4)]"
           style={{ left: `${posRef.current}%` }}
         />
         {interactive && (
@@ -223,7 +223,7 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
             aria-valuemax={100}
             aria-valuenow={Math.round(posRef.current)}
             aria-valuetext={`分割位置 ${Math.round(posRef.current)}%`}
-            className="compare-handle absolute top-1/2 z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full border border-black/10 bg-white/95 text-foreground shadow-lg backdrop-blur transition-transform will-change-[left] hover:scale-105 active:scale-95"
+            className="compare-handle absolute top-1/2 z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full border border-black/10 bg-white/95 text-foreground shadow-lg backdrop-blur transition-transform hover:scale-105 active:scale-95"
             style={{ left: `${posRef.current}%`, touchAction: 'none' }}
             onPointerDown={(e) => {
               onUserInteract?.();
