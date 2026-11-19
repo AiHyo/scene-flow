@@ -247,6 +247,9 @@ All colors MUST be HSL.
   background-color: hsl(var(--card));
   border: 1px solid hsl(var(--border) / 0.75);
   box-shadow: var(--shadow-card);
+  transition: box-shadow 220ms ease, border-color 220ms ease;
+}
+.sf-card-hover {
   transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease, border-color 220ms ease;
 }
 .sf-card-hover:hover {
