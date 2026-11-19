@@ -788,7 +788,7 @@ export default function SceneModule({ data, patchNow, genSignal, onUploadAndChat
           <div className="flex flex-col gap-4">
             {/* 布置程度：控制装饰密度与视觉层次，默认适中 */}
             <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
                 <span className="text-xs font-medium text-muted-foreground">布置程度（装饰密度）</span>
                 <span className="text-[11px] text-muted-foreground">
                   {density === 'simple' && '简约档：轻量点缀，留白通透，仅核心氛围物料'}
@@ -830,8 +830,10 @@ export default function SceneModule({ data, patchNow, genSignal, onUploadAndChat
 
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-muted-foreground">主题风格</span>
-              <Input
+              <Textarea
                 value={style}
+                rows={2}
+                className="min-h-10 resize-none text-sm"
                 onChange={(e) => {
                   const v = e.target.value;
                   setStyle(v);

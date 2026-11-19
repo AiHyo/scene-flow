@@ -178,10 +178,10 @@ export default function PlanStart() {
   };
 
   return (
-    <div className="sf-page-body mx-auto flex w-full max-w-4xl flex-col items-center px-4 py-16 md:px-8 md:py-24">
+    <div className="sf-page-body mx-auto flex w-full max-w-4xl flex-col items-center px-4 py-12 md:px-8 md:py-20">
       <div className="sf-deco" aria-hidden="true">
-        <span className="sf-blob sf-paper-purple-faint" style={{top: '-6%', left: '-22%', width: '24vw', height: '24vw', minWidth: 200, minHeight: 200}} />
-        <span className="sf-blob sf-paper-cream-faint" style={{top: '10%', right: '-20%', width: '20vw', height: '20vw', minWidth: 160, minHeight: 160}} />
+        <span className="sf-blob sf-paper-purple-faint" style={{top: '4%', left: '-14%', width: '24vw', height: '24vw', minWidth: 200, minHeight: 200}} />
+        <span className="sf-blob sf-paper-cream-faint" style={{top: '12%', right: '-14%', width: '20vw', height: '20vw', minWidth: 160, minHeight: 160}} />
       </div>
       <span className="mb-5 inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
         <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -264,7 +264,7 @@ export default function PlanStart() {
           <Button
             onClick={() => void start()}
             disabled={!canStart}
-            className="h-11 rounded-xl px-6"
+            className="h-11 w-full rounded-xl px-6 sm:w-auto"
           >
             {creating ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -323,8 +323,8 @@ export default function PlanStart() {
           <Sparkles className="h-4 w-4" />
           还没想好？先给我一些方向
         </Button>
-        <p className="text-center text-xs text-muted-foreground">
-          「还没想好」也是有效的回答——AI 不会催你，只会陪你把想法慢慢补全。
+        <p className="max-w-md text-balance text-center text-xs leading-relaxed text-muted-foreground">
+          「还没想好」也是有效的起点，AI 会陪你一步步把想法补全。
         </p>
       </div>
     </div>

@@ -168,7 +168,6 @@ export default function BudgetModule({ data, patch, patchNow, allCollapsed, fres
         bodyClassName="p-4 pt-0 md:p-5 md:pt-0"
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">预算上限</span>
             <NumInput
@@ -184,6 +183,18 @@ export default function BudgetModule({ data, patch, patchNow, allCollapsed, fres
             />
             <span className="text-xs text-muted-foreground">元</span>
           </div>
+          {remaining != null && (
+            <p
+              className={`flex items-center gap-1.5 text-xs font-semibold ${
+                overBudget ? 'text-destructive' : 'text-green-600'
+              }`}
+            >
+              {overBudget && <AlertTriangle className="h-3.5 w-3.5" />}
+              {overBudget
+                ? `超出预算 ¥${Math.abs(remaining).toLocaleString()}，请调整`
+                : `预算内：剩余 ¥${remaining.toLocaleString()}`}
+            </p>
+          )}
         </div>
 
         {budget.items.length === 0 ? (
@@ -265,21 +276,23 @@ export default function BudgetModule({ data, patch, patchNow, allCollapsed, fres
                 </tbody>
               </table>
             </div>
-            {/* 窄成果视图：优先费用名称+金额（不缩字号不截断）；数量/单价收进「详情」按需展开；删除操作全保留 */}
+            {/* 窄成果视图：名称整行可读不截断，小计/详情/删除收在次行 */}
             <div className="flex flex-col gap-2 @3xl:hidden">
               {budget.items.map((it) => (
                 <div key={it.id} className="rounded-xl border bg-background p-3">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={it.name}
-                      onChange={(e) => updateItem(it.id, { name: e.target.value })}
-                      onBlur={flushBudget}
-                      placeholder="如：场地租赁"
-                      className="h-9 min-w-0 flex-1 border-0 bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-1"
-                    />
-                    <span className="shrink-0 text-sm font-semibold tabular-nums">
+                  <Input
+                    value={it.name}
+                    title={it.name}
+                    onChange={(e) => updateItem(it.id, { name: e.target.value })}
+                    onBlur={flushBudget}
+                    placeholder="如：场地租赁"
+                    className="h-8 w-full border-0 bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-1"
+                  />
+                  <div className="mt-1 flex items-center justify-between gap-2 pl-1">
+                    <span className="text-sm font-semibold tabular-nums text-primary">
                       {it.priceUnknown ? <span className='text-muted-foreground'>待询价</span> : subtotalLabel(it)}
                     </span>
+                    <div className="flex items-center gap-1.5">
                     <details className="shrink-0">
                       <summary className="cursor-pointer list-none rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground hover:text-foreground">
                         详情
@@ -327,6 +340,7 @@ export default function BudgetModule({ data, patch, patchNow, allCollapsed, fres
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
+                    </div>
                   </div>
                 </div>
               ))}

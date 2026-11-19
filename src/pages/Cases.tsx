@@ -131,11 +131,11 @@ export default function Cases() {
             <h2 className="text-lg font-bold">完整示例案例</h2>
             <span className="text-xs text-muted-foreground">含方案、布置与预算的整套成果</span>
           </div>
-          {/* 筛选后仅剩一两项时收窄为紧凑布局，衔接下方轻量模板区，避免三列大留白 */}
+          {/* 完整案例最多 4 个，2×2 对称排布避免三列尾行大片留白 */}
           <div
             className={cn(
               'grid gap-5',
-              fullCases.length === 1 ? 'md:max-w-2xl' : fullCases.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'
+              fullCases.length === 1 ? 'md:max-w-2xl' : 'md:grid-cols-2'
             )}
           >
             {fullCases.map((c) => (

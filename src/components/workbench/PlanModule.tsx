@@ -924,8 +924,11 @@ export default function PlanModule({ data, patch, openSignal, reqEditSignal, sch
               const items: { label: string; value: string; hint?: string }[] = [];
               if (req.type) items.push({ label: '类型', value: req.type, hint: '已确认' });
               if (req.headcount?.value) items.push({ label: '人数', value: req.headcount.value as string });
-              if (req.budget?.value) items.push({ label: '预算', value: req.budget.value as string });
-              if (data.budget?.limit != null) items.push({ label: '上限', value: `${data.budget.limit.toLocaleString('zh-CN')} 元` });
+              if (data.budget?.limit != null) {
+                items.push({ label: '预算上限', value: `${data.budget.limit.toLocaleString('zh-CN')} 元` });
+              } else if (req.budget?.value) {
+                items.push({ label: '预算', value: req.budget.value as string });
+              }
               if (req.region?.value) items.push({ label: '地区', value: req.region.value as string });
               if (req.date?.value) items.push({ label: '日期', value: req.date.value as string });
               if (req.visualTheme?.value) items.push({ label: '主题', value: req.visualTheme.value as string });
@@ -1100,11 +1103,11 @@ export default function PlanModule({ data, patch, openSignal, reqEditSignal, sch
         className=""
         bodyClassName="p-4 pt-0 md:p-5 md:pt-0"
       >
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2.5">
-          <p className="min-w-0 flex-1 text-xs leading-relaxed text-muted-foreground">
-            方向是活动的策划路线（如桌游派对 / 户外野餐），会决定流程、物料与预算的走向
+        <div className="mb-4 flex flex-col gap-2.5">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            方向是活动的策划路线（如桌游派对 / 户外野餐），会决定流程、物料与预算的走向。
           </p>
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" disabled={genLoading !== null || taskLocked} onClick={genDirections}>
               {genLoading === 'directions' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               {directions.length > 0 ? '更新方向' : '生成方向'}
@@ -1114,11 +1117,14 @@ export default function PlanModule({ data, patch, openSignal, reqEditSignal, sch
                 size="sm"
                 disabled={!data.selectedDirectionId || genLoading !== null || taskLocked}
                 onClick={() => genScheme()}
-                title={data.selectedDirectionId ? undefined : '先在上方选择一个方向'}
+                title={data.selectedDirectionId ? undefined : '先在下方选择一个方向'}
               >
                 {genLoading === 'scheme' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                 生成完整方案
               </Button>
+            )}
+            {directions.length > 0 && !data.selectedDirectionId && (
+              <span className="text-[11px] text-muted-foreground">请先点选一个候选方向</span>
             )}
           </div>
         </div>

@@ -114,6 +114,8 @@ export default function Resources() {
   /* 搜索关键字（可选本地服务搜索） */
   const [localSearchKeyword, setLocalSearchKeyword] = useState('');
   const [appliedKeyword, setAppliedKeyword] = useState('');
+  const [localTypeFilter, setLocalTypeFilter] = useState<string>('all');
+  const [localLimit, setLocalLimit] = useState(8);
 
   /* 申请合作弹窗 */
   const [applyOpen, setApplyOpen] = useState(false);
@@ -197,14 +199,17 @@ export default function Resources() {
           (!ap.city || normCity(r.city) === normCity(ap.city))
       )
     : namedAll;
-  const localResources = appliedKeyword
-    ? namedResources.filter(
-        (r) =>
-          r.name.toLowerCase().includes(appliedKeyword.toLowerCase()) ||
-          r.use.toLowerCase().includes(appliedKeyword.toLowerCase()) ||
-          r.scenes.toLowerCase().includes(appliedKeyword.toLowerCase())
-      )
-    : namedResources;
+  const localResources = namedResources.filter((r) => {
+    const kwOk = !appliedKeyword
+      || r.name.toLowerCase().includes(appliedKeyword.toLowerCase())
+      || r.use.toLowerCase().includes(appliedKeyword.toLowerCase())
+      || r.scenes.toLowerCase().includes(appliedKeyword.toLowerCase());
+    if (!kwOk) return false;
+    if (localTypeFilter === 'all') return true;
+    const text = `${r.name} ${r.use} ${r.scenes}`;
+    return text.includes(localTypeFilter);
+  });
+  const visibleLocalResources = localResources.slice(0, localLimit);
   /* 泛类别地图搜索：链接携带实际所选地区（省+市+区拼接），按钮名与目的相符 */
   const appliedRegionForSearch = [ap.city ?? ap.province, ap.district].filter(Boolean).join('') || null;
 
@@ -259,12 +264,10 @@ export default function Resources() {
             ))}
           </div>
 
-          {/* 普通条目：有图 / 无图混合瀑布流（与找灵感同一套 columns 混排，自然高度对齐） */}
-          <div className="mt-6 columns-1 gap-4 md:columns-2">
+          {/* 普通条目：等高双列网格，确保图文对齐 */}
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
             {onlineNormal.map((r) => (
-              <div key={r.id} className="mb-4 break-inside-avoid">
-                <GoodsCard r={r} />
-              </div>
+              <GoodsCard key={r.id} r={r} />
             ))}
           </div>
         </TabsContent>
@@ -368,9 +371,38 @@ export default function Resources() {
               </div>
             )}
           </div>
-          <p className="mb-4 text-sm text-muted-foreground">
-            按地区与关键词筛选具名合作商家；页面底部可按类别地图搜索。
-          </p>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">
+              按地区、类别与关键词筛选具名合作商家；页面底部可按类别地图搜索。
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { id: 'all', label: '全部类别' },
+                { id: '场地', label: '场地' },
+                { id: '布置', label: '布置' },
+                { id: '餐饮', label: '餐饮/茶歇' },
+                { id: '摄影', label: '摄影摄像' },
+                { id: '租赁', label: '设备租赁' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    setLocalTypeFilter(t.id);
+                    setLocalLimit(8);
+                  }}
+                  className={cn(
+                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    localTypeFilter === t.id
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
           {localResources.length === 0 ? (
             /* 无匹配：如实空结果 + 扩大范围入口，不编造条目 */
             <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-12 text-muted-foreground">
@@ -403,13 +435,20 @@ export default function Resources() {
               </div>
             </div>
           ) : (
-            <div className="columns-1 gap-4 md:columns-2">
-              {localResources.map((r) => (
-                <div key={r.id} className="mb-4 break-inside-avoid">
-                  <GoodsCard r={r} activeRegion={activeRegionText || undefined} />
+            <>
+              <div className="grid gap-4 md:grid-cols-2">
+                {visibleLocalResources.map((r) => (
+                  <GoodsCard key={r.id} r={r} activeRegion={activeRegionText || undefined} />
+                ))}
+              </div>
+              {localResources.length > visibleLocalResources.length && (
+                <div className="mt-6 flex justify-center">
+                  <Button variant="outline" onClick={() => setLocalLimit((n) => n + 8)}>
+                    查看更多商家（还有 {localResources.length - visibleLocalResources.length} 家）
+                  </Button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
 
           {/* ===== 更多场所与服务搜索：泛类别紧凑入口（仅地图搜索，不展示评分评价，不计入商家数） ===== */}
@@ -636,11 +675,17 @@ function GoodsCard({ r, activeRegion }: { r: PartnerResource; activeRegion?: str
         </div>
       )}
       {badges}
-      {r.image && !r.featured ? (
-        /* 普通有图：小缩略图 + 右侧标题信息，避免大图撑满列宽 */
+      {!r.featured ? (
+        /* 普通条目：统一左侧方形图/图标占位 + 右侧文字，保证双列对齐 */
         <div className="flex items-start gap-2.5">
-          <div className="w-20 shrink-0 overflow-hidden rounded-lg border md:w-24">
-            <img src={r.image} alt={`${r.name}商品图`} loading="lazy" className="aspect-square w-full object-cover" />
+          <div className="flex aspect-square w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted/40 md:w-24">
+            {r.image ? (
+              <img src={r.image} alt={`${r.name}商品图`} loading="lazy" className="h-full w-full object-cover" />
+            ) : r.category === 'local' ? (
+              <MapPin className="h-6 w-6 text-primary/50" />
+            ) : (
+              <Package className="h-6 w-6 text-primary/50" />
+            )}
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             {titleRow}

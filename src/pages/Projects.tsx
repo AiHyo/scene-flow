@@ -199,10 +199,11 @@ export default function Projects() {
 
   return (
     <div className="sf-page-body mx-auto w-full max-w-6xl px-4 py-10 md:px-6 md:py-14">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">      <div className="sf-deco" aria-hidden="true">
+      <div className="sf-deco" aria-hidden="true">
         <span className="sf-blob sf-paper-purple-faint" style={{top: '-10%', left: '-18%', width: '28vw', height: '28vw', minWidth: 240, minHeight: 240}} />
         <span className="sf-blob sf-paper-cream-faint" style={{top: '4%', right: '-16%', width: '24vw', height: '24vw', minWidth: 200, minHeight: 200}} />
       </div>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
 
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">我的活动</h1>

@@ -215,7 +215,6 @@ export default function Inspiration() {
             )}
           >
             {c.name}
-            {c.id !== 'all' && c.focus && <span className="hidden md:inline"> · {c.focus}</span>}
           </button>
         ))}
       </div>
@@ -231,7 +230,7 @@ export default function Inspiration() {
             className="pl-9"
           />
         </div>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0 md:pb-0">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setType('all')}
@@ -315,6 +314,17 @@ export default function Inspiration() {
                   />
                 </div>
               )}
+              <div className="flex items-center justify-between pt-1 text-xs font-medium text-primary">
+                <span>点击查看玩法详情</span>
+                <Link
+                  to={`/plan?desc=${encodeURIComponent(`${entry.title}：${entry.howTo}`)}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 transition-colors hover:bg-primary/20"
+                >
+                  用到策划中
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
             </button>
           ))}
         </div>

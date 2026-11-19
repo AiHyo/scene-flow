@@ -338,16 +338,21 @@ export default function SceneStart() {
                   <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
                   <span className="min-w-0">
                     <span className="font-medium text-foreground/75">参考物料：</span>
-                    {s.materials.slice(0, 4).join(' · ')}
-                    {s.materials.length > 4 ? ' 等' : ''}
+                    {s.materials.slice(0, 3).join(' · ')}
+                    {s.materials.length > 3 ? ` 等 ${s.materials.length} 项` : ''}
                   </span>
                 </p>
-                <Textarea
-                  value={briefs[s.id] ?? ''}
-                  onChange={(e) => setBriefs((prev) => ({ ...prev, [s.id]: e.target.value }))}
-                  placeholder="可修改或清空默认诉求"
-                  className="mt-2.5 min-h-16 resize-none text-xs"
-                />
+                <div className="mt-3">
+                  <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
+                    布置诉求（可直接修改）
+                  </label>
+                  <Textarea
+                    value={briefs[s.id] ?? ''}
+                    onChange={(e) => setBriefs((prev) => ({ ...prev, [s.id]: e.target.value }))}
+                    placeholder="可修改或清空默认诉求"
+                    className="min-h-16 resize-none border-border/80 bg-muted/20 text-xs focus-visible:bg-background"
+                  />
+                </div>
               </div>
               <div className="mt-3 flex flex-col gap-2">
                 {/* 卡片仅保留查看大图入口；下载统一在弹窗内 */}

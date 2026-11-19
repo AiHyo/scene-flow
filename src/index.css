@@ -141,6 +141,7 @@ All colors MUST be HSL.
 /* 全局页面背景：奶白纸面（v108 全站背景优化，浅色=奶白 --paper-bg，深色保持深灰），与 body 同源，滚动无断层 */
 .app-surface {
   background-color: hsl(var(--paper-bg));
+  overflow-x: clip;
 }
 
 /* ===== 「轻盈创意纸面」装饰系统（v108）：仅放在内容后的边缘，decorative、pointer-events-none、z-0 =====
@@ -148,7 +149,7 @@ All colors MUST be HSL.
 .sf-deco {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   overflow: hidden;
 }
@@ -203,6 +204,10 @@ All colors MUST be HSL.
 }
 .sf-page-body > .sf-deco {
   z-index: -1;
+  left: 50%;
+  right: auto;
+  width: 100vw;
+  transform: translateX(-50%);
 }
 
 /* 品牌渐变文字 */

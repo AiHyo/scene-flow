@@ -1467,9 +1467,9 @@ export default function Workbench() {
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/30">
+    <div className="flex min-h-screen w-full flex-col bg-muted/30 md:h-dvh md:overflow-hidden">
       {/* 顶栏 */}
-      <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
+      <header className="sticky top-0 z-40 shrink-0 border-b bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-2 px-3 md:px-5">
           <Button asChild variant="ghost" size="icon" className="h-9 w-9 shrink-0" aria-label="返回">
             <Link to="/projects">
@@ -1578,6 +1578,7 @@ export default function Workbench() {
               }}
             >
               <Sparkles className="h-4 w-4" />
+              <span className="sm:hidden">预览</span>
               <span className="hidden sm:inline">预览成果</span>
             </Button>
           </div>
@@ -1609,11 +1610,11 @@ export default function Workbench() {
           />
         </DialogContent>
       </Dialog>
-      {/* 主体：桌面 = 左宽对话区（连续共策主界面）+ 右可收起成果栏；移动 = 模块主区 + AI 抽屉 */}
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 gap-0 px-0 md:gap-4 md:px-5">
+      {/* 主体：桌面 = 左宽对话区（一屏高度贴合不溢出）+ 右可收起成果栏；移动 = 模块主区 + AI 抽屉 */}
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 gap-0 px-0 md:min-h-0 md:gap-4 md:px-5">
         {/* 左：AI 对话协作区（桌面主区域；无成果时右侧不铺空表单，对话即主界面；单实例挂载防双触发） */}
-        <div className="hidden min-w-0 flex-1 pt-4 pb-6 md:block">
-          <div className="sticky top-14 h-[calc(100vh-3.5rem)] overflow-hidden rounded-2xl border bg-background shadow-sm">
+        <div className="hidden min-h-0 min-w-0 flex-1 py-3 md:flex">
+          <div className="h-full w-full overflow-hidden rounded-2xl border bg-background shadow-sm">
             {isDesktop && (
             <AiAssistant
               data={data}
@@ -1650,7 +1651,7 @@ export default function Workbench() {
             ref={panelScrollRef}
             style={panelExpanded ? { width: expandedW } : { width: panelW }}
             className={cn(
-              'sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 overflow-y-auto border-l bg-muted/20 md:block'
+              'relative hidden h-full shrink-0 overflow-y-auto border-l bg-muted/20 md:block'
             )}
           >
             {isDesktop && modulesPanel}

@@ -234,7 +234,7 @@ export default function Preview() {
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-3 rounded-xl border bg-muted/30 p-4">
+            <div className="h-fit flex flex-col gap-3 rounded-xl border bg-muted/30 p-4">
               <p className="text-xs font-medium text-muted-foreground">已选方向</p>
               {selectedDir ? (
                 <>
@@ -388,32 +388,52 @@ export default function Preview() {
             费用与预算
           </h2>
           {items.length > 0 ? (
-            <div className="w-full max-w-full overflow-x-auto bg-card">
-              <table className="w-full min-w-max text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs text-muted-foreground">
-                    <th className="whitespace-nowrap py-2 pr-4 font-medium">项目</th>
-                    <th className="whitespace-nowrap py-2 pr-4 font-medium">数量</th>
-                    <th className="whitespace-nowrap py-2 pr-4 font-medium">单价</th>
-                    <th className="whitespace-nowrap py-2 font-medium">小计</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((it) => (
-                    <tr key={it.id} className="border-b last:border-0">
-                      <td className="whitespace-nowrap py-2 pr-4">{it.name}</td>
-                      <td className="whitespace-nowrap py-2 pr-4 tabular-nums">{Number(it.qty) || 0}</td>
-                      <td className="whitespace-nowrap py-2 pr-4 tabular-nums">
-                        {it.priceUnknown ? <span className="text-chart-5">待询价</span> : unitPriceLabel(it)}
-                      </td>
-                      <td className="whitespace-nowrap py-2 tabular-nums">
+            <>
+              {/* 移动端：双行卡片清单，防止长项目名把小计列挤出视口 */}
+              <div className="flex flex-col divide-y divide-border md:hidden">
+                {items.map((it) => (
+                  <div key={it.id} className="py-2.5 first:pt-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="min-w-0 flex-1 text-sm font-medium leading-snug">{it.name}</span>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums">
                         {it.priceUnknown ? <span className="text-chart-5">待询价</span> : subtotalLabel(it)}
-                      </td>
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                      数量 {Number(it.qty) || 0} × 单价{' '}
+                      {it.priceUnknown ? '待询价' : unitPriceLabel(it)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {/* 桌面端：完整明细表 */}
+              <div className="hidden w-full max-w-full overflow-x-auto bg-card md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-xs text-muted-foreground">
+                      <th className="py-2 pr-4 font-medium">项目</th>
+                      <th className="whitespace-nowrap py-2 pr-4 font-medium">数量</th>
+                      <th className="whitespace-nowrap py-2 pr-4 font-medium">单价</th>
+                      <th className="whitespace-nowrap py-2 text-right font-medium">小计</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {items.map((it) => (
+                      <tr key={it.id} className="border-b last:border-0">
+                        <td className="py-2 pr-4">{it.name}</td>
+                        <td className="whitespace-nowrap py-2 pr-4 tabular-nums">{Number(it.qty) || 0}</td>
+                        <td className="whitespace-nowrap py-2 pr-4 tabular-nums">
+                          {it.priceUnknown ? <span className="text-chart-5">待询价</span> : unitPriceLabel(it)}
+                        </td>
+                        <td className="whitespace-nowrap py-2 text-right tabular-nums">
+                          {it.priceUnknown ? <span className="text-chart-5">待询价</span> : subtotalLabel(it)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : (
             <p className="text-sm text-muted-foreground">暂无费用条目。</p>
           )}

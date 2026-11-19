@@ -288,31 +288,38 @@ export default function Plaza() {
   };
 
   return (
-    <div className="@container mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
-      <ReturnBar />      <div className="sf-deco" aria-hidden="true">
+    <div className="sf-page-body @container mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+      <div className="sf-deco" aria-hidden="true">
         <span className="sf-blob sf-paper-purple-faint" style={{top: '-10%', left: '-18%', width: '28vw', height: '28vw', minWidth: 240, minHeight: 240}} />
         <span className="sf-blob sf-paper-cream-faint" style={{top: '2%', right: '-16%', width: '24vw', height: '24vw', minWidth: 200, minHeight: 200}} />
       </div>
+      <ReturnBar />
 
-      {/* 紧凑页头：标题 + 说明 + 显眼的发布入口 */}
+      {/* 紧凑页头：标题 + 说明 + 显眼的发布入口（空态时主操作收口至空态引导卡片，不重复） */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight">活动广场</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">大家的活动策划、场景布置与现场照片
-                        
-          </p>
+          <p className="mt-1.5 text-sm text-muted-foreground">大家的活动策划、场景布置与现场照片</p>
         </div>
-        <Button
-          onClick={openCompose}
-          className="shrink-0 bg-[image:var(--gradient-primary)] shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.98]"
-        >
-          <Plus className="h-4 w-4" />
-          发布动态
-        </Button>
+        {(posts === null || posts.length > 0) && (
+          <Button
+            onClick={openCompose}
+            className="shrink-0 bg-[image:var(--gradient-primary)] shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" />
+            发布动态
+          </Button>
+        )}
       </div>
+
+      {/* 移动端/中屏提示条：补全右侧引导信息 */}
+      <div className="mt-4 rounded-xl border bg-card/80 px-3.5 py-2.5 text-xs text-muted-foreground @5xl:hidden">
+        浏览免登录；发布动态（标题 + 正文 + 图片）、点赞与评论需先登录账号。
+      </div>
+
       {/* 主体：居中单列动态流；宽屏右侧轻量分享引导（空间不足时隐藏，不挤压主内容） */}
       <div className="mt-6 flex flex-col items-stretch gap-10 @5xl:flex-row @5xl:justify-center">
-        <main className="w-full min-w-0 @5xl:max-w-[720px]">
+        <section className="w-full min-w-0 @5xl:max-w-[720px]" aria-label="活动动态列表">
           {/* 加载中 */}
           {posts === null && loadError === null && (
             <div className="divide-y divide-border">
@@ -347,9 +354,9 @@ export default function Plaza() {
 
           {/* 空状态 */}
           {posts !== null && posts.length === 0 && (
-            <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <p className="text-sm font-medium">广场还没有动态</p>
-              <p className="text-sm text-muted-foreground">分享你的活动策划、场景布置或现场照片，成为第一条动态吧</p>
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed bg-card/60 px-6 py-16 text-center">
+              <p className="text-base font-medium">广场还没有动态</p>
+              <p className="max-w-sm text-sm text-muted-foreground">分享你的活动策划、场景布置或现场照片，成为第一条动态吧</p>
               <Button size="sm" onClick={openCompose}>
                 <Plus className="h-4 w-4" />
                 发布第一条动态
@@ -380,7 +387,7 @@ export default function Plaza() {
               )}
             </>
           )}
-        </main>
+        </section>
 
         {/* 宽屏右侧：轻量氛围区（无重复操作按钮，只留发布说明与品牌插画） */}
         <aside className="hidden w-[250px] shrink-0 @5xl:block">
@@ -395,9 +402,9 @@ export default function Plaza() {
             />
             <p className="text-sm font-medium">把活动现场分享出来</p>
             <div className="flex w-full flex-col gap-2 border-t pt-4 text-left text-xs leading-relaxed text-muted-foreground">
-              <p>一条动态包含标题、正文与至少一张图片</p>
-              <p>图片支持多张上传，可预览和移除</p>
-              <p>点赞与评论需登录，浏览无需登录</p>
+              <p>每条动态需包含标题、正文与配图</p>
+              <p>支持多张图片上传，可预览与移除</p>
+              <p>浏览免登录，点赞与评论需先登录</p>
             </div>
           </div>
         </aside>

@@ -329,14 +329,14 @@ export default function ScrollShowcase() {
   return (
     <section ref={sectionRef} className="relative w-full overflow-x-clip bg-background">
       {/* ===== 幕1 活动文字舞台 · 动态文字海报 ===== */}
-      <div className="sf-panel-1 relative flex min-h-[92dvh] w-full flex-col overflow-hidden px-5 pb-16 pt-20 md:motion-safe:min-h-[100dvh] md:motion-safe:px-0 md:motion-safe:pb-0 md:motion-safe:pt-0">
+      <div className="sf-panel-1 relative isolate flex min-h-[92dvh] w-full flex-col overflow-hidden px-5 pb-16 pt-20 md:motion-safe:min-h-[100dvh] md:motion-safe:px-0 md:motion-safe:pb-0 md:motion-safe:pt-0">
         {/* 「轻盈创意纸面」静态边缘装饰（v108）：仅角落大块纸片/柔和弧形，避开中部标题与右侧活动词，不动 GSAP 时间轴 */}
         <div className="sf-deco" aria-hidden="true">
           <span className="sf-blob sf-paper-cream" style={{ top: '-12%', left: '-10%', width: '42vw', height: '42vw', minWidth: 320, minHeight: 320 }} />
           <span className="sf-blob sf-paper-purple" style={{ bottom: '-18%', right: '-12%', width: '46vw', height: '46vw', minWidth: 360, minHeight: 360 }} />
         </div>
-        {/* 舞台中部偏左：SceneFlow AI + 两行主标题 + 说明文案（紧凑组合，唯一第一视觉层级） */}
-        <div className="sf-a1-top md:motion-safe:absolute md:motion-safe:left-[8vw] md:motion-safe:top-1/2 md:motion-safe:w-[38vw] md:motion-safe:max-w-[560px] md:motion-safe:-translate-y-[54%]">
+        {/* 舞台中部偏左：SceneFlow AI + 两行主标题 + 说明文案 + 首屏直达入口 */}
+        <div className="sf-a1-top relative z-10 md:motion-safe:absolute md:motion-safe:left-[8vw] md:motion-safe:top-1/2 md:motion-safe:w-[38vw] md:motion-safe:max-w-[560px] md:motion-safe:-translate-y-[52%]">
           <div className="overflow-hidden">
             <div className="sf-brand flex items-center gap-2.5">
               <Sparkles className="h-5 w-5 shrink-0 text-primary md:h-6 md:w-6" />
@@ -347,35 +347,49 @@ export default function ScrollShowcase() {
             </div>
           </div>
           <h1 className="mt-4 md:mt-5">
-            <span className="block overflow-hidden">
-              <span className="sf-line sf-line-a font-display block text-[15vw] font-black leading-[1.04] tracking-tight text-foreground md:motion-safe:text-[5.6vw] xl:motion-safe:text-[6.2rem]">
+            <span className="block overflow-hidden pb-1">
+              <span className="sf-line sf-line-a font-display block text-[15vw] font-black leading-[1.08] tracking-tight text-foreground md:motion-safe:text-[5.4vw] xl:motion-safe:text-[5.8rem]">
                 {showcase.intro.lineA}
               </span>
             </span>
-            <span className="block overflow-hidden md:motion-safe:pl-[2.5vw]">
-              <span className="sf-line sf-line-b font-display block text-[15vw] font-black leading-[1.04] tracking-tight text-primary md:motion-safe:text-[5.6vw] xl:motion-safe:text-[6.2rem]">
+            <span className="block overflow-hidden pb-1 md:motion-safe:pl-[2.5vw]">
+              <span className="sf-line sf-line-b font-display block text-[15vw] font-black leading-[1.08] tracking-tight text-primary md:motion-safe:text-[5.4vw] xl:motion-safe:text-[5.8rem]">
                 {showcase.intro.lineB}
               </span>
             </span>
           </h1>
           <p className="sf-sub mt-4 max-w-md text-base leading-relaxed text-muted-foreground md:mt-5 md:text-lg">{showcase.intro.sub}</p>
+          <div className="sf-sub mt-6 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg" className="h-11 rounded-full px-6 shadow-md">
+              <Link to="/plan">
+                <Wand2 className="h-4 w-4" />
+                {showcase.act4Copy.cta.primary}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="h-11 rounded-full bg-card/80 px-5">
+              <Link to="/inspiration">
+                <Lightbulb className="h-4 w-4" />
+                {showcase.act4Copy.cta.secondary}
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* 舞台中部偏右：活动词群主视觉（48vw–92vw，与标题区共占约八成舞台宽，纵向 72vh 展开）。
             全部词绝对定位、零旋转，坐标经重叠校验；主要层级错位大字 + 一处色块，筹备事项小字补空隙 */}
-        <div className="sf-words relative mt-8 flex flex-wrap items-baseline gap-x-6 gap-y-4 md:motion-safe:absolute md:motion-safe:left-[48vw] md:motion-safe:top-1/2 md:motion-safe:mt-0 md:motion-safe:block md:motion-safe:h-[72vh] md:motion-safe:w-[44vw] md:motion-safe:-translate-y-1/2">
+        <div className="sf-words relative z-10 mt-8 flex flex-wrap items-baseline gap-x-5 gap-y-3 md:motion-safe:absolute md:motion-safe:left-[48vw] md:motion-safe:top-1/2 md:motion-safe:mt-0 md:motion-safe:block md:motion-safe:h-[72vh] md:motion-safe:w-[44vw] md:motion-safe:-translate-y-1/2">
           {showcase.intro.words.map((w, i) => (
             <div
               key={w.t}
               className={cn(
-                'sf-word-mask flex items-baseline md:motion-safe:absolute md:motion-safe:overflow-hidden',
+                'sf-word-mask flex items-baseline py-1 md:motion-safe:absolute md:motion-safe:overflow-hidden',
                 w.tier === 'major' ? 'sf-word-major' : 'sf-word-aux'
               )}
               style={w.pos}
             >
               <span
                 className={cn(
-                  'sf-word inline-block leading-[1.08]',
+                  'sf-word inline-block leading-[1.15]',
                   `sf-word-${i}`,
                   w.size,
                   /* 风格：一处主色块强调；其余按字重 / 颜色分层，全部清晰可读，无描边无旋转 */
@@ -443,7 +457,7 @@ export default function ScrollShowcase() {
                   p.tone === 'accent' && 'font-black text-primary',
                   p.tone === 'heavy' && 'font-black text-foreground'
                 )}
-                style={{ ...p.pos, transform: p.pos.tx ? `translateX(${p.pos.tx})` : undefined }}
+                style={p.pos}
               >
                 <span className={cn('h-2 w-2 shrink-0 rounded-[2px]', p.tone === 'accent' ? 'bg-primary' : 'bg-chart-5/80')} />
                 {p.t}

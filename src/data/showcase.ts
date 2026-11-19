@@ -64,14 +64,14 @@ export const showcase = {
       { t: '场地难选', tone: 'mid', size: 'text-2xl md:text-3xl', pos: { top: '14%', left: '64%' } },
       { t: '怕冷场', tone: 'mid', size: 'text-2xl md:text-3xl', pos: { top: '24%', left: '32%' } },
       /* 两侧（与中心问题同层，靠左右） */
-      { t: '物料漏买', tone: 'light', size: 'text-xl md:text-2xl', pos: { top: '42%', left: '3%' } },
-      { t: '临时变更', tone: 'light', size: 'text-xl md:text-2xl', pos: { top: '44%', right: '4%' } },
-      { t: '众口难调', tone: 'mid', size: 'text-2xl md:text-3xl', pos: { top: '54%', left: '8%' } },
-      { t: '下雨怎么办', tone: 'mid', size: 'text-2xl md:text-3xl', pos: { top: '56%', right: '6%' } },
-      /* 下区（观点下方） */
-      { t: '预算超支', tone: 'accent', size: 'text-4xl md:text-5xl', pos: { top: '74%', left: '50%', tx: '-50%' } },
-      { t: '流程混乱', tone: 'heavy', size: 'text-3xl md:text-4xl', pos: { top: '82%', left: '14%' } },
-      { t: '时间太赶', tone: 'mid', size: 'text-2xl md:text-3xl', pos: { top: '80%', right: '10%' } },
+      { t: '物料漏买', tone: 'light', size: 'text-xl md:text-2xl', pos: { top: '38%', left: '4%' } },
+      { t: '临时变更', tone: 'light', size: 'text-xl md:text-2xl', pos: { top: '38%', right: '5%' } },
+      { t: '众口难调', tone: 'mid', size: 'text-2xl md:text-3xl', pos: { top: '54%', left: '7%' } },
+      { t: '下雨怎么办', tone: 'mid', size: 'text-2xl md:text-3xl', pos: { top: '55%', right: '6%' } },
+      /* 下区（观点下方，避免左右碰撞） */
+      { t: '预算超支', tone: 'accent', size: 'text-3xl md:text-5xl', pos: { top: '74%', left: '43%' } },
+      { t: '流程混乱', tone: 'heavy', size: 'text-2xl md:text-4xl', pos: { top: '83%', left: '13%' } },
+      { t: '时间太赶', tone: 'mid', size: 'text-2xl md:text-3xl', pos: { top: '81%', right: '11%' } },
     ] as Array<{
       t: string;
       tone: 'light' | 'mid' | 'accent' | 'heavy';

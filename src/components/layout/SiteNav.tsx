@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   ChevronDown,
   Handshake,
@@ -55,9 +55,18 @@ export default function SiteNav() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [profileOpen, setProfileOpen] = useState(false);
-  const location = useLocation();
+  const navigate = useNavigate();
   const { isAccount, email, profile, signOut } = useAuth();
   const { visible: aiCatVisible, setVisible: setAiCatVisible } = useAiCat();
+
+  const goLastWorkbenchOrProjects = () => {
+    try {
+      const last = sessionStorage.getItem('sf-last-workbench');
+      navigate(last ? `/workbench/${last}` : '/projects');
+    } catch {
+      navigate('/projects');
+    }
+  };
 
   const openAuth = (mode: 'login' | 'register') => {
     setAuthMode(mode);
@@ -90,15 +99,15 @@ export default function SiteNav() {
           <span className="gradient-text text-lg font-bold tracking-tight">SceneFlow AI</span>
         </Link>
 
-        {/* 桌面主导航：全部功能入口集中于左侧，仅账户菜单留右侧 */}
-        <nav className="ml-2 hidden min-w-0 items-center gap-1 md:flex" aria-label="主导航">
+        {/* 桌面主导航：lg 以上展开，避免平板端拥挤折行 */}
+        <nav className="ml-2 hidden min-w-0 items-center gap-1 lg:flex" aria-label="主导航">
           {MAIN_NAV.filter((i) => !i.featured).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:text-primary hover:bg-primary/5 ${
+                `flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition-colors hover:text-primary hover:bg-primary/5 ${
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 }`
               }
@@ -110,53 +119,63 @@ export default function SiteNav() {
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {/* AI 共策主入口（桌面端）：移至右侧头像旁，作为独立主行动按钮 */}
+          {/* AI 共策主入口（桌面端） */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="hidden items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary/10 px-2 py-2 text-sm font-medium text-foreground transition-colors hover:bg-primary/15 data-[state=open]:text-primary md:flex"
+                className="hidden items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary/10 px-2.5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-primary/15 data-[state=open]:text-primary lg:flex"
               >
                 <Wand2 className="h-4 w-4 text-primary" />
-                携手与AI共同策划
+                AI 共策
                 <ChevronDown className="h-3.5 w-3.5 opacity-60" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="max-w-[calc(100%-2rem)] md:max-w-64">
-              <DropdownMenuItem
-                onClick={() => {
-                  try {
-                    const last = sessionStorage.getItem('sf-last-workbench');
-                    if (last) window.location.assign(`/workbench/${last}`);
-                    else window.location.assign('/projects');
-                  } catch {
-                    window.location.assign('/projects');
-                  }
-                }}
-              >
+              <DropdownMenuItem onClick={goLastWorkbenchOrProjects}>
                 <RotateCcw className="h-4 w-4" />
                 继续最近活动
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.location.assign('/projects')}>
+              <DropdownMenuItem onClick={() => navigate('/projects')}>
                 <UserRound className="h-4 w-4" />
                 我的活动
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => window.location.assign('/plan')}>
+              <DropdownMenuItem onClick={() => navigate('/plan')}>
                 <Plus className="h-4 w-4" />
                 新建活动
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* 头像菜单：登录=昵称/邮箱+资料+退出；访客=登录/注册 */}
+
+          {/* 账号/访客态菜单：未登录显式标明「访客」胶囊，消除“已登录”歧义 */}
           <DropdownMenu>
-            <DropdownMenuTrigger
-              className="rounded-full outline-none ring-primary focus-visible:ring-2"
-              aria-label="账号菜单"
-            >
-              <UserAvatar className="h-9 w-9 border" />
+            <DropdownMenuTrigger asChild>
+              {isAccount ? (
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-full border bg-card py-1 pl-1 pr-2.5 text-sm outline-none ring-primary transition-colors hover:bg-muted/60 focus-visible:ring-2"
+                  aria-label="账号菜单"
+                >
+                  <UserAvatar className="h-7 w-7" />
+                  <span className="hidden max-w-24 truncate font-medium sm:inline">
+                    {profile?.nickname?.trim() || '我的账号'}
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-full border border-dashed bg-muted/60 py-1 pl-1.5 pr-2.5 text-xs font-medium text-muted-foreground outline-none ring-primary transition-colors hover:border-primary/40 hover:text-foreground focus-visible:ring-2"
+                  aria-label="访客模式菜单"
+                >
+                  <UserAvatar className="h-6 w-6 opacity-90" />
+                  <span>{profile?.nickname?.trim() || '访客'}</span>
+                  <ChevronDown className="h-3 w-3 opacity-70" />
+                </button>
+              )}
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuContent align="end" className="w-64">
               {isAccount ? (
                 <>
                   <DropdownMenuLabel className="flex items-center gap-2 py-2">
@@ -191,39 +210,45 @@ export default function SiteNav() {
                 </>
               ) : (
                 <>
-                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                    当前为访客模式，功能可用；登录后多设备同步活动
+                  <DropdownMenuLabel className="text-xs font-normal leading-relaxed text-muted-foreground">
+                    当前为访客体验模式，可免登录直接策划；登录后支持跨设备同步。
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/projects" className="flex items-center gap-2">
+                      <UserRound className="h-4 w-4" />
+                      我的访客活动
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
                     <UserRound className="h-4 w-4" />
-                    个人中心
+                    本地资料设置
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setAiCatVisible(!aiCatVisible)}>
                     <Sparkles className="h-4 w-4" />
                     {aiCatVisible ? '隐藏 AI 助手' : '显示 AI 助手'}
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => openAuth('login')}>
+                    <LogIn className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-primary">登录 / 注册同步</span>
+                  </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* 访客：登录/注册直接露出在头像右侧（桌面端），不再收进下拉框 */}
+
           {!isAccount && (
-            <div className="hidden items-center gap-2 md:flex">
-              <Button variant="outline" size="sm" onClick={() => openAuth('login')}>
-                <LogIn className="h-4 w-4" />
-                登录
-              </Button>
-              <Button size="sm" onClick={() => openAuth('register')}>
-                注册
-              </Button>
-            </div>
+            <Button size="sm" className="hidden lg:inline-flex" onClick={() => openAuth('login')}>
+              <LogIn className="h-4 w-4" />
+              登录 / 注册
+            </Button>
           )}
 
-          {/* 移动端菜单 */}
+          {/* 移动端 / 平板菜单 */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden" aria-label="打开菜单">
+              <Button variant="ghost" size="icon" className="lg:hidden" aria-label="打开菜单">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -245,12 +270,7 @@ export default function SiteNav() {
                     type="button"
                     onClick={() => {
                       setOpen(false);
-                      try {
-                        const last = sessionStorage.getItem('sf-last-workbench');
-                        window.location.assign(last ? `/workbench/${last}` : '/projects');
-                      } catch {
-                        window.location.assign('/projects');
-                      }
+                      goLastWorkbenchOrProjects();
                     }}
                     className="flex min-h-11 w-full items-center gap-2 rounded-md px-6 text-sm font-medium text-foreground transition-colors hover:bg-background"
                   >

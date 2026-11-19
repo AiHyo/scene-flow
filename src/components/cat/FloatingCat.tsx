@@ -14,9 +14,12 @@ import { useModalOpen } from '@/hooks/useModalOpen';
  * - 全屏透明容器 pointer-events-none，仅角色与气泡可交互；不遮挡顶部导航与模态弹窗
  */
 
-const SIZE = 80; // 桌面小猫约 80px
-const MARGIN = 12;
-const NAV_CLEAR = 76; // 顶部导航高度 + 留白
+const DESKTOP_SIZE = 72; // 桌面小猫约 72px
+const MOBILE_SIZE = 56; // 移动端收敛为 56px，减少遮挡
+const MARGIN = 14;
+const NAV_CLEAR = 84; // 顶部导航高度 + 留白
+
+const catSizeOf = () => (typeof window !== 'undefined' && window.innerWidth < 768 ? MOBILE_SIZE : DESKTOP_SIZE);
 const SHOW_ROUTES = ['/', '/inspiration', '/cases', '/scene', '/plaza', '/resources', '/projects'];
 const HIDE_ROUTE_PREFIX = ['/plan', '/workbench', '/preview'];
 
@@ -115,29 +118,38 @@ export default function FloatingCat() {
   const bounds = useCallback(() => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
+    const size = catSizeOf();
     return {
       minX: MARGIN,
-      maxX: Math.max(MARGIN, vw - SIZE - MARGIN),
+      maxX: Math.max(MARGIN, vw - size - MARGIN),
       minY: NAV_CLEAR,
-      maxY: Math.max(NAV_CLEAR, vh - SIZE - MARGIN),
+      maxY: Math.max(NAV_CLEAR, vh - size - MARGIN),
     };
   }, []);
 
-  /* 选择落点：优先两侧留白，空间不足停靠安全边缘，不横穿主要内容 */
+  /* 选择落点：宽屏仅在主内容区外侧留白通道与底边安全带之间游走，不横穿正文/标题区 */
+  const sideRef = useRef<'left' | 'right'>('right');
   const pickTarget = useCallback(() => {
     const b = bounds();
     const vw = window.innerWidth;
-    const bandWidth = Math.max(120, vw * 0.18);
-    const side = Math.random() < 0.5;
-    let x: number;
-    if (vw < 420) {
-      x = side ? b.minX : b.maxX; // 窄屏直接贴边
-    } else if (side) {
-      x = random(b.minX, Math.min(b.minX + bandWidth, b.maxX)); // 左侧带
-    } else {
-      x = random(Math.max(b.maxX - bandWidth, b.minX), b.maxX); // 右侧带
+    const size = catSizeOf();
+    const contentWidth = 1152; // 对齐 max-w-6xl 主内容容器
+    const gutter = (vw - contentWidth) / 2;
+
+    if (gutter >= size + MARGIN * 2) {
+      // 宽屏两侧有充足留白：沿当前侧边通道纵向游走（不斜穿屏幕中心）
+      const x =
+        sideRef.current === 'left'
+          ? random(b.minX, Math.max(b.minX, gutter - size - MARGIN))
+          : random(Math.min(b.maxX, vw - gutter + MARGIN), b.maxX);
+      const y = random(Math.min(b.maxY, b.minY + 140), Math.max(b.minY + 140, b.maxY - 24));
+      return { x, y };
     }
-    const y = random(b.minY + 20, Math.max(b.minY + 20, b.maxY - 40));
+
+    // 中屏/窄屏无宽裕侧边留白：沿右下底边安全区轻量巡游，避开正中与顶部标题/按钮
+    const minRightX = Math.max(b.minX, b.maxX - (vw < 768 ? 56 : 160));
+    const x = random(minRightX, b.maxX);
+    const y = random(Math.max(b.minY + 140, b.maxY - (vw < 768 ? 20 : 80)), b.maxY);
     return { x, y };
   }, [bounds]);
 
@@ -468,6 +480,13 @@ export default function FloatingCat() {
   const onFocus = useCallback(() => pause(), [pause]);
   const onBlur = useCallback(() => resume(), [resume]);
 
+  const [catSize, setCatSize] = useState(catSizeOf);
+  useEffect(() => {
+    const onResizeSize = () => setCatSize(catSizeOf());
+    window.addEventListener('resize', onResizeSize);
+    return () => window.removeEventListener('resize', onResizeSize);
+  }, []);
+
   if (!shouldRender) return null;
 
   const interactive = hover && !dragging;
@@ -478,7 +497,7 @@ export default function FloatingCat() {
       <div
         ref={outerRef}
         className="pointer-events-none absolute left-0 top-0"
-        style={{ width: SIZE, height: SIZE }}
+        style={{ width: catSize, height: catSize }}
       >
         <div
           ref={innerRef}
@@ -512,8 +531,8 @@ export default function FloatingCat() {
             <img
               src={ASSETS.aiCat.full}
               alt=""
-              width={SIZE}
-              height={SIZE}
+              width={catSize}
+              height={catSize}
               draggable={false}
               className="h-full w-full select-none object-contain"
               style={{ filter: 'drop-shadow(0 6px 14px rgba(80,60,160,0.22))' }}
