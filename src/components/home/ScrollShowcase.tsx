@@ -75,6 +75,7 @@ export default function ScrollShowcase() {
   const comparePosRef = useRef(50);
 
   const userInteractedRef = useRef(false);
+  const act4DemoPlayedRef = useRef(false);
   const autoDemoTweenRef = useRef<gsap.core.Timeline | null>(null);
   const act4InViewRef = useRef(false);
   const act4ImgsLoadedRef = useRef(false);
@@ -102,6 +103,7 @@ export default function ScrollShowcase() {
   /** 离开第四幕时停止自动演示；若用户未手动接管则复位居中，下次回来继续自然演示 */
   const handleLeaveAct4 = useCallback(() => {
     act4InViewRef.current = false;
+    act4DemoPlayedRef.current = false;
     if (autoDemoTweenRef.current) {
       autoDemoTweenRef.current.kill();
       autoDemoTweenRef.current = null;
@@ -112,9 +114,9 @@ export default function ScrollShowcase() {
     }
   }, []);
 
-  /** 启动幕4无停顿正弦单摆对比演示（50% 起滑 → 20% ↔ 80% 连续往复，中段不停顿、零 React 重渲染） */
+  /** 启动幕4单次丝滑对比演示（强缓动快慢有致：50% → 16% → 84% → 50% 一气呵成后自然停稳，不循环晃眼） */
   const tryStartAct4Demo = useCallback(() => {
-    if (userInteractedRef.current || autoDemoTweenRef.current) {
+    if (userInteractedRef.current || act4DemoPlayedRef.current || autoDemoTweenRef.current) {
       return;
     }
     if (!act4InViewRef.current || isReducedMotion()) {
@@ -129,28 +131,40 @@ export default function ScrollShowcase() {
       }
     }
 
+    act4DemoPlayedRef.current = true;
     const proxy = { pos: comparePosRef.current };
     const syncPos = () => {
       comparePosRef.current = proxy.pos;
       compareRef.current?.setPos(proxy.pos);
     };
 
-    const tl = gsap.timeline();
+    const tl = gsap.timeline({
+      onComplete: () => {
+        comparePosRef.current = 50;
+        compareRef.current?.setPos(50);
+        autoDemoTweenRef.current = null;
+      },
+    });
     autoDemoTweenRef.current = tl;
 
     tl.to(proxy, {
-      pos: 20,
-      duration: 1.25,
-      ease: 'sine.inOut',
+      pos: 16,
+      duration: 0.95,
+      ease: 'power3.inOut',
       onUpdate: syncPos,
-    }).to(proxy, {
-      pos: 80,
-      duration: 2.6,
-      ease: 'sine.inOut',
-      repeat: -1,
-      yoyo: true,
-      onUpdate: syncPos,
-    });
+    })
+      .to(proxy, {
+        pos: 84,
+        duration: 1.45,
+        ease: 'power3.inOut',
+        onUpdate: syncPos,
+      })
+      .to(proxy, {
+        pos: 50,
+        duration: 1.05,
+        ease: 'power3.inOut',
+        onUpdate: syncPos,
+      });
   }, [isReducedMotion]);
 
   useEffect(() => {
