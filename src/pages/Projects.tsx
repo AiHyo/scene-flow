@@ -209,7 +209,7 @@ export default function Projects() {
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">我的活动</h1>
           <p className="mt-2 text-sm text-muted-foreground">访客与账号的活动都在这里，自动保存</p>
         </div>
-        <Button asChild>
+        <Button asChild className="sf-pill-cobalt rounded-full border-0 px-5 font-semibold hover:opacity-95">
           <Link to="/plan">
             <Plus className="h-4 w-4" />
             新建活动
@@ -254,7 +254,7 @@ export default function Projects() {
             return (
               <div
                 key={p.id}
-                className="group relative cursor-pointer overflow-hidden rounded-2xl border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
+                className="sf-card sf-card-hover group relative cursor-pointer overflow-hidden rounded-2xl"
                 onClick={() => navigate(`/workbench/${p.id}`)}
               >
                 {/* 封面：用户真实图片优先，无图时文字封面 */}

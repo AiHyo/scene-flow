@@ -14,8 +14,8 @@ import { useModalOpen } from '@/hooks/useModalOpen';
  * - 全屏透明容器 pointer-events-none，仅角色与气泡可交互；不遮挡顶部导航与模态弹窗
  */
 
-const DESKTOP_SIZE = 72; // 桌面小猫约 72px
-const MOBILE_SIZE = 56; // 移动端收敛为 56px，减少遮挡
+const DESKTOP_SIZE = 82; // 桌面 3D 小猫约 82px，细节与护目镜清晰可辨
+const MOBILE_SIZE = 58; // 移动端收敛为 58px，减少遮挡
 const MARGIN = 14;
 const NAV_CLEAR = 84; // 顶部导航高度 + 留白
 
@@ -535,7 +535,6 @@ export default function FloatingCat() {
               height={catSize}
               draggable={false}
               className="h-full w-full select-none object-contain"
-              style={{ filter: 'drop-shadow(0 6px 14px rgba(80,60,160,0.22))' }}
             />
           </button>
 

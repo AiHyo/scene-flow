@@ -198,11 +198,11 @@ export default function PlanStart() {
       </p>
 
       {/* 主输入卡：短欢迎 + 一处描述输入 + 照片附件 + 可跳过的补充条件（首屏内可见核心输入） */}
-      <div className="w-full rounded-2xl border bg-card p-4 shadow-lg md:p-5">
-        <div className="flex items-start gap-3">
-          <AiAvatar className="h-9 w-9 shrink-0" />
-          <p className="text-sm leading-relaxed text-foreground/90">
-            我是你的 AI 策划伙伴，说说你的想法，我们边聊边把它变成完整的活动方案。
+      <div className="sf-card w-full rounded-3xl p-5 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 md:p-6">
+        <div className="flex items-center gap-3">
+          <AiAvatar className="h-10 w-10 shrink-0" />
+          <p className="text-sm font-medium leading-relaxed text-foreground/90">
+            我是小灵，你的 AI 策划伙伴。说说你的想法，我们边聊边把它变成完整的活动方案。
           </p>
         </div>
 
@@ -264,7 +264,7 @@ export default function PlanStart() {
           <Button
             onClick={() => void start()}
             disabled={!canStart}
-            className="h-11 w-full rounded-xl px-6 sm:w-auto"
+            className="sf-pill-cobalt h-11 w-full rounded-full border-0 px-6 font-semibold hover:opacity-95 sm:w-auto"
           >
             {creating ? (
               <Loader2 className="h-4 w-4 animate-spin" />

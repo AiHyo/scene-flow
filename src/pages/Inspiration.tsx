@@ -199,83 +199,84 @@ export default function Inspiration() {
         </p>
       </div>
 
-      {/* 场景筛选：全部场景 + 五类（两端可见；带 ?cat= 进入时高亮当前场景，可切换或清除） */}
-      <div className="mb-4 flex flex-wrap items-center gap-1.5">
-        <span className="mr-1 shrink-0 text-xs font-medium text-muted-foreground">场景</span>
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => setParams(c.id === 'all' ? {} : { cat: c.id })}
-            className={cn(
-              'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
-              cat === c.id
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
-            )}
-          >
-            {c.name}
-          </button>
-        ))}
-      </div>
-
-      {/* 搜索 + 类型筛选 */}
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative md:w-64 md:shrink-0">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索点子、玩法、道具…"
-            className="pl-9"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setType('all')}
-            className={cn(
-              'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
-              type === 'all'
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
-            )}
-          >
-            全部类型
-          </button>
-          {CONTENT_TYPES.map((t) => (
+      {/* 统一现代悬浮筛选工具条：场景 + 搜索 + 类型收拢进清爽卡片 */}
+      <div className="sf-card mb-6 flex flex-col gap-3 rounded-2xl p-3.5 md:p-4">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 shrink-0 text-xs font-semibold text-muted-foreground">场景</span>
+          {CATEGORIES.map((c) => (
             <button
-              key={t.id}
+              key={c.id}
               type="button"
-              onClick={() => setType(t.id)}
+              onClick={() => setParams(c.id === 'all' ? {} : { cat: c.id })}
               className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
-                type === t.id
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                'rounded-full border px-3 py-1 text-xs font-medium transition-all',
+                cat === c.id
+                  ? 'sf-pill-cobalt border-0 font-semibold'
+                  : 'border-border/80 bg-background/80 text-muted-foreground hover:border-primary/40 hover:text-foreground'
               )}
             >
-              <span className={cn('h-1.5 w-1.5 rounded-full', TYPE_COLOR[t.id])} />
-              {t.name}
+              {c.name}
             </button>
           ))}
         </div>
+
+        <div className="flex flex-col gap-3 border-t border-border/60 pt-3 md:flex-row md:items-center">
+          <div className="relative md:w-64 md:shrink-0">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="搜索点子、玩法、道具…"
+              className="h-9 rounded-full bg-background/80 pl-9 text-sm"
+            />
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setType('all')}
+              className={cn(
+                'shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all',
+                type === 'all'
+                  ? 'sf-pill-cobalt border-0 font-semibold'
+                  : 'border-border/80 bg-background/80 text-muted-foreground hover:border-primary/40 hover:text-foreground'
+              )}
+            >
+              全部类型
+            </button>
+            {CONTENT_TYPES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setType(t.id)}
+                className={cn(
+                  'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all',
+                  type === t.id
+                    ? 'sf-pill-cobalt border-0 font-semibold'
+                    : 'border-border/80 bg-background/80 text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                )}
+              >
+                <span className={cn('h-1.5 w-1.5 rounded-full', type === t.id ? 'bg-white' : TYPE_COLOR[t.id])} />
+                {t.name}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* 点子列表：三列自然高度瀑布流（图片保比例、无图卡不补空图区，卡片各自成型不强迫同排等高） */}
+      {/* 点子列表：三列自然高度瀑布流 */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
           <Search className="h-8 w-8" />
           <p className="text-sm">没有匹配的点子，换个类型或关键词试试</p>
         </div>
       ) : (
-        <div className="columns-1 gap-3 md:columns-3">
+        <div className="columns-1 gap-4 md:columns-3">
           {filtered.map((entry) => (
             <button
               key={entry.id}
               type="button"
               onClick={() => setDetailId(entry.id)}
-              className="mb-3 flex w-full flex-col gap-2.5 break-inside-avoid rounded-2xl border bg-card p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md md:p-5"
+              className="sf-card sf-card-hover group mb-4 flex w-full flex-col gap-2.5 break-inside-avoid rounded-2xl p-4 text-left md:p-5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">

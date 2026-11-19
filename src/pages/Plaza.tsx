@@ -304,7 +304,7 @@ export default function Plaza() {
         {(posts === null || posts.length > 0) && (
           <Button
             onClick={openCompose}
-            className="shrink-0 bg-[image:var(--gradient-primary)] shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.98]"
+            className="sf-pill-cobalt shrink-0 rounded-full border-0 px-5 font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
             发布动态

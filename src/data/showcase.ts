@@ -27,31 +27,49 @@ export const showcase = {
     lineB: '你来定义。',
     sub: '找灵感、聊想法、看效果。AI提供建议，你来选择和调整。',
     scrollHint: '向下，看一次共同策划',
-    /* tier: major=主要活动层级（错位大字，一处色块） / aux=其他活动（补充构图） */
+    /* tier: major=主要活动贴纸层级 / aux=轻盈补充词 */
     words: [
-      { t: '公司团建', tier: 'major', style: 'block', size: 'text-6xl xl:text-7xl', pos: { top: '2%', left: '0%' } },
-      { t: '企业年会', tier: 'major', style: 'bold', size: 'text-5xl xl:text-6xl', pos: { top: '9%', left: '56%' } },
-      { t: '生日派对', tier: 'major', style: 'bold', size: 'text-4xl xl:text-5xl', pos: { top: '34%', left: '32%' } },
-      { t: '毕业聚餐', tier: 'aux', style: 'accent', size: 'text-2xl xl:text-3xl', pos: { top: '42%', left: '0%' } },
-      { t: '校园市集', tier: 'aux', style: 'muted', size: 'text-xl xl:text-2xl', pos: { top: '58%', left: '30%' } },
-      { t: '亲子活动', tier: 'aux', style: 'muted', size: 'text-xl xl:text-2xl', pos: { top: '66%', left: '62%' } },
-      { t: '节日联欢', tier: 'aux', style: 'muted', size: 'text-xl xl:text-2xl', pos: { top: '82%', left: '40%' } },
-      { t: '婚礼答谢宴', tier: 'aux', style: 'muted', size: 'text-2xl xl:text-3xl', pos: { top: '74%', left: '0%' } },
+      { t: '公司团建', tier: 'major', style: 'cobalt', tilt: 'md:motion-safe:-rotate-3', size: 'text-3xl xl:text-4xl', pos: { top: '4%', left: '2%' } },
+      { t: '生日派对', tier: 'major', style: 'amber', tilt: 'md:motion-safe:rotate-3', size: 'text-2xl xl:text-3xl', pos: { top: '9%', left: '54%' } },
+      { t: '企业年会', tier: 'major', style: 'bold', tilt: 'md:motion-safe:rotate-1', size: 'text-5xl xl:text-6xl', pos: { top: '23%', left: '22%' } },
+      { t: '户外沙龙', tier: 'major', style: 'mint', tilt: 'md:motion-safe:rotate-2', size: 'text-2xl xl:text-3xl', pos: { top: '81%', left: '12%' } },
+      { t: '校园市集', tier: 'aux', style: 'soft', tilt: 'md:motion-safe:-rotate-2', size: 'text-base xl:text-lg', pos: { top: '84%', left: '60%' } },
     ] as Array<{
       t: string;
       tier: 'major' | 'aux';
-      style: 'block' | 'bold' | 'accent' | 'muted';
+      style: 'cobalt' | 'amber' | 'mint' | 'bold' | 'soft';
+      tilt?: string;
       size: string;
       pos: Record<string, string>;
     }>,
-    /* 具体筹备事项：小字点缀，围绕词群空隙补充构图 */
+    /* 现代圆角白边实景场地贴图（FigJam 轻拟物贴纸感，随开场交错入场） */
+    stickers: [
+      {
+        src: ASSETS.inspiration.dopamine,
+        alt: '多巴胺主题派对空间',
+        tag: '主题布置',
+        tilt: '-rotate-3',
+        pos: { top: '43%', left: '3%' },
+      },
+      {
+        src: ASSETS.venue.annual.after,
+        alt: '暖光宴会布置实景',
+        tag: '实景光影',
+        tilt: 'rotate-2',
+        pos: { top: '46%', left: '49%' },
+      },
+    ] as Array<{
+      src: string;
+      alt: string;
+      tag: string;
+      tilt: string;
+      pos: Record<string, string>;
+    }>,
+    /* 具体筹备事项：轻盈点缀在留白角落 */
     preps: [
-      { t: '签到', pos: { top: '24%', left: '44%' } },
-      { t: '茶歇', pos: { top: '31%', left: '76%' } },
-      { t: '破冰游戏', pos: { top: '50%', left: '9%' } },
-      { t: '伴手礼', pos: { top: '53%', left: '74%' } },
-      { t: '拍照布景', pos: { top: '92%', left: '26%' } },
-      { t: '桌椅租赁', pos: { top: '90%', left: '64%' } },
+      { t: '签到 · 茶歇', pos: { top: '1%', left: '58%' } },
+      { t: '破冰互动', pos: { top: '33%', left: '2%' } },
+      { t: '拍照区 · 动线', pos: { top: '94%', left: '36%' } },
     ] as Array<{ t: string; pos: Record<string, string> }>,
   },
 

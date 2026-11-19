@@ -219,7 +219,7 @@ export default function SceneStart() {
         {/* 标题旁显眼主入口：轻量上传弹窗，不必向下寻找 */}
         <Button
           size="lg"
-          className="h-12 shrink-0 rounded-full px-6 shadow-lg"
+          className="sf-pill-cobalt h-12 shrink-0 rounded-full border-0 px-6 font-semibold hover:opacity-95"
           onClick={() => setUploadOpen(true)}
         >
           <ImagePlus className="h-5 w-5" />
@@ -318,7 +318,7 @@ export default function SceneStart() {
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {VENUE_SAMPLES.map((s) => (
-            <div key={s.id} className="flex h-full flex-col rounded-2xl border bg-card p-3 shadow-sm md:p-4">
+            <div key={s.id} className="sf-card sf-card-hover flex h-full flex-col rounded-2xl p-3.5 md:p-4">
               {/* 卡片内直接拖拽前后对比（默认分割线居中；拖拽在对比组件内部，不触发其他操作） */}
               <CompareCanvas
                 beforeUrl={s.before}

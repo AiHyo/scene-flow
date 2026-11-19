@@ -112,10 +112,10 @@ export default function Cases() {
             type="button"
             onClick={() => setActiveCat(c.id)}
             className={cn(
-              'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors',
+              'rounded-full border px-4 py-1.5 text-sm font-medium transition-all',
               activeCat === c.id
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                ? 'sf-pill-cobalt border-0 font-semibold'
+                : 'border-border/80 bg-card/90 text-muted-foreground shadow-2xs hover:border-primary/40 hover:text-foreground'
             )}
           >
             {c.name}
@@ -141,16 +141,16 @@ export default function Cases() {
             {fullCases.map((c) => (
               <div
                 key={c.id}
-                className="flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                className="sf-card sf-card-hover group flex h-full flex-col overflow-hidden rounded-2xl"
               >
                 <button
                   type="button"
                   onClick={() => setPreviewCase(c)}
                   className="relative aspect-video w-full overflow-hidden text-left"
                 >
-                  <img src={c.coverUrl} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
-                  <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-sm">
-                    <BadgeCheck className="h-3 w-3" />
+                  <img src={c.coverUrl} alt={c.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <span className="sf-pill-cobalt absolute left-3 top-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold">
+                    <BadgeCheck className="h-3.5 w-3.5" />
                     完整案例
                   </span>
                   <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">

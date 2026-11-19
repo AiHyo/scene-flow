@@ -41,15 +41,15 @@ export default function CollapsibleSection({
       /* 定位锚点：未显式传 id 时按 sectionKey 生成稳定锚点（sf-sec-*，成果定位滚动目标） */
       id={id ?? `sf-sec-${sectionKey}`}
       data-section={sectionKey}
-      className={cn('rounded-2xl border bg-card shadow-sm', className)}
+      className={cn('sf-card rounded-2xl', className)}
     >
       <button
         type="button"
         onClick={() => onToggle(!open)}
         aria-expanded={open}
-        className="flex min-h-12 w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-muted/40 md:px-5"
+        className="flex min-h-12 w-full items-center gap-2 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-muted/35 md:px-5"
       >
-        <h2 className="shrink-0 text-base font-semibold">{title}</h2>
+        <h2 className="shrink-0 text-[15px] font-bold tracking-tight text-foreground">{title}</h2>
         {!open && summary != null && summary !== '' && (
           <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{summary}</span>
         )}

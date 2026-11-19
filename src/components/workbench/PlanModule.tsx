@@ -915,29 +915,29 @@ export default function PlanModule({ data, patch, openSignal, reqEditSignal, sch
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ============ 需求摘要：常驻紧凑条件条（无需展开即可见已知条件与冲突提醒） ============ */}
-      <section id="req-summary-anchor" className="relative scroll-mt-20 rounded-2xl border bg-card shadow-sm">
+      {/* ============ 需求摘要：现代彩色条件胶囊条 ============ */}
+      <section id="req-summary-anchor" className="sf-card relative scroll-mt-20 rounded-2xl">
         <div className="flex flex-wrap items-center gap-2 p-4 md:p-5">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-            <span className="text-sm font-semibold">当前条件</span>
+            <span className="mr-1 text-[15px] font-bold tracking-tight text-foreground">当前条件</span>
             {(() => {
-              const items: { label: string; value: string; hint?: string }[] = [];
-              if (req.type) items.push({ label: '类型', value: req.type, hint: '已确认' });
-              if (req.headcount?.value) items.push({ label: '人数', value: req.headcount.value as string });
+              const items: { label: string; value: string; hint?: string; tone: string }[] = [];
+              if (req.type) items.push({ label: '类型', value: req.type, hint: '已确认', tone: 'bg-rose-50 text-rose-700 border-rose-200/70' });
+              if (req.headcount?.value) items.push({ label: '人数', value: req.headcount.value as string, tone: 'bg-sky-50 text-sky-700 border-sky-200/70' });
               if (data.budget?.limit != null) {
-                items.push({ label: '预算上限', value: `${data.budget.limit.toLocaleString('zh-CN')} 元` });
+                items.push({ label: '预算上限', value: `${data.budget.limit.toLocaleString('zh-CN')} 元`, tone: 'bg-amber-50 text-amber-800 border-amber-200/80' });
               } else if (req.budget?.value) {
-                items.push({ label: '预算', value: req.budget.value as string });
+                items.push({ label: '预算', value: req.budget.value as string, tone: 'bg-amber-50 text-amber-800 border-amber-200/80' });
               }
-              if (req.region?.value) items.push({ label: '地区', value: req.region.value as string });
-              if (req.date?.value) items.push({ label: '日期', value: req.date.value as string });
-              if (req.visualTheme?.value) items.push({ label: '主题', value: req.visualTheme.value as string });
+              if (req.region?.value) items.push({ label: '地区', value: req.region.value as string, tone: 'bg-emerald-50 text-emerald-700 border-emerald-200/70' });
+              if (req.date?.value) items.push({ label: '日期', value: req.date.value as string, tone: 'bg-violet-50 text-violet-700 border-violet-200/70' });
+              if (req.visualTheme?.value) items.push({ label: '主题', value: req.visualTheme.value as string, tone: 'bg-indigo-50 text-primary border-indigo-200/70' });
               if (items.length === 0)
                 return <span className="text-xs text-muted-foreground">暂无确定条件——未知也可以继续，随时补充</span>;
               return items.map((it) => (
                 <span
                   key={it.label}
-                  className="rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary"
+                  className={cn('rounded-full border px-2.5 py-0.5 text-xs font-medium', it.tone)}
                   title={it.hint}
                 >
                   {it.label}：{it.value}
@@ -1108,13 +1108,14 @@ export default function PlanModule({ data, patch, openSignal, reqEditSignal, sch
             方向是活动的策划路线（如桌游派对 / 户外野餐），会决定流程、物料与预算的走向。
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" disabled={genLoading !== null || taskLocked} onClick={genDirections}>
-              {genLoading === 'directions' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            <Button variant="outline" size="sm" className="rounded-full" disabled={genLoading !== null || taskLocked} onClick={genDirections}>
+              {genLoading === 'directions' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-primary" />}
               {directions.length > 0 ? '更新方向' : '生成方向'}
             </Button>
             {directions.length > 0 && (
               <Button
                 size="sm"
+                className="sf-pill-cobalt rounded-full border-0 px-4"
                 disabled={!data.selectedDirectionId || genLoading !== null || taskLocked}
                 onClick={() => genScheme()}
                 title={data.selectedDirectionId ? undefined : '先在下方选择一个方向'}
@@ -1129,14 +1130,20 @@ export default function PlanModule({ data, patch, openSignal, reqEditSignal, sch
           </div>
         </div>
         {directions.length === 0 ? (
-          <EmptyHint text="还没有候选方向。条件不全也可以开始——直接在右侧和 AI 聊出想法，或让它生成 2-3 个建议供你挑选；已有完整方案时无需重选方向。" />
+          <EmptyHint text="还没有候选方向。条件不全也可以开始——直接在左侧和 AI 聊出想法，或让它生成 2-3 个建议供你挑选；已有完整方案时无需重选方向。" />
         ) : (
           <>
             {/* 窄成果栏单列、宽视图三列：@container 按面板自身宽度切换（不缩字号不挤碎） */}
             <div className="grid gap-3 @2xl:grid-cols-3 @md:grid-cols-2">
-              {directions.map((d) => {
+              {directions.map((d, idx) => {
                 const selected = data.selectedDirectionId === d.id;
                 const open = dirDetailIds.includes(d.id);
+                const vibeTone =
+                  idx % 3 === 0
+                    ? 'bg-amber-50 text-amber-800 border-amber-200/70'
+                    : idx % 3 === 1
+                    ? 'bg-rose-50 text-rose-700 border-rose-200/70'
+                    : 'bg-violet-50 text-violet-700 border-violet-200/70';
                 return (
                   <div
                     key={d.id}
@@ -1150,15 +1157,26 @@ export default function PlanModule({ data, patch, openSignal, reqEditSignal, sch
                       }
                     }}
                     className={cn(
-                      'flex cursor-pointer flex-col gap-1.5 rounded-xl border p-3.5 text-left transition-all',
-                      selected ? 'border-primary ring-2 ring-primary/30' : 'hover:border-primary/40'
+                      'flex cursor-pointer flex-col gap-2 rounded-2xl border p-4 text-left transition-all duration-200',
+                      selected
+                        ? 'border-2 border-primary bg-[#F4F5FF] shadow-md dark:bg-primary/10'
+                        : 'border-border/80 bg-card hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm'
                     )}
                   >
                     <span className="flex w-full items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-sm font-semibold">{d.name}</span>
-                      {selected && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                      <span className="min-w-0 truncate text-[15px] font-bold tracking-tight text-foreground">{d.name}</span>
+                      {selected && (
+                        <span className="sf-pill-cobalt inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
+                          <Check className="h-3 w-3" />
+                          已选定
+                        </span>
+                      )}
                     </span>
-                    <span className="line-clamp-1 text-xs text-muted-foreground">{d.style}</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className={cn('inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium', vibeTone)}>
+                        {d.style}
+                      </span>
+                    </div>
                     <button
                       type="button"
                       onClick={(e) => {

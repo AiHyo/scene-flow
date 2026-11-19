@@ -79,27 +79,25 @@ export default function SiteNav() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-card/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-4 md:gap-3 md:px-5">
         <Link
           to="/"
           onClick={() => {
-            /* 已在首页时点击 Logo：确实回到第一幕（滚到 pinned 舞台顶部，ScrollTrigger 还原到幕1），
-               不是只向上移动一小段或停在中间 */
             if (window.location.pathname === '/') {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }
           }}
-          className="flex shrink-0 items-center gap-2"
+          className="flex shrink-0 items-center gap-2.5"
           aria-label="SceneFlow AI 首页"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <span className="sf-pill-cobalt flex h-8.5 w-8.5 items-center justify-center rounded-xl">
             <Sparkles className="h-4.5 w-4.5" />
           </span>
-          <span className="gradient-text text-lg font-bold tracking-tight">SceneFlow AI</span>
+          <span className="font-display text-lg font-black tracking-tight text-foreground">SceneFlow AI</span>
         </Link>
 
-        {/* 桌面主导航：lg 以上展开，避免平板端拥挤折行 */}
+        {/* 桌面主导航：lg 以上展开，胶囊选中态与首页一致 */}
         <nav className="ml-2 hidden min-w-0 items-center gap-1 lg:flex" aria-label="主导航">
           {MAIN_NAV.filter((i) => !i.featured).map((item) => (
             <NavLink
@@ -107,8 +105,10 @@ export default function SiteNav() {
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition-colors hover:text-primary hover:bg-primary/5 ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                `flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-primary/10 font-semibold text-primary'
+                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                 }`
               }
             >
@@ -124,11 +124,11 @@ export default function SiteNav() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="hidden items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary/10 px-2.5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-primary/15 data-[state=open]:text-primary lg:flex"
+                className="hidden items-center gap-1.5 whitespace-nowrap rounded-full border border-primary/25 bg-[#F4F5FF] px-3.5 py-1.5 text-sm font-semibold text-primary shadow-2xs transition-all hover:border-primary/50 hover:bg-primary/15 lg:flex"
               >
                 <Wand2 className="h-4 w-4 text-primary" />
                 AI 共策
-                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="max-w-[calc(100%-2rem)] md:max-w-64">

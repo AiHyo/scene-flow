@@ -769,15 +769,21 @@ useEffect(() => {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* 标题 */}
-      <div className="flex items-center gap-2 border-b px-4 py-3">
-        <AiAvatar className="h-7 w-7" />
-        <h2 className="text-sm font-semibold">小灵 · AI 策划伙伴</h2>
+      <div className="flex items-center gap-2.5 border-b border-border/70 bg-card/90 px-4 py-3.5">
+        <div className="relative shrink-0">
+          <AiAvatar className="h-9 w-9" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-400" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold tracking-tight text-foreground">小灵 · AI 策划伙伴</h2>
+          <p className="text-[11px] text-muted-foreground">随时聊想法、调预算、看实景效果</p>
+        </div>
         {/* 去右侧场景布置页签生成（本按钮只做跳转，不直接出图，文案明确「去」避免误会）；
             与所有生成入口共用同一活动忙碌状态：任一 AI 任务进行中外观置灰、aria 禁用、事件不触发 */}
         <Button
           variant="outline"
           size="sm"
-          className="ml-auto h-8 gap-1.5"
+          className="ml-auto h-8 gap-1.5 rounded-full border-border/80 bg-background/80 px-3.5 text-xs font-medium shadow-2xs hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
           disabled={taskLocked || streaming}
           aria-disabled={taskLocked || streaming}
           title={taskLocked || streaming ? `${taskLabel ?? 'AI 任务'}进行中，完成后可去生成布置效果` : '跳转到右侧「场景布置」页签生成效果图'}
@@ -831,17 +837,17 @@ useEffect(() => {
     <div
       key={m.id}
       className={cn(
-        'flex w-full items-end gap-2',
+        'flex w-full items-end gap-2.5',
         m.role === 'user' ? 'flex-row-reverse justify-start' : 'justify-start'
       )}
     >
-      {m.role === 'user' ? <UserAvatar className="h-7 w-7 shrink-0" /> : <AiAvatar className="h-7 w-7 shrink-0" />}
+      {m.role === 'user' ? <UserAvatar className="h-7 w-7 shrink-0" /> : <AiAvatar className="h-8 w-8 shrink-0" />}
       <div
         className={cn(
-          'max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed break-words',
+          'max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed break-words shadow-2xs',
           m.role === 'user'
-            ? 'whitespace-pre-line bg-primary text-primary-foreground'
-            : 'border bg-muted'
+            ? 'whitespace-pre-line rounded-br-md bg-primary text-primary-foreground'
+            : 'rounded-bl-md border border-primary/15 bg-[#F5F4FF] text-foreground dark:bg-muted'
         )}
       >
   {m.imageUrl && (
@@ -1056,9 +1062,9 @@ useEffect(() => {
 </div>
 ))}
 {streaming && (
-  <div className="flex items-end gap-2 self-start">
-    <AiAvatar className="h-7 w-7 shrink-0" />
-    <div className="max-w-[80%] rounded-2xl border bg-muted px-3.5 py-2.5 text-sm leading-relaxed">
+  <div className="flex items-end gap-2.5 self-start">
+    <AiAvatar className="h-8 w-8 shrink-0" />
+    <div className="max-w-[82%] rounded-2xl rounded-bl-md border border-primary/15 bg-[#F5F4FF] px-4 py-3 text-sm leading-relaxed shadow-2xs dark:bg-muted">
       {visionWorking ? (
         <span className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -1173,114 +1179,145 @@ className="rounded-full px-2.5 py-1 text-muted-foreground transition-colors hove
 <p className="text-[11px] text-muted-foreground">完整清单与更多渠道见「预算与准备」页签</p>
 </div>
 )}
+{/* 新建/未发首条用户消息时：展示 3 张结构化开场灵感卡片，彻底消除大块空白并降低首轮提问门槛 */}
+{!streaming && !taskLocked && !chatLog.some((m) => m.role === 'user') && (
+  <div className="mt-2 flex flex-col gap-2 pl-10">
+    <p className="text-[11px] font-medium text-muted-foreground">点一下直接开聊，或直接输入你的想法：</p>
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={() => void send('帮我挑几个不尴尬、大家愿意参与的破冰和互动环节')}
+        className="group flex items-center gap-3 rounded-xl border border-border/75 bg-card px-3.5 py-2.5 text-left text-sm font-medium text-foreground shadow-2xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-[#F8F8FF] hover:shadow-sm"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+          <Sparkles className="h-3.5 w-3.5" />
+        </span>
+        <span className="min-w-0 flex-1 truncate">挑选不尴尬的活动破冰与互动环节</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => void send('结合目前的人数和预算，帮我建议最出彩的预算分配思路')}
+        className="group flex items-center gap-3 rounded-xl border border-border/75 bg-card px-3.5 py-2.5 text-left text-sm font-medium text-foreground shadow-2xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-[#F8F8FF] hover:shadow-sm"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+          <ShoppingBag className="h-3.5 w-3.5" />
+        </span>
+        <span className="min-w-0 flex-1 truncate">按当前人数和预算，怎么分配最出彩</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        className="group flex items-center gap-3 rounded-xl border border-border/75 bg-card px-3.5 py-2.5 text-left text-sm font-medium text-foreground shadow-2xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-[#F8F8FF] hover:shadow-sm"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-primary">
+          <ImagePlus className="h-3.5 w-3.5" />
+        </span>
+        <span className="min-w-0 flex-1 truncate">上传场地照片，先看看布置效果图</span>
+      </button>
+    </div>
+  </div>
+)}
 </div>
 </div>
-      {/* 底部快捷控制栏：规整优雅，左侧快捷提问胶囊，右侧三档详略调节；任务锁激活时显示当前任务 */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t bg-muted/20 px-3.5 py-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {QUICK_REPLIES.map((q) => (
-            <button
-              key={q}
-              type="button"
-              disabled={streaming || taskLocked}
-              onClick={() => send(q)}
-              className="inline-flex h-7 items-center rounded-full border border-border/70 bg-background/90 px-2.5 text-xs text-muted-foreground shadow-2xs transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary disabled:opacity-50"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
-        {/* 任务锁状态：明确显示当前正在执行的任务（不只禁用按钮），允许阅读与编辑草稿 */}
-        {taskLocked && !streaming && (
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            {taskLabel}
-          </span>
-        )}
-        {/* 回复详略滑块：极致精简，不常驻显示中文档位文字，仅拖动滑动时浮现对应档位提示 */}
-        <div
-          className="relative ml-auto inline-flex h-7 items-center gap-2 rounded-full border border-border/70 bg-background/90 px-2.5 shadow-2xs"
-          role="group"
-          aria-label="回复详略"
-        >
-          <span className="text-[11px] text-muted-foreground select-none">详略</span>
-          <div className="relative flex items-center">
-            {sliding && (
-              <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-0.5 text-[10px] font-medium text-background shadow-md animate-in fade-in zoom-in-95">
-                {DETAIL_OPTIONS.find((o) => o.key === detail)?.label}
-              </div>
-            )}
-            <Slider
-              value={[DETAIL_INDEX[detail]]}
-              min={0}
-              max={2}
-              step={1}
-              onValueChange={(v) => {
-                const idx = v[0];
-                const key = DETAIL_OPTIONS[idx]?.key;
-                if (key) setDetail(key);
-                setSliding(true);
-                if (slideTimerRef.current) clearTimeout(slideTimerRef.current);
-                slideTimerRef.current = setTimeout(() => setSliding(false), 1200);
-              }}
-              className="w-16"
-              aria-label="回复详略滑块"
-            />
+      {/* 底部快捷控制栏 + 现代聚焦输入区 */}
+      <div className="border-t border-border/70 bg-background/60 p-3">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-0.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {QUICK_REPLIES.map((q) => (
+              <button
+                key={q}
+                type="button"
+                disabled={streaming || taskLocked}
+                onClick={() => send(q)}
+                className="inline-flex h-7 items-center rounded-full border border-border/75 bg-card px-3 text-xs font-medium text-muted-foreground shadow-2xs transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary disabled:opacity-50"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+          {taskLocked && !streaming && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              {taskLabel}
+            </span>
+          )}
+          <div
+            className="relative ml-auto inline-flex h-7 items-center gap-2 rounded-full border border-border/75 bg-card px-2.5 shadow-2xs"
+            role="group"
+            aria-label="回复详略"
+          >
+            <span className="text-[11px] text-muted-foreground select-none">详略</span>
+            <div className="relative flex items-center">
+              {sliding && (
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-0.5 text-[10px] font-medium text-background shadow-md animate-in fade-in zoom-in-95">
+                  {DETAIL_OPTIONS.find((o) => o.key === detail)?.label}
+                </div>
+              )}
+              <Slider
+                value={[DETAIL_INDEX[detail]]}
+                min={0}
+                max={2}
+                step={1}
+                onValueChange={(v) => {
+                  const idx = v[0];
+                  const key = DETAIL_OPTIONS[idx]?.key;
+                  if (key) setDetail(key);
+                  setSliding(true);
+                  if (slideTimerRef.current) clearTimeout(slideTimerRef.current);
+                  slideTimerRef.current = setTimeout(() => setSliding(false), 1200);
+                }}
+                className="w-16"
+                aria-label="回复详略滑块"
+              />
+            </div>
           </div>
         </div>
-      </div>
-      {/* 输入区 */}
-      <div className="border-t p-3">
-        {/* 待发送照片：四态预览（上传中 / 成功 / 失败重试），失败不丢文字 */}
+        {/* 待发送照片：四态预览 */}
         {venue.img && (
           <div className="mb-2">
             <PendingImageBar img={venue.img} onRetry={venue.retry} onRemove={venue.clear} />
-      </div>
-)}
-<div className="flex items-end gap-2">
-  <input
-    ref={fileRef}
-    type="file"
-    accept="image/*"
-    className="hidden"
-    onChange={(e) => {
-      const f = e.target.files?.[0];
-      e.target.value = '';
-      void venue.pick(f);
-}}
-/>
-<Button
-  variant="outline"
-  size="icon"
-  className="h-10 w-10 shrink-0"
-  disabled={streaming || venue.busy}
-  onClick={() => fileRef.current?.click()}
-  aria-label="附加场地照片"
-  title="附加场地照片"
->
-  {venue.busy ? (
-    <Loader2 className="h-4 w-4 animate-spin" />
-) : (
-  <Paperclip className="h-4 w-4" />
-)}
-</Button>
-<Textarea
-  ref={textAreaFocusRef}
-  value={input}
-  onChange={(e) => setInput(e.target.value)}
-  onKeyDown={(e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      void send(input);
-}
-}}
-placeholder={taskLocked && !streaming ? `${taskLabel ?? 'AI 任务进行中'}，输入会保留为草稿…` : venue.img ? '可搭配一句话说明（也可直接发送照片）' : '说说你的想法、顾虑或问题…'}
-className="max-h-28 min-h-10 flex-1 resize-none"
-rows={2}
-/>
+          </div>
+        )}
+        <div className="flex items-end gap-2 rounded-2xl border border-primary/30 bg-card p-2 shadow-xs transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              void venue.pick(f);
+            }}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary"
+            disabled={streaming || venue.busy}
+            onClick={() => fileRef.current?.click()}
+            aria-label="附加场地照片"
+            title="附加场地照片"
+          >
+            {venue.busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+          </Button>
+          <Textarea
+            ref={textAreaFocusRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                void send(input);
+              }
+            }}
+            placeholder={taskLocked && !streaming ? `${taskLabel ?? 'AI 任务进行中'}，输入会保留为草稿…` : venue.img ? '可搭配一句话说明（也可直接发送照片）' : '说说你的想法、顾虑或调整方向…'}
+            className="max-h-28 min-h-9 flex-1 resize-none border-0 bg-transparent px-1 py-1.5 text-sm shadow-none focus-visible:ring-0"
+            rows={2}
+          />
           <Button
             size="icon"
-            className="h-10 w-10 shrink-0"
+            className="sf-pill-cobalt h-9 w-9 shrink-0 rounded-full border-0"
             disabled={(!input.trim() && !venue.readyUrl) || streaming || !!venue.img || taskLocked}
             onClick={() => void send(input)}
             title={taskLocked && !streaming ? taskLabel : undefined}

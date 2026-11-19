@@ -46,7 +46,7 @@ export const ASSETS = {
     photoprops: '/images/assets/material-photoprops.webp',
     awards: '/images/assets/material-awards.webp',
   },
-  /** AI 伙伴：白色小猫·紫色围巾·深紫大眼（统一形象；全身=悬浮助手，脸部=聊天头像取景） */
+  /** AI 伙伴：3D 长毛蓝白小猫·磨砂护目镜·鸢尾蓝紫星芒围巾（全身透明 PNG = 悬浮助手，面部特写 = 聊天头像 1:1 对应） */
   aiCat: {
     full: '/images/assets/sceneflow-ai-cat.png',
     face: '/images/assets/sceneflow-ai-cat-face.png',

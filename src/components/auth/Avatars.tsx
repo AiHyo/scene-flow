@@ -69,14 +69,14 @@ export function UserAvatar({ className }: { className?: string }) {
 }
 
 /**
- * AI 伙伴头像：橙白小猫·紫色围巾，与欢迎页形象同一图片，圆形容器内裁切。
+ * AI 伙伴头像：3D 长毛蓝白护目镜小猫，与悬浮全身助手严格 1:1 对应，圆形容器内裁切。
  */
 export function AiAvatar({ className }: { className?: string }) {
   return (
-    <Avatar className={className}>
+    <Avatar className={`ring-1 ring-primary/30 bg-[#F2EFFF] ${className ?? ''}`}>
       <AvatarImage
         src={ASSETS.aiCat.face}
-        alt="AI 伙伴"
+        alt="AI 伙伴小灵"
         className="object-cover"
       />
       <AvatarFallback>

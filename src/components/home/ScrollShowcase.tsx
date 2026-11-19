@@ -167,16 +167,17 @@ export default function ScrollShowcase() {
         gsap.set(['.sf-brand', '.sf-line-a', '.sf-line-b'], { yPercent: 115 });
         gsap.set('.sf-sub', { autoAlpha: 0, y: 16 });
         gsap.set('.sf-hint', { autoAlpha: 0, y: 10 });
-        /* 活动词：整词组从左右两侧位移入场，零旋转（中文字形不变形） */
+        /* 活动贴纸词与实景场地贴图：整组位移缩放入场 */
         showcase.intro.words.forEach((w, i) => {
           const dir = i % 2 === 0 ? 1 : -1;
           gsap.set(`.sf-word-${i}`, {
-            x: dir * (60 + i * 12),
-            y: 36 + i * 6,
-            scale: 0.92,
+            x: dir * (56 + i * 12),
+            y: 34 + i * 6,
+            scale: 0.9,
             autoAlpha: 0,
           });
         });
+        gsap.set('.sf-sticker', { y: 42, scale: 0.88, autoAlpha: 0 });
         gsap.set('.sf-prep', { autoAlpha: 0, y: 12 });
         gsap.set('.sf-q-line', { yPercent: 115 });
         gsap.set('.sf-q-bar', { scaleX: 0 });
@@ -199,18 +200,23 @@ export default function ScrollShowcase() {
           .to('.sf-line-a', { yPercent: 0, duration: 0.9, ease: 'power4.out' }, 0.35)
           .to('.sf-line-b', { yPercent: 0, duration: 0.85, ease: 'power4.out' }, 0.6)
           .to('.sf-sub', { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out' }, 1.05)
-          /* 活动词交错进入（整词组，不逐字），零旋转保证字形清晰 */
+          /* 活动贴纸交错进入 + 现代白边实景场地贴图弹入 */
           .to(
             '.sf-word',
-            { x: 0, y: 0, scale: 1, autoAlpha: 1, duration: 1.0, stagger: 0.075, ease: 'power4.out' },
-            1.15
+            { x: 0, y: 0, scale: 1, autoAlpha: 1, duration: 0.95, stagger: 0.08, ease: 'power4.out' },
+            1.05
+          )
+          .to(
+            '.sf-sticker',
+            { y: 0, scale: 1, autoAlpha: 1, duration: 0.9, stagger: 0.14, ease: 'back.out(1.3)' },
+            1.45
           )
           /* 筹备事项补入第三层级 */
-          .to('.sf-prep', { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.06, ease: 'power3.out' }, 2.75)
+          .to('.sf-prep', { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.06, ease: 'power3.out' }, 2.45)
           /* 一次尺度收束：主视觉整体微放大后落定，形成节拍 */
-          .to('.sf-words', { scale: 1.04, duration: 0.3, ease: 'power2.inOut' }, 3.1)
-          .to('.sf-words', { scale: 1, duration: 0.35, ease: 'power2.inOut' }, 3.4)
-          .to('.sf-hint', { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 3.55)
+          .to('.sf-words', { scale: 1.03, duration: 0.3, ease: 'power2.inOut' }, 2.85)
+          .to('.sf-words', { scale: 1, duration: 0.35, ease: 'power2.inOut' }, 3.15)
+          .to('.sf-hint', { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 3.3)
           .to({}, { duration: 0.45 });
 
         /* ===== 滚动 scrub：面板滑入覆盖 + 幕内序列；反向按同一时间轴回退 ===== */
@@ -250,8 +256,9 @@ export default function ScrollShowcase() {
         /* 幕1 → 幕2：少量主要活动词收拢让位，中心问题随即建立（旧标题先退场、不剩残字） */
         tl.to('.sf-hint', { autoAlpha: 0, duration: 0.03 }, 0.02)
           .to(['.sf-a1-top', '.sf-sub'], { y: -60, autoAlpha: 0, duration: 0.07, ease: 'power2.in' }, 0.03)
-          /* 主要活动词向中部收拢、让位 */
+          /* 主要活动词与场地贴图向中部收拢、让位 */
           .to('.sf-word-major', { x: 0, y: -30, autoAlpha: 0, duration: 0.1, stagger: 0.02, ease: 'power2.in' }, 0.05)
+          .to('.sf-sticker', { y: -24, scale: 0.92, autoAlpha: 0, duration: 0.09, stagger: 0.02, ease: 'power2.in' }, 0.05)
           .to('.sf-word-aux', { autoAlpha: 0, duration: 0.06, stagger: 0.015 }, 0.06)
           .to('.sf-panel-2', { yPercent: 0, duration: 0.2, ease: 'power2.inOut' }, 0.1)
           /* 幕2 内部：中心问题建立 → 痛点自上下聚合（紧凑围绕，不围边缘）→ 结论落定 */
@@ -360,74 +367,108 @@ export default function ScrollShowcase() {
           </h1>
           <p className="sf-sub mt-4 max-w-md text-base leading-relaxed text-muted-foreground md:mt-5 md:text-lg">{showcase.intro.sub}</p>
           <div className="sf-sub mt-6 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="h-11 rounded-full px-6 shadow-md">
+            <Button asChild size="lg" className="sf-pill-cobalt h-11 rounded-full border-0 px-6 text-[15px] font-semibold hover:opacity-95">
               <Link to="/plan">
                 <Wand2 className="h-4 w-4" />
-                {showcase.act4Copy.cta.primary}
+                开始共策
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="h-11 rounded-full bg-card/80 px-5">
-              <Link to="/inspiration">
-                <Lightbulb className="h-4 w-4" />
-                {showcase.act4Copy.cta.secondary}
+            <Button asChild variant="outline" size="lg" className="h-11 rounded-full border-border/80 bg-card/90 px-5 text-[15px] font-medium shadow-sm hover:border-primary/40 hover:bg-card">
+              <Link to="/cases">
+                <Lightbulb className="h-4 w-4 text-primary" />
+                先看案例
               </Link>
             </Button>
           </div>
         </div>
 
-        {/* 舞台中部偏右：活动词群主视觉（48vw–92vw，与标题区共占约八成舞台宽，纵向 72vh 展开）。
-            全部词绝对定位、零旋转，坐标经重叠校验；主要层级错位大字 + 一处色块，筹备事项小字补空隙 */}
-        <div className="sf-words relative z-10 mt-8 flex flex-wrap items-baseline gap-x-5 gap-y-3 md:motion-safe:absolute md:motion-safe:left-[48vw] md:motion-safe:top-1/2 md:motion-safe:mt-0 md:motion-safe:block md:motion-safe:h-[72vh] md:motion-safe:w-[44vw] md:motion-safe:-translate-y-1/2">
+        {/* 舞台中部偏右：现代波普活动贴纸 + 实景白边贴图拼贴（桌面 48vw–92vw 自由错位；移动自然流式排列） */}
+        <div className="sf-words relative z-10 mt-8 flex flex-wrap items-center gap-3 md:motion-safe:absolute md:motion-safe:left-[48vw] md:motion-safe:top-1/2 md:motion-safe:mt-0 md:motion-safe:block md:motion-safe:h-[72vh] md:motion-safe:w-[44vw] md:motion-safe:-translate-y-1/2">
           {showcase.intro.words.map((w, i) => (
             <div
               key={w.t}
               className={cn(
-                'sf-word-mask flex items-baseline py-1 md:motion-safe:absolute md:motion-safe:overflow-hidden',
+                'sf-word-mask flex items-center py-1 md:motion-safe:absolute',
                 w.tier === 'major' ? 'sf-word-major' : 'sf-word-aux'
               )}
               style={w.pos}
             >
               <span
                 className={cn(
-                  'sf-word inline-block leading-[1.15]',
+                  'sf-word inline-block leading-[1.12] transition-transform duration-300',
                   `sf-word-${i}`,
                   w.size,
-                  /* 风格：一处主色块强调；其余按字重 / 颜色分层，全部清晰可读，无描边无旋转 */
-                  w.style === 'block' &&
-                    'rounded-lg bg-primary px-3.5 pb-1.5 pt-1 font-display font-black tracking-tight text-primary-foreground shadow-2xl',
+                  w.tilt,
+                  w.style === 'cobalt' &&
+                    'sf-pill-cobalt rounded-full px-5 py-2 font-display font-black tracking-tight md:px-7 md:py-2.5',
+                  w.style === 'amber' &&
+                    'sf-pill-amber rounded-full px-5 py-2 font-display font-black tracking-tight md:px-6 md:py-2',
+                  w.style === 'mint' &&
+                    'sf-pill-mint rounded-full px-5 py-2 font-display font-black tracking-tight md:px-6 md:py-2',
                   w.style === 'bold' && 'font-display font-black tracking-tight text-foreground',
-                  w.style === 'accent' && 'font-display font-bold tracking-tight text-chart-5',
-                  w.style === 'muted' && 'font-display font-semibold tracking-tight text-muted-foreground'
+                  w.style === 'soft' &&
+                    'rounded-full border border-border/80 bg-card/90 px-4 py-1.5 font-display font-semibold tracking-tight text-foreground/80 shadow-sm backdrop-blur-sm'
                 )}
               >
                 {w.t}
               </span>
             </div>
           ))}
-          {/* 筹备事项：小方块 + 小字，补充第三层级构图 */}
+
+          {/* 2 张现代圆角白边实景场地贴图：桌面端错落卡在词群中段，移动端双列精致呈现 */}
+          <div className="mt-2 grid w-full grid-cols-2 gap-3 md:motion-safe:contents">
+            {showcase.intro.stickers.map((s) => (
+              <div
+                key={s.alt}
+                className={cn(
+                  'sf-sticker sf-sticker-photo group relative overflow-hidden bg-white md:motion-safe:absolute md:motion-safe:w-[46%]',
+                  s.tilt
+                )}
+                style={s.pos}
+              >
+                <div className="aspect-[4/3] w-full overflow-hidden rounded-[0.9rem] bg-muted">
+                  <img
+                    src={s.src}
+                    alt={s.alt}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <span className="pointer-events-none absolute bottom-2.5 left-2.5 rounded-full bg-background/90 px-2.5 py-0.5 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur-sm">
+                  {s.tag}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* 筹备事项：轻盈点缀在留白角落 */}
           {showcase.intro.preps.map((pr) => (
             <span
               key={pr.t}
-              className="sf-prep inline-flex items-center gap-2 text-sm text-muted-foreground md:motion-safe:absolute md:text-base"
+              className="sf-prep hidden items-center gap-2 rounded-full bg-card/75 px-3 py-1 text-xs font-medium text-muted-foreground shadow-2xs backdrop-blur-sm md:motion-safe:absolute md:motion-safe:inline-flex md:text-sm"
               style={pr.pos}
             >
-              <span className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-5/70" />
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
               {pr.t}
             </span>
           ))}
         </div>
 
-        {/* 滚动引导（首屏内完整可见） */}
-        <div className="sf-hint mt-auto flex justify-center md:motion-safe:absolute md:motion-safe:bottom-7 md:motion-safe:left-1/2 md:motion-safe:mt-0 md:motion-safe:-translate-x-1/2">
-          <span className="flex items-center gap-2 rounded-full border bg-card/90 px-5 py-2.5 text-sm font-medium text-foreground/80 shadow-sm backdrop-blur md:text-base">
+        {/* 滚动引导（首屏 900px 视口内完整可见，计入 64px 顶栏高度；移动端留足间距防叠压） */}
+        <div className="sf-hint relative z-10 mt-6 flex justify-center md:motion-safe:absolute md:motion-safe:bottom-[5.25rem] md:motion-safe:left-1/2 md:motion-safe:mt-0 md:motion-safe:-translate-x-1/2">
+          <span className="flex items-center gap-2 rounded-full border border-border/80 bg-card/95 px-5 py-2 text-sm font-medium text-foreground/80 shadow-sm backdrop-blur md:text-sm">
             {showcase.intro.scrollHint}
             <ChevronDown className="h-4 w-4 animate-bounce text-primary" />
           </span>
         </div>
       </div>
 
-      {/* ===== 幕2 困扰聚合 · 围绕中心问题的紧凑三层 ===== */}
-      <div className="sf-panel-2 relative w-full bg-background px-5 py-16 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:overflow-hidden md:motion-safe:py-0 md:motion-safe:will-change-transform">
+      {/* ===== 幕2 困扰聚合 · 围绕中心问题的现代贴纸三层 ===== */}
+      <div className="sf-panel-2 relative isolate w-full bg-background px-5 py-16 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:overflow-hidden md:motion-safe:py-0 md:motion-safe:will-change-transform">
+        <div className="sf-deco" aria-hidden="true">
+          <span className="sf-blob sf-paper-purple-faint" style={{ top: '-12%', right: '-10%', width: '36vw', height: '36vw', minWidth: 280, minHeight: 280 }} />
+          <span className="sf-blob sf-paper-cream-faint" style={{ bottom: '-14%', left: '-8%', width: '34vw', height: '34vw', minWidth: 260, minHeight: 260 }} />
+        </div>
         <div className="sf-inner relative flex min-h-[80dvh] w-full flex-col items-center md:motion-safe:h-full md:motion-safe:min-h-0 md:motion-safe:justify-center">
           {/* 中心问题（主体）：问题 → 观点 → 辅助说明，成块居中，观点清楚可见不作脚注 */}
           <div className="relative z-10 flex flex-col items-center px-4 text-center">
@@ -443,23 +484,25 @@ export default function ScrollShowcase() {
             <p className="sf-aux mt-3 max-w-md text-base text-muted-foreground md:text-lg">{showcase.act2.aux}</p>
           </div>
 
-          {/* 痛点：上/两侧/下三区围绕中心，紧凑有疏密（不围屏幕四边一圈，预算只是其中一个） */}
-          <div className="sf-pains relative mt-8 flex w-full flex-wrap justify-center gap-x-5 gap-y-3 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:mt-0 md:motion-safe:block">
+          {/* 痛点：现代贴纸胶囊围绕中心，有疏密与层次 */}
+          <div className="sf-pains relative mt-8 flex w-full flex-wrap justify-center gap-3 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:mt-0 md:motion-safe:block">
             {showcase.act2.pains.map((p, i) => (
               <span
                 key={p.t}
                 className={cn(
-                  'sf-pain inline-flex items-center gap-2 font-display tracking-tight md:motion-safe:absolute',
+                  'sf-pain inline-flex items-center gap-2 rounded-full border px-4 py-1.5 font-display tracking-tight shadow-sm backdrop-blur-sm md:motion-safe:absolute',
                   `sf-pain-${i}`,
                   p.size,
-                  p.tone === 'light' && 'font-medium text-muted-foreground',
-                  p.tone === 'mid' && 'font-bold text-foreground',
-                  p.tone === 'accent' && 'font-black text-primary',
-                  p.tone === 'heavy' && 'font-black text-foreground'
+                  p.tone === 'light' && 'border-border/75 bg-card/85 font-medium text-muted-foreground',
+                  p.tone === 'mid' && 'border-border/80 bg-card font-bold text-foreground',
+                  p.tone === 'accent' && 'sf-pill-cobalt border-0 px-5 py-2 font-black',
+                  p.tone === 'heavy' && 'sf-pill-amber border-0 px-5 py-1.5 font-black'
                 )}
                 style={p.pos}
               >
-                <span className={cn('h-2 w-2 shrink-0 rounded-[2px]', p.tone === 'accent' ? 'bg-primary' : 'bg-chart-5/80')} />
+                {p.tone !== 'accent' && p.tone !== 'heavy' && (
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-chart-5/85" />
+                )}
                 {p.t}
               </span>
             ))}
@@ -468,20 +511,24 @@ export default function ScrollShowcase() {
       </div>
 
       {/* ===== 幕3 共策过程 · 对话/候选/调整成为舞台主体 ===== */}
-      <div className="sf-panel-3 relative w-full bg-background px-5 py-16 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:overflow-hidden md:motion-safe:py-0 md:motion-safe:will-change-transform">
-        <div className="sf-inner mx-auto flex min-h-[80dvh] w-full max-w-4xl flex-col justify-center gap-4 md:motion-safe:h-full md:motion-safe:min-h-0 md:motion-safe:gap-6 md:motion-safe:px-10">
+      <div className="sf-panel-3 relative isolate w-full bg-background px-5 py-16 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:overflow-hidden md:motion-safe:py-0 md:motion-safe:will-change-transform">
+        <div className="sf-deco" aria-hidden="true">
+          <span className="sf-blob sf-paper-cream-faint" style={{ top: '-12%', left: '-10%', width: '36vw', height: '36vw', minWidth: 280, minHeight: 280 }} />
+          <span className="sf-blob sf-paper-purple-faint" style={{ bottom: '-16%', right: '-10%', width: '40vw', height: '40vw', minWidth: 300, minHeight: 300 }} />
+        </div>
+        <div className="sf-inner mx-auto flex min-h-[80dvh] w-full max-w-4xl flex-col justify-center gap-4 md:motion-safe:h-full md:motion-safe:min-h-0 md:motion-safe:gap-5 md:motion-safe:px-10">
           {/* 用户诉求（第二幕的一个问题自然进入用户诉求） */}
           <div className="sf-conv-user1 flex justify-end">
-            <div className="max-w-[82%] rounded-2xl rounded-br-md border border-primary/30 bg-primary/10 px-5 py-4 md:px-6 md:py-5">
-              <p className="text-[11px] font-medium text-primary md:text-xs">你</p>
-              <p className="mt-1 text-xl leading-relaxed text-foreground md:text-3xl">{showcase.act3.user1}</p>
+            <div className="max-w-[82%] rounded-2xl rounded-br-md border border-primary/25 bg-[#F4F5FF] px-5 py-4 shadow-sm md:px-6 md:py-5">
+              <p className="text-[11px] font-semibold text-primary md:text-xs">你</p>
+              <p className="mt-1 text-xl font-medium leading-relaxed text-foreground md:text-3xl">{showcase.act3.user1}</p>
             </div>
           </div>
 
           {/* AI 建议方向（舞台主体：三个方向并排，选中点亮） */}
           <div className="flex flex-col gap-3">
-            <p className="sf-conv-ai-lead flex items-center gap-2 text-sm font-medium text-muted-foreground md:text-lg">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <p className="sf-conv-ai-lead flex items-center gap-2 text-sm font-semibold text-muted-foreground md:text-lg">
+              <Sparkles className="h-4 w-4 text-primary" />
               {showcase.act3.aiLead}
             </p>
             <div className="grid gap-3 md:grid-cols-3 md:gap-4">
@@ -489,15 +536,17 @@ export default function ScrollShowcase() {
                 <div
                   key={d.name}
                   className={cn(
-                    'sf-conv-dir relative rounded-2xl border bg-card p-5 shadow-sm md:p-6',
-                    i === showcase.act3.pickIndex ? 'border-primary/60 shadow-md' : 'sf-conv-dim'
+                    'sf-conv-dir sf-card relative rounded-2xl p-5 md:p-6',
+                    i === showcase.act3.pickIndex
+                      ? 'border-2 border-primary bg-[#F4F5FF] shadow-md'
+                      : 'sf-conv-dim'
                   )}
                 >
                   <p className="font-display text-xl font-bold tracking-tight text-foreground md:text-2xl">{d.name}</p>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">{d.desc}</p>
                   {i === showcase.act3.pickIndex && (
-                    <span className="sf-conv-badge absolute -top-2.5 right-3 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-md">
-                      {showcase.act3.pickLabel}
+                    <span className="sf-conv-badge sf-pill-cobalt absolute -top-3 right-3 rounded-full px-3 py-0.5 text-[11px] font-semibold">
+                      ✓ {showcase.act3.pickLabel}
                     </span>
                   )}
                 </div>
@@ -507,19 +556,19 @@ export default function ScrollShowcase() {
 
           {/* 用户选择与补充 */}
           <div className="sf-conv-user2 flex justify-end">
-            <div className="max-w-[82%] rounded-2xl rounded-br-md border border-primary/30 bg-primary/10 px-5 py-4 md:px-6 md:py-5">
-              <p className="text-[11px] font-medium text-primary md:text-xs">你</p>
-              <p className="mt-1 text-xl leading-relaxed text-foreground md:text-3xl">{showcase.act3.user2}</p>
+            <div className="max-w-[82%] rounded-2xl rounded-br-md border border-primary/25 bg-[#F4F5FF] px-5 py-4 shadow-sm md:px-6 md:py-5">
+              <p className="text-[11px] font-semibold text-primary md:text-xs">你</p>
+              <p className="mt-1 text-xl font-medium leading-relaxed text-foreground md:text-3xl">{showcase.act3.user2}</p>
             </div>
           </div>
 
           {/* 调整后的安排（选中方向的成果，收拢为紧凑上下文） */}
-          <div className="sf-conv-adjust rounded-2xl border bg-card p-5 shadow-sm md:p-6">
-            <p className="text-base font-semibold text-foreground md:text-lg">{showcase.act3.adjustTitle}</p>
+          <div className="sf-conv-adjust sf-card rounded-2xl p-5 md:p-6">
+            <p className="text-base font-bold text-foreground md:text-lg">{showcase.act3.adjustTitle}</p>
             <div className="mt-3 grid gap-x-6 gap-y-2 md:grid-cols-2">
               {showcase.act3.schedule.map((r) => (
                 <div key={r.time} className="sf-conv-row flex items-baseline gap-2.5">
-                  <span className="shrink-0 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                     {r.time}
                   </span>
                   <span className="min-w-0 text-sm leading-relaxed text-foreground/90 md:text-base">{r.text}</span>
@@ -527,45 +576,51 @@ export default function ScrollShowcase() {
               ))}
               {showcase.act3.materials.map((m) => (
                 <div key={m} className="sf-conv-row flex items-baseline gap-2.5">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-[2px] bg-chart-5/80" />
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500/80" />
                   <span className="min-w-0 text-sm leading-relaxed text-foreground/90 md:text-base">{m}</span>
                 </div>
               ))}
             </div>
-            <p className="sf-conv-row mt-1 text-[10px] text-muted-foreground/70">{showcase.act3.demoNote}</p>
+            <p className="sf-conv-row mt-2 text-[11px] text-muted-foreground/70">{showcase.act3.demoNote}</p>
           </div>
         </div>
       </div>
 
-      {/* ===== 幕4 看见效果 + 收尾 · 对比图与标题形成有力量构图 ===== */}
-      <div className="sf-panel-4 relative flex w-full flex-col items-center gap-3 bg-background px-5 py-14 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:justify-center md:motion-safe:gap-3.5 md:motion-safe:overflow-hidden md:motion-safe:py-6 md:motion-safe:will-change-transform">
+      {/* ===== 幕4 看见效果 + 收尾 · 现代白边画框 + 自动拖拽对比 ===== */}
+      <div className="sf-panel-4 relative isolate flex w-full flex-col items-center gap-3 bg-background px-5 py-14 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:justify-center md:motion-safe:gap-3.5 md:motion-safe:overflow-hidden md:motion-safe:py-6 md:motion-safe:will-change-transform">
+        <div className="sf-deco" aria-hidden="true">
+          <span className="sf-blob sf-paper-cream-faint" style={{ top: '-14%', right: '-10%', width: '36vw', height: '36vw', minWidth: 280, minHeight: 280 }} />
+          <span className="sf-blob sf-paper-purple-faint" style={{ bottom: '-14%', left: '-10%', width: '38vw', height: '38vw', minWidth: 300, minHeight: 300 }} />
+        </div>
         <h2 className="sf-final-title max-w-xl px-4 text-center font-display text-2xl font-black leading-[1.3] tracking-tight text-balance text-foreground md:text-4xl">
           {showcase.act4Copy.title}
         </h2>
-        <CompareCanvas
-          beforeUrl={showcase.act4.beforeUrl}
-          afterUrl={showcase.act4.afterUrl}
-          interactive
-          pos={comparePos}
-          onPosChange={(next) => {
-            setComparePos(next);
-            comparePosRef.current = next;
-          }}
-          onUserInteract={() => {
-            interruptAutoDemo();
-          }}
-          onImagesLoaded={() => {
-            act4ImgsLoadedRef.current = true;
-            tryStartAct4Demo();
-          }}
-          className="sf-final-canvas aspect-[3/2] w-full max-w-4xl rounded-2xl shadow-2xl md:h-[min(48vh,480px)] md:w-auto"
-          labels={['布置前', '布置后']}
-        />
-        {/* 新增布置：紧凑清单（不挤小对比图、不溢出整幕） */}
+        <div className="sf-final-canvas sf-sticker-photo w-full max-w-4xl overflow-hidden bg-white md:w-auto">
+          <CompareCanvas
+            beforeUrl={showcase.act4.beforeUrl}
+            afterUrl={showcase.act4.afterUrl}
+            interactive
+            pos={comparePos}
+            onPosChange={(next) => {
+              setComparePos(next);
+              comparePosRef.current = next;
+            }}
+            onUserInteract={() => {
+              interruptAutoDemo();
+            }}
+            onImagesLoaded={() => {
+              act4ImgsLoadedRef.current = true;
+              tryStartAct4Demo();
+            }}
+            className="aspect-[3/2] w-full rounded-[0.95rem] md:h-[min(46vh,460px)] md:w-auto"
+            labels={['布置前', '布置后']}
+          />
+        </div>
+        {/* 新增布置：清爽彩色胶囊清单 */}
         <div className="sf-final-added flex w-full max-w-4xl flex-wrap items-center justify-center gap-1.5 px-4">
-          <span className="text-sm font-medium text-foreground/75 md:text-base">新增布置：</span>
+          <span className="text-sm font-semibold text-foreground/80 md:text-base">新增布置：</span>
           {showcase.act4.added.map((a) => (
-            <span key={a} className="rounded-full border bg-card px-2.5 py-1 text-xs text-muted-foreground md:text-sm">
+            <span key={a} className="rounded-full border border-primary/20 bg-card/95 px-3 py-1 text-xs font-medium text-foreground/80 shadow-2xs md:text-sm">
               {a}
             </span>
           ))}
@@ -579,10 +634,10 @@ export default function ScrollShowcase() {
               {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />}
               <span
                 className={cn(
-                  'rounded-full border px-3 py-1 text-xs font-medium md:text-sm',
+                  'rounded-full border px-3 py-1 text-xs font-semibold md:text-sm',
                   i === showcase.act4Copy.activeCycle
-                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                    : 'border-border bg-card text-muted-foreground'
+                    ? 'sf-pill-cobalt border-0'
+                    : 'border-border/80 bg-card text-muted-foreground shadow-2xs'
                 )}
               >
                 {c}
@@ -591,14 +646,14 @@ export default function ScrollShowcase() {
           ))}
         </div>
         <div className="sf-final-cta flex flex-col items-center gap-3 sm:flex-row">
-          <Button asChild size="lg" className="h-12 rounded-full px-8 text-base shadow-xl">
+          <Button asChild size="lg" className="sf-pill-cobalt h-12 rounded-full border-0 px-8 text-base font-semibold hover:opacity-95">
             <Link to="/plan">
               <Wand2 className="h-5 w-5" />
               {showcase.act4Copy.cta.primary}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="rounded-full border border-primary/30 text-primary hover:bg-primary/10">
+          <Button asChild variant="outline" className="h-12 rounded-full border-primary/30 bg-card/90 px-6 text-primary shadow-sm hover:bg-primary/10">
             <Link to="/inspiration">
               <Lightbulb className="h-4 w-4" />
               {showcase.act4Copy.cta.secondary}

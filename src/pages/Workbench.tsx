@@ -6,6 +6,7 @@ import {
   Clock3,
   CloudOff,
   ExternalLink,
+  ImageIcon,
   Loader2,
   Maximize2,
   MessageSquareHeart,
@@ -15,6 +16,7 @@ import {
   Plus,
   RotateCcw,
   Sparkles,
+  Wallet,
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -46,6 +48,7 @@ import { ensureIds, normalizeListIds } from '@/services/normalize';
 import { clearReturnContext, getReturnContext, saveReturnContext } from '@/services/returnContext';
 import { submitSceneGeneration } from '@/services/sceneGen';
 import { normalizeTags, repairSceneData } from '@/services/sceneTags';
+import { knownTotal } from '@/services/budgetMath';
 import type { AdjustCard, ChatMessage, Direction, ProjectData, ReqSource, SceneState } from '@/types/types';
 
 type SaveState = 'saved' | 'saving' | 'error' | 'idle' | 'pending';
@@ -71,7 +74,7 @@ export default function Workbench() {
     return Math.max(360, Math.min(maxW, w));
   }, []);
   const [panelW, setPanelW] = useState(() => {
-    let w = 400;
+    let w = 480;
     try {
       const raw = Number(localStorage.getItem('sf-workbench-panel-w'));
       if (Number.isFinite(raw) && raw >= 360 && raw <= 780) w = raw;
@@ -1409,19 +1412,77 @@ export default function Workbench() {
     );
   }
 
+  /* 底部双列 Bento 速览卡数据（实时由当前项目场景图与预算明细派生，无假数据） */
+  const previewThumb = data.scene?.afterUrl || data.scene?.beforeUrl || null;
+  const budgetItems = data.budget?.items ?? [];
+  const budgetSpent = knownTotal(budgetItems);
+  const budgetLimit = data.budget?.limit ?? null;
+  const budgetPct = budgetLimit && budgetLimit > 0 ? Math.min(100, Math.round((budgetSpent / budgetLimit) * 100)) : null;
+
   /* 成果栏页签内容（桌面右栏与移动主区共用同一份，受控页签状态同步） */
   const modulesPanel = (
     /* @container：模块按成果栏自身宽度切换布局（窄=单列紧凑、宽=多列完整），与视口断点无关 */
-    (<Tabs value={modTab ?? (data.intent === 'venue' ? 'scene' : 'plan')} onValueChange={handleModTab} className="@container w-full">
-      <div className="px-1 md:px-0">
-        <TabsList className="h-11 w-full justify-start gap-1 overflow-x-auto rounded-xl bg-muted p-1 md:w-fit">
-          <TabsTrigger value="plan" className="min-h-9 flex-1 rounded-lg px-4 text-sm data-[state=active]:shadow-sm md:flex-none">活动方案</TabsTrigger>
-          <TabsTrigger value="scene" className="min-h-9 flex-1 rounded-lg px-4 text-sm data-[state=active]:shadow-sm md:flex-none">场景布置</TabsTrigger>
-          <TabsTrigger value="budget" className="min-h-9 flex-1 rounded-lg px-4 text-sm data-[state=active]:shadow-sm md:flex-none">预算与准备</TabsTrigger>
+    <Tabs value={modTab ?? (data.intent === 'venue' ? 'scene' : 'plan')} onValueChange={handleModTab} className="@container w-full">
+      {/* 移动端与中等屏显示局部页签条；桌面宽屏（lg+）已移入顶部栏居中胶囊切换，避免双份重复 */}
+      <div className="px-1 md:px-0 lg:hidden">
+        <TabsList className="h-11 w-full justify-start gap-1 overflow-x-auto rounded-full bg-muted/80 p-1 md:w-fit">
+          <TabsTrigger value="plan" className="min-h-9 flex-1 rounded-full px-4 text-sm font-medium data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm md:flex-none">活动方案</TabsTrigger>
+          <TabsTrigger value="scene" className="min-h-9 flex-1 rounded-full px-4 text-sm font-medium data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm md:flex-none">场景布置</TabsTrigger>
+          <TabsTrigger value="budget" className="min-h-9 flex-1 rounded-full px-4 text-sm font-medium data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm md:flex-none">预算与准备</TabsTrigger>
         </TabsList>
       </div>
-      <div className="mt-4 px-1 md:mt-6 md:px-0">
-        <TabsContent value="plan" className="mt-0" id="mod-plan">
+      <div className="mt-4 px-1 md:mt-3 lg:mt-0 md:px-0">
+        <TabsContent value="plan" className="mt-0 flex flex-col gap-5" id="mod-plan">
+          {/* 底部双列 Bento 状态速览（实景缩略 + 预算进度条），点卡直达对应页签 */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => handleModTab('scene')}
+              className="sf-card sf-card-hover flex items-center justify-between gap-2.5 rounded-2xl p-3.5 text-left"
+            >
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground">场地布置预览</p>
+                <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                  {data.scene?.afterUrl ? '已生成效果图' : data.scene?.beforeUrl ? '已传场地底图' : '点击上传场地照'}
+                </p>
+              </div>
+              {previewThumb ? (
+                <img src={previewThumb} alt="场地缩略图" className="h-12 w-16 shrink-0 rounded-xl object-cover shadow-2xs" />
+              ) : (
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <ImageIcon className="h-5 w-5" />
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModTab('budget')}
+              className="sf-card sf-card-hover flex flex-col justify-between gap-2 rounded-2xl p-3.5 text-left"
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-xs font-bold text-foreground">预算进度</span>
+                <Wallet className="h-3.5 w-3.5 shrink-0 text-primary" />
+              </div>
+              <div>
+                <div className="flex items-baseline justify-between gap-1">
+                  <span className="truncate text-sm font-bold text-foreground">
+                    {budgetSpent > 0 ? `¥${budgetSpent.toLocaleString('zh-CN')}` : '待估算'}
+                  </span>
+                  {budgetLimit != null && (
+                    <span className="shrink-0 text-[11px] font-medium text-primary">
+                      {budgetPct != null ? `${budgetPct}%` : `上限 ¥${budgetLimit.toLocaleString('zh-CN')}`}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-300"
+                    style={{ width: `${budgetPct ?? (budgetSpent > 0 ? 35 : 8)}%` }}
+                  />
+                </div>
+              </div>
+            </button>
+          </div>
           <PlanModule
             data={data}
             patch={patch}
@@ -1463,15 +1524,15 @@ export default function Workbench() {
           />
         </TabsContent>
       </div>
-    </Tabs>)
+    </Tabs>
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/30 md:h-dvh md:overflow-hidden">
-      {/* 顶栏 */}
-      <header className="sticky top-0 z-40 shrink-0 border-b bg-background/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-2 px-3 md:px-5">
-          <Button asChild variant="ghost" size="icon" className="h-9 w-9 shrink-0" aria-label="返回">
+    <div className="flex min-h-screen w-full flex-col bg-background md:h-dvh md:overflow-hidden">
+      {/* 顶栏：左标题与保存胶囊 + 中段居中现代胶囊页签 + 右工具与高光预览入口 */}
+      <header className="sticky top-0 z-40 shrink-0 border-b border-border/70 bg-card/90 backdrop-blur-md">
+        <div className="mx-auto flex h-15 w-full max-w-[1600px] items-center gap-2 px-3 md:px-5">
+          <Button asChild variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-full" aria-label="返回">
             <Link to="/projects">
               <ArrowLeft className="h-4.5 w-4.5" />
             </Link>
@@ -1479,32 +1540,76 @@ export default function Workbench() {
           <Input
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
-            className="min-w-0 max-w-xs flex-1 border-0 bg-transparent px-2 text-sm font-semibold shadow-none focus-visible:ring-1 md:max-w-sm md:text-base"
+            className="min-w-0 max-w-[180px] flex-1 border-0 bg-transparent px-2 text-sm font-bold tracking-tight shadow-none focus-visible:ring-1 md:max-w-[240px] md:text-base"
             placeholder="活动名称"
           />
-          {/* 保存状态 */}
-          <span className="ml-1 hidden items-center gap-1.5 text-xs text-muted-foreground md:inline-flex">
-            {saveState === 'pending' && (<><Loader2 className="h-3.5 w-3.5 animate-spin text-amber-500" />已恢复未同步的编辑，正在同步…</>)}
-            {saveState === 'saving' && (<><Loader2 className="h-3.5 w-3.5 animate-spin" />保存中…</>)}
-            {saveState === 'saved' && (<><Check className="h-3.5 w-3.5 text-green-600" />已保存 {savedAt}</>)}
+          {/* 保存状态胶囊 */}
+          <span className="hidden items-center gap-1.5 text-xs md:inline-flex">
+            {saveState === 'pending' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 font-medium text-amber-700">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                同步中…
+              </span>
+            )}
+            {saveState === 'saving' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                保存中…
+              </span>
+            )}
+            {saveState === 'saved' && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700">
+                <Check className="h-3 w-3" />
+                已保存 {savedAt}
+              </span>
+            )}
             {saveState === 'error' && (
-              <>
-                <CloudOff className="h-3.5 w-3.5 text-destructive" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-destructive">
+                <CloudOff className="h-3 w-3" />
                 保存失败
-                <button type="button" onClick={() => persist(title, data)} className="inline-flex items-center gap-0.5 text-primary hover:underline">
+                <button type="button" onClick={() => persist(title, data)} className="inline-flex items-center gap-0.5 font-semibold underline">
                   <RotateCcw className="h-3 w-3" />
                   重试
                 </button>
-              </>
+              </span>
             )}
-            {saveState === 'idle' && '自动保存已开启'}
+            {saveState === 'idle' && <span className="text-muted-foreground">自动保存已开启</span>}
           </span>
 
-          <div className="ml-auto flex items-center gap-2">
-            {/* 最近活动切换 + 新建（公共导航：不强制从我的活动绕回） */}
+          {/* 桌面宽屏居中分段胶囊切换（与效果图一致，一目了然切换三大成果模块） */}
+          <div className="mx-auto hidden items-center rounded-full border border-border/70 bg-muted/70 p-1 lg:inline-flex">
+            {([
+              { key: 'plan', label: '活动方案' },
+              { key: 'scene', label: '场景布置' },
+              { key: 'budget', label: '预算与准备' },
+            ] as const).map((t) => {
+              const active = effTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => handleModTab(t.key)}
+                  className={cn(
+                    'relative inline-flex h-8 items-center rounded-full px-4 text-sm font-medium transition-all',
+                    active
+                      ? 'bg-card font-semibold text-primary shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {t.label}
+                  {freshTabs.includes(t.key) && !active && (
+                    <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            {/* 最近活动切换 + 新建 */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 shrink-0">
+                <Button variant="outline" size="sm" className="h-9 shrink-0 rounded-full">
                   <Clock3 className="h-4 w-4" />
                   <span className="hidden sm:inline">活动</span>
                 </Button>
@@ -1527,39 +1632,39 @@ export default function Workbench() {
               </DropdownMenuContent>
             </DropdownMenu>
             {/* 移动端 AI 入口 */}
-            <Button variant="outline" size="sm" className="h-9 md:hidden" onClick={() => setAiOpen(true)}>
+            <Button variant="outline" size="sm" className="h-9 rounded-full md:hidden" onClick={() => setAiOpen(true)}>
               <MessageSquareHeart className="h-4 w-4" />
               AI
             </Button>
-            {/* 桌面：宽屏编辑（成果区加宽为固定宽度的编辑模式）；返回分栏恢复并排布局与此前拖拽的比例 */}
+            {/* 桌面：宽屏编辑 */}
             <Button
               variant="outline"
               size="sm"
-              className="hidden h-9 gap-1.5 md:inline-flex"
+              className="hidden h-9 gap-1.5 rounded-full md:inline-flex"
               onClick={() => setPanelExpanded((v) => !v)}
               disabled={!aiPanel}
-              aria-label={panelExpanded ? '退出宽屏（恢复聊天与成果并排及调整的宽度比例）' : '宽屏编辑（成果区加宽到可调整的最宽位置）'}
-              title={panelExpanded ? '退出宽屏：恢复聊天与成果并排及此前拖拽的宽度比例' : '宽屏编辑：成果区加宽到拖拽线可调整的最宽位置，便于编辑完整方案与预算表'}
+              aria-label={panelExpanded ? '退出宽屏' : '宽屏编辑'}
+              title={panelExpanded ? '退出宽屏' : '宽屏编辑'}
             >
               {panelExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-              <span className="hidden lg:inline">{panelExpanded ? '退出宽屏' : '宽屏编辑'}</span>
+              <span className="hidden xl:inline">{panelExpanded ? '退出宽屏' : '宽屏'}</span>
             </Button>
-            {/* 全部收起/展开：成果栏长内容一键折叠，状态随项目保存 */}
+            {/* 全部收起/展开 */}
             <Button
               variant="outline"
-              size="sm"
-              className="hidden h-9 gap-1.5 md:inline-flex"
+              size="icon"
+              className="hidden h-9 w-9 rounded-full md:inline-flex"
               onClick={toggleAllCollapsed}
               aria-label={allCollapsed ? '全部展开卡片' : '全部收起卡片'}
+              title={allCollapsed ? '全部展开卡片' : '全部收起卡片'}
             >
               {allCollapsed ? <ChevronsUpDown className="h-4 w-4" /> : <ChevronsDownUp className="h-4 w-4" />}
-              <span className="hidden lg:inline">{allCollapsed ? '全部展开' : '全部收起'}</span>
             </Button>
             {/* 桌面 AI 面板开关 */}
             <Button
               variant="ghost"
               size="icon"
-              className="hidden h-9 w-9 md:inline-flex"
+              className="hidden h-9 w-9 rounded-full md:inline-flex"
               onClick={() => setAiPanel((v) => !v)}
               aria-label={aiPanel ? '收起成果栏（扩大对话区）' : '展开成果栏'}
               title={aiPanel ? '收起成果栏' : '展开成果栏'}
@@ -1568,8 +1673,8 @@ export default function Workbench() {
             </Button>
             <Button
               size="sm"
+              className="sf-pill-cobalt h-9 rounded-full border-0 px-4 font-semibold hover:opacity-95"
               onClick={() => {
-                /* 打开预览前先冲刷最新未保存编辑（草稿已同步写入，这里确保服务端也拿到） */
                 if (dirtyRef.current && data && id && userId) {
                   if (saveTimer.current) clearTimeout(saveTimer.current);
                   void persist(title, data);
@@ -1612,9 +1717,9 @@ export default function Workbench() {
       </Dialog>
       {/* 主体：桌面 = 左宽对话区（一屏高度贴合不溢出）+ 右可收起成果栏；移动 = 模块主区 + AI 抽屉 */}
       <div className="mx-auto flex w-full max-w-[1600px] flex-1 gap-0 px-0 md:min-h-0 md:gap-4 md:px-5">
-        {/* 左：AI 对话协作区（桌面主区域；无成果时右侧不铺空表单，对话即主界面；单实例挂载防双触发） */}
-        <div className="hidden min-h-0 min-w-0 flex-1 py-3 md:flex">
-          <div className="h-full w-full overflow-hidden rounded-2xl border bg-background shadow-sm">
+        {/* 左：AI 对话协作区（独立悬浮工作室卡片，带柔和弥散投影） */}
+        <div className="hidden min-h-0 min-w-0 flex-1 py-4 md:flex">
+          <div className="sf-card h-full w-full overflow-hidden rounded-2xl">
             {isDesktop && (
             <AiAssistant
               data={data}
@@ -1651,7 +1756,7 @@ export default function Workbench() {
             ref={panelScrollRef}
             style={panelExpanded ? { width: expandedW } : { width: panelW }}
             className={cn(
-              'relative hidden h-full shrink-0 overflow-y-auto border-l bg-muted/20 md:block'
+              'relative hidden h-full shrink-0 overflow-y-auto py-4 pl-2 md:block'
             )}
           >
             {isDesktop && modulesPanel}
