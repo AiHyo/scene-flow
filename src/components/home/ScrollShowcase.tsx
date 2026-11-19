@@ -70,16 +70,13 @@ export default function ScrollShowcase() {
 
   const activePanel = STEP_META[activeStep].panel;
 
-  /* ===== 幕4 自动演示对比状态 ===== */
+  /* ===== 幕4 自动演示对比状态（仅在用户未手动接管时，进入第 4 幕即舒缓往复展示） ===== */
   const [comparePos, setComparePos] = useState(50);
   const comparePosRef = useRef(50);
   comparePosRef.current = comparePos;
 
-  const autoDemoStartedRef = useRef(false);
-  const autoDemoDoneRef = useRef(false);
   const userInteractedRef = useRef(false);
   const autoDemoTweenRef = useRef<gsap.core.Timeline | null>(null);
-  const stayTimerRef = useRef<number | null>(null);
   const act4InViewRef = useRef(false);
   const act4ImgsLoadedRef = useRef(false);
 
@@ -94,96 +91,69 @@ export default function ScrollShowcase() {
     );
   }, []);
 
-  /** 用户手动操作对比滑块时立即交还控制 */
+  /** 用户手动操作对比滑块时立即交还控制，不再自动移动 */
   const interruptAutoDemo = useCallback(() => {
     userInteractedRef.current = true;
-    autoDemoDoneRef.current = true;
-    if (stayTimerRef.current) {
-      window.clearTimeout(stayTimerRef.current);
-      stayTimerRef.current = null;
-    }
     if (autoDemoTweenRef.current) {
       autoDemoTweenRef.current.kill();
       autoDemoTweenRef.current = null;
     }
   }, []);
 
-  /** 离开第四幕时停止自动演示 */
+  /** 离开第四幕时停止自动演示；若用户未手动接管则复位居中，下次回来继续自然演示 */
   const handleLeaveAct4 = useCallback(() => {
-    if (stayTimerRef.current) {
-      window.clearTimeout(stayTimerRef.current);
-      stayTimerRef.current = null;
-    }
-    if (autoDemoTweenRef.current && autoDemoTweenRef.current.isActive()) {
+    act4InViewRef.current = false;
+    if (autoDemoTweenRef.current) {
       autoDemoTweenRef.current.kill();
       autoDemoTweenRef.current = null;
-      autoDemoDoneRef.current = true;
     }
-    act4InViewRef.current = false;
+    if (!userInteractedRef.current) {
+      setComparePos(50);
+      comparePosRef.current = 50;
+    }
   }, []);
 
-  /** 启动幕4舒缓对比演示（50% -> 28% -> 72% -> 50%） */
+  /** 启动幕4舒缓往复对比演示（50% -> 22% -> 78% -> 50% 循环呼吸，手动拖拽立即交权） */
   const tryStartAct4Demo = useCallback(() => {
-    if (autoDemoStartedRef.current || autoDemoDoneRef.current || userInteractedRef.current) {
+    if (userInteractedRef.current || autoDemoTweenRef.current) {
       return;
     }
-    if (!act4InViewRef.current || !act4ImgsLoadedRef.current) {
+    if (!act4InViewRef.current || isReducedMotion()) {
       return;
     }
-    if (isReducedMotion()) {
-      autoDemoDoneRef.current = true;
-      return;
+    if (!act4ImgsLoadedRef.current) {
+      const imgs = sectionRef.current?.querySelectorAll<HTMLImageElement>('.sf-final-canvas img');
+      if (imgs && imgs.length >= 2 && imgs[0].complete && imgs[1].complete && imgs[0].naturalWidth > 1 && imgs[1].naturalWidth > 1) {
+        act4ImgsLoadedRef.current = true;
+      } else {
+        return;
+      }
     }
 
-    autoDemoStartedRef.current = true;
-    stayTimerRef.current = window.setTimeout(() => {
-      if (userInteractedRef.current || autoDemoDoneRef.current) return;
+    const proxy = { pos: comparePosRef.current };
+    const syncPos = () => {
+      setComparePos(proxy.pos);
+      comparePosRef.current = proxy.pos;
+    };
 
-      const proxy = { pos: comparePosRef.current };
-      const tl = gsap.timeline({
-        onComplete: () => {
-          setComparePos(50);
-          comparePosRef.current = 50;
-          autoDemoDoneRef.current = true;
-          autoDemoTweenRef.current = null;
-        },
-      });
-      autoDemoTweenRef.current = tl;
+    const tl = gsap.timeline({
+      delay: 0.15,
+      repeat: -1,
+      repeatDelay: 0.55,
+    });
+    autoDemoTweenRef.current = tl;
 
-      tl.to(proxy, {
-        pos: 28,
-        duration: 1.0,
-        ease: 'power2.inOut',
-        onUpdate: () => {
-          setComparePos(proxy.pos);
-          comparePosRef.current = proxy.pos;
-        },
-      })
-        .to(proxy, {
-          pos: 72,
-          duration: 1.35,
-          ease: 'power2.inOut',
-          onUpdate: () => {
-            setComparePos(proxy.pos);
-            comparePosRef.current = proxy.pos;
-          },
-        })
-        .to(proxy, {
-          pos: 50,
-          duration: 1.0,
-          ease: 'power2.inOut',
-          onUpdate: () => {
-            setComparePos(proxy.pos);
-            comparePosRef.current = proxy.pos;
-          },
-        });
-    }, 850);
+    tl.to(proxy, { pos: 22, duration: 1.25, ease: 'power2.inOut', onUpdate: syncPos })
+      .to(proxy, { pos: 78, duration: 1.7, delay: 0.3, ease: 'power2.inOut', onUpdate: syncPos })
+      .to(proxy, { pos: 50, duration: 1.25, delay: 0.3, ease: 'power2.inOut', onUpdate: syncPos });
   }, [isReducedMotion]);
 
   useEffect(() => {
     return () => {
-      if (stayTimerRef.current) window.clearTimeout(stayTimerRef.current);
-      if (autoDemoTweenRef.current) autoDemoTweenRef.current.kill();
+      if (autoDemoTweenRef.current) {
+        autoDemoTweenRef.current.kill();
+        autoDemoTweenRef.current = null;
+      }
     };
   }, []);
 
@@ -354,10 +324,6 @@ export default function ScrollShowcase() {
           const master = gsap.timeline({
             onComplete: () => {
               animatingRef.current = false;
-              if (nextPanel === 3) {
-                act4InViewRef.current = true;
-                tryStartAct4Demo();
-              }
             },
           });
           activeTlRef.current = master;
@@ -372,6 +338,14 @@ export default function ScrollShowcase() {
           master.call(() => {
             animatingRef.current = false;
           }, [], 0.78);
+
+          /* 幕 4 画框落定后立即启动舒缓往复对比演示，无需干等整幕收尾 */
+          if (nextPanel === 3) {
+            master.call(() => {
+              act4InViewRef.current = true;
+              tryStartAct4Demo();
+            }, [], 1.15);
+          }
         };
 
         goToStepRef.current = goToStep;
