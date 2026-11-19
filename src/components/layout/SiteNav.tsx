@@ -86,6 +86,7 @@ export default function SiteNav() {
           onClick={() => {
             if (window.location.pathname === '/') {
               window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.dispatchEvent(new Event('sf-home-top'));
             }
           }}
           className="flex shrink-0 items-center gap-2.5"
