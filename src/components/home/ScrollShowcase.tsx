@@ -163,135 +163,177 @@ export default function ScrollShowcase() {
       const mm = gsap.matchMedia();
 
       mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
-        /* ===== 初始状态：全部就位到入场起点，显式 force3D 保持独立 GPU 合成层 ===== */
-        gsap.set('.sf-panel-2, .sf-panel-3, .sf-panel-4', { yPercent: 100, force3D: true });
-        gsap.set('.sf-panel-1-stage', { yPercent: 0, scale: 1, autoAlpha: 1, force3D: true });
+        /* ===== 初始状态：第 1 幕自动开场，第 2/3/4 幕由各自独立实时时间轴编排（与滚动速度彻底解耦） ===== */
         gsap.set(['.sf-brand', '.sf-line-a', '.sf-line-b'], { yPercent: 115, force3D: true });
         gsap.set('.sf-sub', { autoAlpha: 0, y: 14, force3D: true });
         gsap.set('.sf-hint', { autoAlpha: 0, y: 10, force3D: true });
-        /* 活动贴纸词与实景场地贴图：整组位移缩放入场 */
         showcase.intro.words.forEach((w, i) => {
           const dir = i % 2 === 0 ? 1 : -1;
           gsap.set(`.sf-word-${i}`, {
-            x: dir * (48 + i * 10),
-            y: 26 + i * 5,
+            x: dir * (44 + i * 10),
+            y: 24 + i * 4,
             scale: 0.92,
             autoAlpha: 0,
             force3D: true,
           });
         });
-        gsap.set('.sf-sticker', { y: 34, scale: 0.9, autoAlpha: 0, force3D: true });
+        gsap.set('.sf-sticker', { y: 30, scale: 0.9, autoAlpha: 0, force3D: true });
         gsap.set('.sf-prep', { autoAlpha: 0, y: 10, force3D: true });
+
+        /* 第 2/3/4 幕内部元素初始隐藏，等待进幕时以稳定优雅的实时节拍播完 */
         gsap.set('.sf-q-line', { yPercent: 115, force3D: true });
         gsap.set('.sf-q-bar', { scaleX: 0, force3D: true });
-        showcase.act2.pains.forEach((p, i) => {
-          gsap.set(`.sf-pain-${i}`, { y: 24, autoAlpha: 0, force3D: true });
-        });
-        gsap.set(['.sf-core', '.sf-aux'], { autoAlpha: 0, y: 18, force3D: true });
-        gsap.set(['.sf-conv-user1', '.sf-conv-user2', '.sf-conv-ai-lead', '.sf-conv-adjust'], { autoAlpha: 0, y: 22, force3D: true });
-        gsap.set('.sf-conv-dir', { autoAlpha: 0, y: 22, force3D: true });
-        gsap.set('.sf-conv-badge', { autoAlpha: 0, scale: 0.7, force3D: true });
-        gsap.set('.sf-conv-row', { autoAlpha: 0, y: 14, force3D: true });
+        gsap.set('.sf-pain', { y: 22, autoAlpha: 0, force3D: true });
+        gsap.set(['.sf-core', '.sf-aux'], { autoAlpha: 0, y: 16, force3D: true });
+
+        gsap.set(['.sf-conv-user1', '.sf-conv-user2', '.sf-conv-ai-lead', '.sf-conv-adjust'], { autoAlpha: 0, y: 20, force3D: true });
+        gsap.set('.sf-conv-dir', { autoAlpha: 0, y: 20, force3D: true });
+        gsap.set('.sf-conv-badge', { autoAlpha: 0, scale: 0.65, force3D: true });
+        gsap.set('.sf-conv-row', { autoAlpha: 0, y: 12, force3D: true });
+
         gsap.set(['.sf-final-title', '.sf-final-canvas', '.sf-final-aux', '.sf-final-added', '.sf-final-cycle', '.sf-final-cta'], { autoAlpha: 0, y: 18, force3D: true });
         gsap.set('.sf-final-footer', { autoAlpha: 0 });
 
-        /* ===== ① 自动开场（精简至约 2.2s 一气呵成，去掉 3s 处的抖动缩放，减少与滚动冲突） ===== */
+        /* ===== ① 第 1 幕自动开场（约 1.8s 利落完成） ===== */
         const intro = gsap.timeline();
         introRef.current = intro;
         intro
-          .to('.sf-brand', { yPercent: 0, duration: 0.45, ease: 'power3.out' }, 0.04)
-          .to('.sf-line-a', { yPercent: 0, duration: 0.65, ease: 'power4.out' }, 0.16)
-          .to('.sf-line-b', { yPercent: 0, duration: 0.65, ease: 'power4.out' }, 0.30)
-          .to('.sf-sub', { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.52)
+          .to('.sf-brand', { yPercent: 0, duration: 0.42, ease: 'power3.out' }, 0.04)
+          .to('.sf-line-a', { yPercent: 0, duration: 0.6, ease: 'power4.out' }, 0.14)
+          .to('.sf-line-b', { yPercent: 0, duration: 0.6, ease: 'power4.out' }, 0.26)
+          .to('.sf-sub', { autoAlpha: 1, y: 0, duration: 0.42, ease: 'power3.out' }, 0.46)
           .to(
             '.sf-word',
-            { x: 0, y: 0, scale: 1, autoAlpha: 1, duration: 0.72, stagger: 0.06, ease: 'power3.out' },
-            0.55
+            { x: 0, y: 0, scale: 1, autoAlpha: 1, duration: 0.65, stagger: 0.055, ease: 'power3.out' },
+            0.48
           )
           .to(
             '.sf-sticker',
-            { y: 0, scale: 1, autoAlpha: 1, duration: 0.7, stagger: 0.1, ease: 'power3.out' },
-            0.82
+            { y: 0, scale: 1, autoAlpha: 1, duration: 0.65, stagger: 0.1, ease: 'power3.out' },
+            0.72
           )
-          .to('.sf-prep', { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.05, ease: 'power2.out' }, 1.25)
-          .to('.sf-hint', { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 1.55);
+          .to('.sf-prep', { autoAlpha: 1, y: 0, duration: 0.32, stagger: 0.04, ease: 'power2.out' }, 1.05)
+          .to('.sf-hint', { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out' }, 1.32);
 
-        /* ===== 滚动 scrub：从顶栏下方 64px 起立即钉住（零 64px 死区跳动），仅操作面板层与入场层，与 intro 零目标冲突 ===== */
-        const tl = gsap.timeline({
-          defaults: { ease: 'none' },
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 64px',
-            end: '+=4400',
-            scrub: 0.6,
-            pin: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              const p = self.progress;
-              const nextAct = p < 0.14 ? 0 : p < 0.46 ? 1 : p < 0.83 ? 2 : 3;
-              if (nextAct !== activeActRef.current) {
-                activeActRef.current = nextAct;
-                setActiveAct(nextAct);
-              }
+        const setActIfChanged = (idx: number) => {
+          if (idx !== activeActRef.current) {
+            activeActRef.current = idx;
+            setActiveAct(idx);
+          }
+        };
 
-              /* 第4幕切幕基本结束 (p >= 0.93)：启动停留 0.4s 后的平滑对比演示 */
-              if (p >= 0.93) {
-                if (!act4InViewRef.current) {
-                  act4InViewRef.current = true;
-                  tryStartAct4Demo();
-                }
-              } else if (act4InViewRef.current) {
-                handleLeaveAct4();
-              }
+        /* ===== ② 第 2 幕独立实时入场动画（进幕即按固定舒适节拍播完，绝不因滚轮快慢而卡住或爆冲） ===== */
+        const act2Tl = gsap.timeline({ paused: true });
+        act2Tl
+          .to('.sf-q-line', { yPercent: 0, duration: 0.55, ease: 'power3.out' }, 0)
+          .to('.sf-q-bar', { scaleX: 1, duration: 0.45, ease: 'power2.out' }, 0.16)
+          .to('.sf-pain', { autoAlpha: 1, y: 0, duration: 0.48, stagger: 0.045, ease: 'power2.out' }, 0.12)
+          .to('.sf-core', { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power2.out' }, 0.38)
+          .to('.sf-aux', { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0.5);
 
-              /* 滚动打断开场：直追完成态；因 tl 只动外层 .sf-panel-1-stage，不与子元素属性抢状态，正反向零闪烁 */
-              if (self.scroll() > 4 && introRef.current && introRef.current.progress() < 1) {
-                introRef.current.progress(1);
-              }
+        /* ===== ③ 第 3 幕独立实时入场动画（用户提问 → AI 候选 → 选中点亮 → 调整安排，从容展开且完整定格） ===== */
+        const act3Tl = gsap.timeline({ paused: true });
+        act3Tl
+          .to('.sf-conv-user1', { autoAlpha: 1, y: 0, duration: 0.42, ease: 'power2.out' }, 0)
+          .to('.sf-conv-ai-lead', { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out' }, 0.22)
+          .to('.sf-conv-dir', { autoAlpha: 1, y: 0, duration: 0.42, stagger: 0.08, ease: 'power2.out' }, 0.28)
+          .to('.sf-conv-user2', { autoAlpha: 1, y: 0, duration: 0.42, ease: 'power2.out' }, 0.62)
+          .to('.sf-conv-badge', { autoAlpha: 1, scale: 1, duration: 0.34, ease: 'back.out(1.7)' }, 0.78)
+          .to('.sf-conv-dim', { autoAlpha: 0.45, duration: 0.36, ease: 'power1.out' }, 0.78)
+          .to('.sf-conv-adjust', { autoAlpha: 1, y: 0, duration: 0.42, ease: 'power2.out' }, 0.92)
+          .to('.sf-conv-row', { autoAlpha: 1, y: 0, duration: 0.34, stagger: 0.055, ease: 'power2.out' }, 1.02);
+
+        /* ===== ④ 第 4 幕独立实时入场动画（标题 → 对比画布 → 清单 → 循环 → 行动入口 → 页脚） ===== */
+        const act4Tl = gsap.timeline({ paused: true });
+        act4Tl
+          .to('.sf-final-title', { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power2.out' }, 0)
+          .to('.sf-final-canvas', { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power2.out' }, 0.1)
+          .to('.sf-final-added', { autoAlpha: 1, y: 0, duration: 0.38, ease: 'power2.out' }, 0.28)
+          .to('.sf-final-aux', { autoAlpha: 1, y: 0, duration: 0.38, ease: 'power2.out' }, 0.36)
+          .to('.sf-final-cycle', { autoAlpha: 1, y: 0, duration: 0.38, ease: 'power2.out' }, 0.44)
+          .to('.sf-final-cta', { autoAlpha: 1, y: 0, duration: 0.42, ease: 'power2.out' }, 0.52)
+          .to('.sf-final-footer', { autoAlpha: 1, duration: 0.35, ease: 'power1.out' }, 0.62);
+
+        /* ===== 非 sticky 轨道触发器：原生 1:1 滚动滑入无任何死区，同时驱动景深轻退与幕内编排 ===== */
+        const triggers: ScrollTrigger[] = [];
+
+        /* 下一幕原生滑上覆盖时，上一幕做 1:1 零延迟（scrub: true）轻景深退场；完全退到视口下方后才静默复位，绝不在可见时突兀消失 */
+        const addDeckDepth = (trackSel: string, prevSel: string, onFullyBelow?: () => void) => {
+          const tween = gsap.to(prevSel, {
+            scale: 0.96,
+            autoAlpha: 0.35,
+            ease: 'none',
+            force3D: true,
+            scrollTrigger: {
+              trigger: trackSel,
+              start: 'top bottom',
+              end: 'top 64px',
+              scrub: true,
+              onLeaveBack: onFullyBelow,
             },
-          },
+          });
+          if (tween.scrollTrigger) triggers.push(tween.scrollTrigger);
+        };
+        addDeckDepth('.sf-track-2', '.sf-panel-1-stage', () => act2Tl.pause(0));
+        addDeckDepth('.sf-track-3', '.sf-panel-2 .sf-inner', () => act3Tl.pause(0));
+        addDeckDepth('.sf-track-4', '.sf-panel-3 .sf-inner', () => {
+          act4Tl.pause(0);
+          handleLeaveAct4();
         });
 
-        /* 幕1 → 幕2（0.00 → 0.24）：整体景深轻退 + 第2幕滑入覆盖 */
-        tl.to('.sf-panel-1-stage', { yPercent: -7, scale: 0.96, autoAlpha: 0.2, duration: 0.2, ease: 'power1.inOut' }, 0.02)
-          .to('.sf-panel-2', { yPercent: 0, duration: 0.2, ease: 'power2.inOut' }, 0.05)
-          /* 幕2 内部（0.16 → 0.44 落定，0.44 → 0.58 约 400px 舒缓阅读停留区） */
-          .to('.sf-q-line', { yPercent: 0, duration: 0.09, ease: 'power3.out' }, 0.16)
-          .to('.sf-q-bar', { scaleX: 1, duration: 0.07, ease: 'power2.inOut' }, 0.23)
-          .to('.sf-pain', { autoAlpha: 1, y: 0, duration: 0.1, stagger: 0.014, ease: 'power2.out' }, 0.18)
-          .to('.sf-core', { autoAlpha: 1, y: 0, duration: 0.06, ease: 'power2.out' }, 0.35)
-          .to('.sf-aux', { autoAlpha: 1, y: 0, duration: 0.05, ease: 'power2.out' }, 0.39)
-          /* 幕2 → 幕3（0.58 → 0.76）：第2幕景深轻退 + 第3幕滑入覆盖 */
-          .to('.sf-panel-2 .sf-inner', { yPercent: -8, scale: 0.96, autoAlpha: 0.2, duration: 0.16, ease: 'power1.inOut' }, 0.58)
-          .to('.sf-panel-3', { yPercent: 0, duration: 0.18, ease: 'power2.inOut' }, 0.60)
-          /* 幕3 分阶段（0.64 → 1.01 全部落定，1.01 → 1.18 约 480px 纯净阅读停留区） */
-          .to('.sf-conv-user1', { autoAlpha: 1, y: 0, duration: 0.055, ease: 'power2.out' }, 0.64)
-          .to('.sf-conv-ai-lead', { autoAlpha: 1, y: 0, duration: 0.045, ease: 'power2.out' }, 0.70)
-          .to('.sf-conv-dir', { autoAlpha: 1, y: 0, duration: 0.055, stagger: 0.018, ease: 'power2.out' }, 0.72)
-          .to('.sf-conv-user2', { autoAlpha: 1, y: 0, duration: 0.055, ease: 'power2.out' }, 0.81)
-          .to('.sf-conv-badge', { autoAlpha: 1, scale: 1, duration: 0.04, ease: 'back.out(1.7)' }, 0.85)
-          .to('.sf-conv-dim', { autoAlpha: 0.45, duration: 0.045, ease: 'power1.out' }, 0.85)
-          .to('.sf-conv-adjust', { autoAlpha: 1, y: 0, duration: 0.055, ease: 'power2.out' }, 0.88)
-          .to('.sf-conv-row', { autoAlpha: 1, y: 0, duration: 0.045, stagger: 0.013, ease: 'power2.out' }, 0.90)
-          /* 幕3 → 幕4（1.18 → 1.38）：第3幕景深轻退 + 第4幕滑入覆盖 */
-          .to('.sf-panel-3 .sf-inner', { yPercent: -8, scale: 0.96, autoAlpha: 0.2, duration: 0.16, ease: 'power1.inOut' }, 1.18)
-          .to('.sf-panel-4', { yPercent: 0, duration: 0.18, ease: 'power2.inOut' }, 1.20)
-          /* 幕4 收尾（1.26 → 1.44 落定，1.44 → 1.52 柔和停稳） */
-          .to('.sf-final-title', { autoAlpha: 1, y: 0, duration: 0.045, ease: 'power2.out' }, 1.26)
-          .to('.sf-final-canvas', { autoAlpha: 1, y: 0, duration: 0.055, ease: 'power2.out' }, 1.28)
-          .to('.sf-final-added', { autoAlpha: 1, y: 0, duration: 0.035, ease: 'power2.out' }, 1.32)
-          .to('.sf-final-aux', { autoAlpha: 1, y: 0, duration: 0.035, ease: 'power2.out' }, 1.34)
-          .to('.sf-final-cycle', { autoAlpha: 1, y: 0, duration: 0.035, ease: 'power2.out' }, 1.36)
-          .to('.sf-final-cta', { autoAlpha: 1, y: 0, duration: 0.04, ease: 'power2.out' }, 1.38)
-          .to('.sf-final-footer', { autoAlpha: 1, duration: 0.03, ease: 'power1.out' }, 1.41)
-          .to({}, { duration: 0.08 }, 1.44);
+        triggers.push(
+          ScrollTrigger.create({
+            trigger: '.sf-track-1',
+            start: 'top 60%',
+            end: 'bottom 50%',
+            onEnter: () => setActIfChanged(0),
+            onEnterBack: () => setActIfChanged(0),
+          }),
+          ScrollTrigger.create({
+            trigger: '.sf-track-2',
+            start: 'top 70%',
+            end: 'bottom 50%',
+            onEnter: () => {
+              if (introRef.current && introRef.current.progress() < 1) introRef.current.progress(1);
+              setActIfChanged(1);
+              act2Tl.play();
+            },
+            onEnterBack: () => setActIfChanged(1),
+            onLeaveBack: () => setActIfChanged(0),
+          }),
+          ScrollTrigger.create({
+            trigger: '.sf-track-3',
+            start: 'top 70%',
+            end: 'bottom 50%',
+            onEnter: () => {
+              setActIfChanged(2);
+              act3Tl.play();
+            },
+            onEnterBack: () => setActIfChanged(2),
+            onLeaveBack: () => setActIfChanged(1),
+          }),
+          ScrollTrigger.create({
+            trigger: '.sf-track-4',
+            start: 'top 70%',
+            end: 'bottom bottom',
+            onEnter: () => {
+              setActIfChanged(3);
+              act4Tl.play();
+              act4InViewRef.current = true;
+              tryStartAct4Demo();
+            },
+            onEnterBack: () => setActIfChanged(3),
+            onLeaveBack: () => setActIfChanged(2),
+          })
+        );
 
         return () => {
           intro.kill();
           introRef.current = null;
-          tl.scrollTrigger?.kill();
-          tl.kill();
+          act2Tl.kill();
+          act3Tl.kill();
+          act4Tl.kill();
+          triggers.forEach((st) => st.kill());
         };
       });
       /* 移动端 / 减弱动效：CSS 默认静态堆叠，无 GSAP 干预 */
@@ -331,8 +373,16 @@ export default function ScrollShowcase() {
 
   return (
     <section ref={sectionRef} className="relative w-full overflow-x-clip bg-background">
-      {/* ===== 幕1 活动文字舞台 · 精确对齐 64px 顶栏下方可视高度（零 64px 死区滚动跳动） ===== */}
-      <div className="sf-panel-1 relative isolate flex min-h-[92dvh] w-full flex-col overflow-hidden px-5 pb-16 pt-20 md:motion-safe:h-[calc(100dvh-4rem)] md:motion-safe:min-h-0 md:motion-safe:px-0 md:motion-safe:pb-0 md:motion-safe:pt-0">
+      {/* 非 sticky 不可见滚动轨道锚点（四等分高度，精准驱动进幕实时编排与 1:1 景深退场，绝不被 sticky 坐标干扰） */}
+      <div className="pointer-events-none hidden md:motion-safe:block" aria-hidden="true">
+        <div className="sf-track-1 absolute left-0 top-0 h-1/4 w-px" />
+        <div className="sf-track-2 absolute left-0 top-1/4 h-1/4 w-px" />
+        <div className="sf-track-3 absolute left-0 top-2/4 h-1/4 w-px" />
+        <div className="sf-track-4 absolute left-0 top-3/4 h-1/4 w-px" />
+      </div>
+
+      {/* ===== 幕1 活动文字舞台 · 原生 sticky 卡片（1:1 跟手 120fps，零死区） ===== */}
+      <div className="sf-panel-1 relative isolate flex min-h-[92dvh] w-full flex-col overflow-hidden bg-background px-5 pb-16 pt-20 md:motion-safe:sticky md:motion-safe:top-16 md:motion-safe:z-[1] md:motion-safe:h-[calc(100dvh-4rem)] md:motion-safe:min-h-0 md:motion-safe:px-0 md:motion-safe:pb-0 md:motion-safe:pt-0">
         {/* 「轻盈创意纸面」静态边缘装饰 */}
         <div className="sf-deco" aria-hidden="true">
           <span className="sf-blob sf-paper-cream" style={{ top: '-12%', left: '-10%', width: '42vw', height: '42vw', minWidth: 320, minHeight: 320 }} />
@@ -512,8 +562,8 @@ export default function ScrollShowcase() {
         </div>
       </div>
 
-      {/* ===== 幕2 困扰聚合 · 围绕中心问题的现代贴纸三层（去除动态芯片 backdrop-blur 保 60fps 丝滑） ===== */}
-      <div className="sf-panel-2 relative isolate w-full bg-background px-5 py-16 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:overflow-hidden md:motion-safe:py-0 md:motion-safe:border-t md:motion-safe:border-border/50 md:motion-safe:will-change-transform">
+      {/* ===== 幕2 困扰聚合 · 原生 sticky 卡片，滚 1px 即 1:1 平滑盖上 ===== */}
+      <div className="sf-panel-2 relative isolate w-full bg-background px-5 py-16 md:motion-safe:sticky md:motion-safe:top-16 md:motion-safe:z-[2] md:motion-safe:h-[calc(100dvh-4rem)] md:motion-safe:overflow-hidden md:motion-safe:py-0 md:motion-safe:border-t md:motion-safe:border-border/60">
         <div className="sf-deco" aria-hidden="true">
           <span className="sf-blob sf-paper-purple-faint" style={{ top: '-12%', right: '-10%', width: '36vw', height: '36vw', minWidth: 280, minHeight: 280 }} />
           <span className="sf-blob sf-paper-cream-faint" style={{ bottom: '-14%', left: '-8%', width: '34vw', height: '34vw', minWidth: 260, minHeight: 260 }} />
@@ -559,8 +609,8 @@ export default function ScrollShowcase() {
         </div>
       </div>
 
-      {/* ===== 幕3 共策过程 · 对话/候选/调整成为舞台主体 ===== */}
-      <div className="sf-panel-3 relative isolate w-full bg-background px-5 py-16 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:overflow-hidden md:motion-safe:py-0 md:motion-safe:border-t md:motion-safe:border-border/50 md:motion-safe:will-change-transform">
+      {/* ===== 幕3 共策过程 · 原生 sticky 卡片，进幕按从容节拍展开并完整定格 ===== */}
+      <div className="sf-panel-3 relative isolate w-full bg-background px-5 py-16 md:motion-safe:sticky md:motion-safe:top-16 md:motion-safe:z-[3] md:motion-safe:h-[calc(100dvh-4rem)] md:motion-safe:overflow-hidden md:motion-safe:py-0 md:motion-safe:border-t md:motion-safe:border-border/60">
         <div className="sf-deco" aria-hidden="true">
           <span className="sf-blob sf-paper-cream-faint" style={{ top: '-12%', left: '-10%', width: '36vw', height: '36vw', minWidth: 280, minHeight: 280 }} />
           <span className="sf-blob sf-paper-purple-faint" style={{ bottom: '-16%', right: '-10%', width: '40vw', height: '40vw', minWidth: 300, minHeight: 300 }} />
@@ -635,8 +685,8 @@ export default function ScrollShowcase() {
         </div>
       </div>
 
-      {/* ===== 幕4 看见效果 + 收尾 · 现代白边画框 + 自动拖拽对比 ===== */}
-      <div className="sf-panel-4 relative isolate flex w-full flex-col items-center gap-3 bg-background px-5 py-14 md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:justify-center md:motion-safe:gap-3 md:motion-safe:overflow-hidden md:motion-safe:pb-12 md:motion-safe:pt-4 md:motion-safe:border-t md:motion-safe:border-border/50 md:motion-safe:will-change-transform">
+      {/* ===== 幕4 看见效果 + 收尾 · 原生 sticky 末幕 ===== */}
+      <div className="sf-panel-4 relative isolate flex w-full flex-col items-center gap-3 bg-background px-5 py-14 md:motion-safe:sticky md:motion-safe:top-16 md:motion-safe:z-[4] md:motion-safe:h-[calc(100dvh-4rem)] md:motion-safe:justify-center md:motion-safe:gap-3 md:motion-safe:overflow-hidden md:motion-safe:pb-12 md:motion-safe:pt-4 md:motion-safe:border-t md:motion-safe:border-border/60">
         <div className="sf-deco" aria-hidden="true">
           <span className="sf-blob sf-paper-cream-faint" style={{ top: '-14%', right: '-10%', width: '36vw', height: '36vw', minWidth: 280, minHeight: 280 }} />
           <span className="sf-blob sf-paper-purple-faint" style={{ bottom: '-14%', left: '-10%', width: '38vw', height: '38vw', minWidth: 300, minHeight: 300 }} />
@@ -720,13 +770,13 @@ export default function ScrollShowcase() {
         </div>
       </div>
 
-      {/* ===== 桌面叠加控件：可点击切换的幕进度点 ===== */}
-      <div className="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-2.5 md:motion-safe:flex">
+      {/* ===== 桌面叠加控件：可点击精准跳转的幕进度点 ===== */}
+      <div className="fixed right-4 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-2.5 md:motion-safe:flex">
         {[
-          { label: '第 1 幕 · 开场舞台', ratio: 0 },
-          { label: '第 2 幕 · 筹备困扰', ratio: 0.34 },
-          { label: '第 3 幕 · AI 共策', ratio: 0.73 },
-          { label: '第 4 幕 · 实景效果', ratio: 1 },
+          { label: '第 1 幕 · 开场舞台', index: 0 },
+          { label: '第 2 幕 · 筹备困扰', index: 1 },
+          { label: '第 3 幕 · AI 共策', index: 2 },
+          { label: '第 4 幕 · 实景效果', index: 3 },
         ].map((act, i) => (
           <button
             key={act.label}
@@ -734,8 +784,8 @@ export default function ScrollShowcase() {
             title={act.label}
             aria-label={act.label}
             onClick={() => {
-              const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-              window.scrollTo({ top: Math.round(maxScroll * act.ratio), behavior: 'smooth' });
+              const step = Math.max(1, window.innerHeight - 64);
+              window.scrollTo({ top: Math.round(act.index * step), behavior: 'smooth' });
             }}
             className="group flex h-4 w-4 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
