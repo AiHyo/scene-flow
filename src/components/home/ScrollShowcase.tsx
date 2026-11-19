@@ -355,12 +355,12 @@ export default function ScrollShowcase() {
           </div>
           <h1 className="mt-4 md:mt-5">
             <span className="block overflow-hidden pb-1">
-              <span className="sf-line sf-line-a font-display block text-[15vw] font-black leading-[1.08] tracking-tight text-foreground md:motion-safe:text-[5.4vw] xl:motion-safe:text-[5.8rem]">
+              <span className="sf-line sf-line-a font-display block whitespace-nowrap text-[14vw] font-black leading-[1.08] tracking-tight text-foreground md:motion-safe:text-[4.8vw] xl:motion-safe:text-[5.4rem]">
                 {showcase.intro.lineA}
               </span>
             </span>
-            <span className="block overflow-hidden pb-1 md:motion-safe:pl-[2.5vw]">
-              <span className="sf-line sf-line-b font-display block text-[15vw] font-black leading-[1.08] tracking-tight text-primary md:motion-safe:text-[5.4vw] xl:motion-safe:text-[5.8rem]">
+            <span className="block overflow-hidden pb-1 md:motion-safe:pl-[2.2vw]">
+              <span className="sf-line sf-line-b font-display block whitespace-nowrap text-[14vw] font-black leading-[1.08] tracking-tight text-primary md:motion-safe:text-[4.8vw] xl:motion-safe:text-[5.4rem]">
                 {showcase.intro.lineB}
               </span>
             </span>
@@ -383,51 +383,76 @@ export default function ScrollShowcase() {
           </div>
         </div>
 
-        {/* 舞台中部偏右：现代波普活动贴纸 + 实景白边贴图拼贴（桌面 48vw–92vw 自由错位；移动自然流式排列） */}
-        <div className="sf-words relative z-10 mt-8 flex flex-wrap items-center gap-3 md:motion-safe:absolute md:motion-safe:left-[48vw] md:motion-safe:top-1/2 md:motion-safe:mt-0 md:motion-safe:block md:motion-safe:h-[72vh] md:motion-safe:w-[44vw] md:motion-safe:-translate-y-1/2">
-          {showcase.intro.words.map((w, i) => (
-            <div
-              key={w.t}
-              className={cn(
-                'sf-word-mask flex items-center py-1 md:motion-safe:absolute',
-                w.tier === 'major' ? 'sf-word-major' : 'sf-word-aux'
-              )}
-              style={w.pos}
-            >
-              <span
+        {/* 舞台中部偏右：四层流式弹性拼贴（杜绝任意宽屏/矮屏下 vw 图片高度与 vh 绝对定位相撞遮挡文字） */}
+        <div className="sf-words relative z-10 mt-8 flex flex-col gap-4 md:motion-safe:absolute md:motion-safe:left-[47vw] md:motion-safe:top-[46%] md:motion-safe:mt-0 md:motion-safe:w-[45vw] md:motion-safe:max-w-[680px] md:motion-safe:-translate-y-1/2 md:motion-safe:gap-4 xl:motion-safe:gap-5">
+          {/* 第 1 排：顶部波普贴纸 + 轻巧筹备标签 */}
+          <div className="flex flex-wrap items-center justify-between gap-3 md:px-2">
+            {showcase.intro.words.slice(0, 2).map((w, i) => (
+              <div
+                key={w.t}
                 className={cn(
-                  'sf-word inline-block leading-[1.12] transition-transform duration-300',
-                  `sf-word-${i}`,
-                  w.size,
-                  w.tilt,
-                  w.style === 'cobalt' &&
-                    'sf-pill-cobalt rounded-full px-5 py-2 font-display font-black tracking-tight md:px-7 md:py-2.5',
-                  w.style === 'amber' &&
-                    'sf-pill-amber rounded-full px-5 py-2 font-display font-black tracking-tight md:px-6 md:py-2',
-                  w.style === 'mint' &&
-                    'sf-pill-mint rounded-full px-5 py-2 font-display font-black tracking-tight md:px-6 md:py-2',
-                  w.style === 'bold' && 'font-display font-black tracking-tight text-foreground',
-                  w.style === 'soft' &&
-                    'rounded-full border border-border/80 bg-card/90 px-4 py-1.5 font-display font-semibold tracking-tight text-foreground/80 shadow-sm backdrop-blur-sm'
+                  'sf-word-mask flex items-center py-1',
+                  w.tier === 'major' ? 'sf-word-major' : 'sf-word-aux'
                 )}
               >
-                {w.t}
+                <span
+                  className={cn(
+                    'sf-word inline-block leading-[1.12] transition-transform duration-300',
+                    `sf-word-${i}`,
+                    w.size,
+                    w.tilt,
+                    w.style === 'cobalt' &&
+                      'sf-pill-cobalt rounded-full px-5 py-2 font-display font-black tracking-tight md:px-7 md:py-2.5',
+                    w.style === 'amber' &&
+                      'sf-pill-amber rounded-full px-5 py-2 font-display font-black tracking-tight md:px-6 md:py-2'
+                  )}
+                >
+                  {w.t}
+                </span>
+              </div>
+            ))}
+            {showcase.intro.preps[0] && (
+              <span className="sf-prep hidden items-center gap-2 rounded-full bg-card/85 px-3 py-1 text-xs font-medium text-muted-foreground shadow-2xs backdrop-blur-sm md:motion-safe:inline-flex">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
+                {showcase.intro.preps[0].t}
               </span>
-            </div>
-          ))}
+            )}
+          </div>
 
-          {/* 2 张现代圆角白边实景场地贴图：桌面端错落卡在词群中段，移动端双列精致呈现 */}
-          <div className="mt-2 grid w-full grid-cols-2 gap-3 md:motion-safe:contents">
+          {/* 第 2 排：视觉核心大字「企业年会」+ 破冰筹备标签 */}
+          <div className="flex flex-wrap items-center gap-4 md:pl-4">
+            {showcase.intro.preps[1] && (
+              <span className="sf-prep hidden items-center gap-2 rounded-full bg-card/85 px-3 py-1 text-xs font-medium text-muted-foreground shadow-2xs backdrop-blur-sm md:motion-safe:inline-flex">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
+                {showcase.intro.preps[1].t}
+              </span>
+            )}
+            {showcase.intro.words[2] && (
+              <div className="sf-word-mask sf-word-major flex items-center py-0.5 md:ml-4">
+                <span
+                  className={cn(
+                    'sf-word sf-word-2 inline-block font-display font-black leading-[1.08] tracking-tight text-foreground transition-transform duration-300',
+                    showcase.intro.words[2].size,
+                    showcase.intro.words[2].tilt
+                  )}
+                >
+                  {showcase.intro.words[2].t}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* 第 3 排：2 张现代圆角白边实景场地贴图（限高 25vh，任何屏幕比例都不会挤占下方文字） */}
+          <div className="grid grid-cols-2 gap-3.5 md:gap-5 md:px-1">
             {showcase.intro.stickers.map((s) => (
               <div
                 key={s.alt}
                 className={cn(
-                  'sf-sticker sf-sticker-photo group relative overflow-hidden bg-white md:motion-safe:absolute md:motion-safe:w-[46%]',
+                  'sf-sticker sf-sticker-photo group relative overflow-hidden bg-white',
                   s.tilt
                 )}
-                style={s.pos}
               >
-                <div className="aspect-[4/3] w-full overflow-hidden rounded-[0.9rem] bg-muted">
+                <div className="aspect-[4/3] max-h-[25vh] w-full overflow-hidden rounded-[0.9rem] bg-muted">
                   <img
                     src={s.src}
                     alt={s.alt}
@@ -441,17 +466,42 @@ export default function ScrollShowcase() {
             ))}
           </div>
 
-          {/* 筹备事项：轻盈点缀在留白角落 */}
-          {showcase.intro.preps.map((pr) => (
-            <span
-              key={pr.t}
-              className="sf-prep hidden items-center gap-2 rounded-full bg-card/75 px-3 py-1 text-xs font-medium text-muted-foreground shadow-2xs backdrop-blur-sm md:motion-safe:absolute md:motion-safe:inline-flex md:text-sm"
-              style={pr.pos}
-            >
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
-              {pr.t}
-            </span>
-          ))}
+          {/* 第 4 排：底部波普贴纸（自然流排在实景贴图正下方，绝不遮挡任何字） */}
+          <div className="flex flex-wrap items-center gap-3 pt-1 md:justify-around md:px-2">
+            {showcase.intro.words.slice(3).map((w, idx) => {
+              const i = idx + 3;
+              return (
+                <div
+                  key={w.t}
+                  className={cn(
+                    'sf-word-mask flex items-center py-0.5',
+                    w.tier === 'major' ? 'sf-word-major' : 'sf-word-aux'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'sf-word inline-block leading-[1.12] transition-transform duration-300',
+                      `sf-word-${i}`,
+                      w.size,
+                      w.tilt,
+                      w.style === 'mint' &&
+                        'sf-pill-mint rounded-full px-5 py-2 font-display font-black tracking-tight md:px-6 md:py-2',
+                      w.style === 'soft' &&
+                        'rounded-full border border-border/80 bg-card/90 px-4 py-1.5 font-display font-semibold tracking-tight text-foreground/80 shadow-sm backdrop-blur-sm'
+                    )}
+                  >
+                    {w.t}
+                  </span>
+                </div>
+              );
+            })}
+            {showcase.intro.preps[2] && (
+              <span className="sf-prep hidden items-center gap-2 rounded-full bg-card/85 px-3 py-1 text-xs font-medium text-muted-foreground shadow-2xs backdrop-blur-sm md:motion-safe:inline-flex">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
+                {showcase.intro.preps[2].t}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* 滚动引导（首屏 900px 视口内完整可见，计入 64px 顶栏高度；移动端留足间距防叠压） */}

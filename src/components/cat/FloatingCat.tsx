@@ -490,6 +490,10 @@ export default function FloatingCat() {
   if (!shouldRender) return null;
 
   const interactive = hover && !dragging;
+  /* 按小猫当前视口坐标自动翻转气泡方向，防止靠近顶部/左侧时气泡被视口裁切 */
+  const catPos = interactive ? currentPos() : { x: 0, y: 0 };
+  const bubbleBelow = catPos.y < 240;
+  const bubbleAlignLeft = catPos.x < 260;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-30" aria-hidden={!interactive}>
@@ -538,12 +542,14 @@ export default function FloatingCat() {
             />
           </button>
 
-          {/* 气泡：悬停/聚焦/触屏点按时显示 */}
+          {/* 气泡：悬停/聚焦/触屏点按时显示，自动避开顶部和左侧边缘裁切 */}
           {interactive && (
             <div
               ref={bubbleRef}
               onMouseDown={(e) => e.stopPropagation()}
-              className="ai-cat-bubble pointer-events-auto absolute bottom-full right-0 mb-3 w-56 rounded-xl border bg-card p-3 text-left shadow-lg"
+              className={`ai-cat-bubble pointer-events-auto absolute w-56 rounded-xl border bg-card p-3 text-left shadow-lg ${
+                bubbleBelow ? 'top-full mt-3' : 'bottom-full mb-3'
+              } ${bubbleAlignLeft ? 'left-0' : 'right-0'}`}
             >
               <p className="text-sm font-medium leading-snug">有个活动想法？和我一起策划吧。</p>
               {confirmHide ? (
