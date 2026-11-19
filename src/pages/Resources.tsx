@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Check, Copy, ExternalLink, Handshake, Mail, MapPin, Package, RotateCcw, Search, Send, Sparkles, Star, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ReturnBar from '@/components/shared/ReturnBar';
+import { usePageEntrance } from '@/hooks/usePageEntrance';
 import {
   Dialog,
   DialogContent,
@@ -102,6 +103,8 @@ interface CitySel {
 }
 
 export default function Resources() {
+  const pageRef = useRef<HTMLDivElement>(null);
+  usePageEntrance(pageRef);
   const [params, setParams] = useSearchParams();
   /* 旧链接兼容：materials→online、venues→local；tab 参数本身即类别（local/online 均有效） */
   const rawTab = params.get('tab') ?? 'online';
@@ -218,32 +221,39 @@ export default function Resources() {
     .join(' · ');
 
   return (
-    <div className="sf-page-body mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-12">
-      <ReturnBar />      <div className="sf-deco" aria-hidden="true">
-        <span className="sf-blob sf-paper-purple-faint" style={{top: '-8%', left: '-16%', width: '26vw', height: '26vw', minWidth: 220, minHeight: 220}} />
-        <span className="sf-blob sf-paper-cream-faint" style={{top: '6%', right: '-14%', width: '22vw', height: '22vw', minWidth: 180, minHeight: 180}} />
+    <div ref={pageRef} className="sf-page-body mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-12">
+      <ReturnBar />
+      <div className="sf-deco" aria-hidden="true">
+        <span className="sf-blob sf-paper-purple" style={{ top: '-8%', left: '-16%', width: '30vw', height: '30vw', minWidth: 240, minHeight: 240 }} />
+        <span className="sf-blob sf-paper-cream" style={{ top: '6%', right: '-14%', width: '25vw', height: '25vw', minWidth: 200, minHeight: 200 }} />
       </div>
 
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold md:text-3xl">合作伙伴</h1>
-          <p className="mt-2 text-sm text-muted-foreground md:text-base">
+      <div className="sf-reveal-hero mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <span className="sf-pill-mint inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-bold">
+            <Handshake className="h-3.5 w-3.5" />
+            供应链与本地服务
+          </span>
+          <h1 className="font-display text-3xl font-black tracking-tight md:text-4xl">
+            合作伙伴<span className="text-primary">。</span>
+          </h1>
+          <p className="text-sm text-muted-foreground md:text-base">
             按需要查找线上好物与本地场所服务；提供活动相关服务的商家也欢迎申请合作。
           </p>
         </div>
-        <Button size="sm" onClick={() => setApplyOpen(true)}>
+        <Button size="sm" className="sf-pill-cobalt h-10 rounded-full border-0 px-5 font-semibold hover:opacity-95" onClick={() => setApplyOpen(true)}>
           <Handshake className="h-4 w-4" />
           申请合作
         </Button>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setParams(v === 'online' ? {} : { tab: v })}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="online">
+        <TabsList className="mb-6 h-11 rounded-full bg-card/90 p-1 shadow-sm ring-1 ring-border/70">
+          <TabsTrigger value="online" className="rounded-full px-5 font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <Package className="h-4 w-4" />
             线上好物与服务
           </TabsTrigger>
-          <TabsTrigger value="local">
+          <TabsTrigger value="local" className="rounded-full px-5 font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <MapPin className="h-4 w-4" />
             本地场所与服务
           </TabsTrigger>

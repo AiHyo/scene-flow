@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BadgeCheck,
   Clock3,
@@ -25,6 +25,7 @@ import { CASE_CATEGORIES, CASES } from '@/data/cases';
 import { createProject } from '@/services/api';
 import { knownTotal, subtotalLabel, unitPriceLabel } from '@/services/budgetMath';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageEntrance } from '@/hooks/usePageEntrance';
 import { cn } from '@/lib/utils';
 import ReturnBar from '@/components/shared/ReturnBar';
 import type { CaseTemplate, ProjectData } from '@/types/types';
@@ -41,6 +42,8 @@ const compactNote = (note: string) =>
   note.replace(/[（(]/g, ' ').replace(/[）)]/g, '').replace(/\s{2,}/g, ' ').trim();
 
 export default function Cases() {
+  const pageRef = useRef<HTMLDivElement>(null);
+  usePageEntrance(pageRef);
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { ready: authReady, userId } = useAuth();
@@ -90,18 +93,36 @@ export default function Cases() {
   };
 
   return (
-    /* 「轻盈创意纸面」内页样板（v108）：外层纸面底 + 页头两侧弧形层次，卡片内部保持干净 */
-    <div className="sf-page-body mx-auto w-full max-w-6xl px-4 py-10 md:px-6 md:py-14">
+    <div ref={pageRef} className="sf-page-body mx-auto w-full max-w-6xl px-4 py-10 md:px-6 md:py-14">
       <div className="sf-deco" aria-hidden="true">
-        <span className="sf-blob sf-paper-purple-soft" style={{ top: '-6%', left: '-18%', width: '30vw', height: '30vw', minWidth: 260, minHeight: 260 }} />
-        <span className="sf-blob sf-paper-cream" style={{ top: '4%', right: '-16%', width: '26vw', height: '26vw', minWidth: 220, minHeight: 220 }} />
+        <span className="sf-blob sf-paper-purple" style={{ top: '-6%', left: '-18%', width: '32vw', height: '32vw', minWidth: 260, minHeight: 260 }} />
+        <span className="sf-blob sf-paper-cream" style={{ top: '4%', right: '-16%', width: '28vw', height: '28vw', minWidth: 220, minHeight: 220 }} />
       </div>
       <ReturnBar />
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">案例探索</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          整场活动的完整成果：主题、流程、预算、文案与布置效果，看中即可复制成你的项目
-        </p>
+      <div className="sf-reveal-hero mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="sf-pill-mint inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-bold">
+              <BadgeCheck className="h-3.5 w-3.5" />
+              策展案例画廊
+            </span>
+            <span className="rounded-full border border-border/80 bg-card/90 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+              一键复制到工作台 · 随时让 AI 二次改稿
+            </span>
+          </div>
+          <h1 className="font-display text-3xl font-black tracking-tight text-foreground md:text-4xl">
+            案例探索<span className="text-primary">。</span>
+          </h1>
+          <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+            整场活动的完整成果：主题、流程、预算、文案与同场地布置效果，看中即可复制成你的项目继续微调
+          </p>
+        </div>
+        <Button asChild className="sf-pill-cobalt h-10 shrink-0 rounded-full border-0 px-5 text-sm font-semibold hover:opacity-95">
+          <Link to="/plan">
+            <Wand2 className="h-4 w-4" />
+            定制一场全新活动
+          </Link>
+        </Button>
       </div>
 
       {/* 分类筛选 */}
@@ -141,7 +162,7 @@ export default function Cases() {
             {fullCases.map((c) => (
               <div
                 key={c.id}
-                className="sf-card sf-card-hover group flex h-full flex-col overflow-hidden rounded-2xl"
+                className="sf-reveal-item sf-card sf-card-hover group flex h-full flex-col overflow-hidden rounded-2xl"
               >
                 <button
                   type="button"

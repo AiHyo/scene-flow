@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Heart, MessageCircle, Plus, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import PostDetailDialog from '@/components/plaza/PostDetailDialog';
 import { PlazaAvatar } from '@/components/plaza/PlazaAvatar';
 import AuthDialog from '@/components/auth/AuthDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageEntrance } from '@/hooks/usePageEntrance';
 import { UserAvatar } from '@/components/auth/Avatars';
 import { ASSETS } from '@/data/assets';
 import { cn } from '@/lib/utils';
@@ -147,6 +148,8 @@ function FeedItem({
 
 /** 活动广场：社区动态流（浏览免登录；发布/点赞/评论需登录；数据后端存储） */
 export default function Plaza() {
+  const pageRef = useRef<HTMLDivElement>(null);
+  usePageEntrance(pageRef);
   const { ready, userId, isAccount } = useAuth();
   const [posts, setPosts] = useState<PlazaPost[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -288,18 +291,23 @@ export default function Plaza() {
   };
 
   return (
-    <div className="sf-page-body @container mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+    <div ref={pageRef} className="sf-page-body @container mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-12">
       <div className="sf-deco" aria-hidden="true">
-        <span className="sf-blob sf-paper-purple-faint" style={{top: '-10%', left: '-18%', width: '28vw', height: '28vw', minWidth: 240, minHeight: 240}} />
-        <span className="sf-blob sf-paper-cream-faint" style={{top: '2%', right: '-16%', width: '24vw', height: '24vw', minWidth: 200, minHeight: 200}} />
+        <span className="sf-blob sf-paper-purple" style={{ top: '-10%', left: '-18%', width: '30vw', height: '30vw', minWidth: 240, minHeight: 240 }} />
+        <span className="sf-blob sf-paper-cream" style={{ top: '2%', right: '-16%', width: '26vw', height: '26vw', minWidth: 210, minHeight: 210 }} />
       </div>
       <ReturnBar />
 
-      {/* 紧凑页头：标题 + 说明 + 显眼的发布入口（空态时主操作收口至空态引导卡片，不重复） */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight">活动广场</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">大家的活动策划、场景布置与现场照片</p>
+      {/* 现代波普页头 */}
+      <div className="sf-reveal-hero flex flex-wrap items-end justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className="sf-pill-amber inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-bold">
+            真实活动社区
+          </span>
+          <h1 className="font-display text-3xl font-black tracking-tight md:text-4xl">
+            活动广场<span className="text-primary">。</span>
+          </h1>
+          <p className="text-sm text-muted-foreground md:text-base">大家的活动策划、场景布置与现场照片</p>
         </div>
         {(posts === null || posts.length > 0) && (
           <Button
@@ -389,22 +397,24 @@ export default function Plaza() {
           )}
         </section>
 
-        {/* 宽屏右侧：轻量氛围区（无重复操作按钮，只留发布说明与品牌插画） */}
-        <aside className="hidden w-[250px] shrink-0 @5xl:block">
-          <div className="sticky top-24 flex flex-col items-center gap-4 rounded-xl border bg-card p-5 text-center">
-            <img
-              src={ASSETS.plazaCat}
-              alt="探头的小猫，活动广场氛围插画"
-              width={176}
-              height={176}
-              loading="lazy"
-              className="h-28 w-28 rounded-2xl object-cover"
-            />
-            <p className="text-sm font-medium">把活动现场分享出来</p>
-            <div className="flex w-full flex-col gap-2 border-t pt-4 text-left text-xs leading-relaxed text-muted-foreground">
-              <p>每条动态需包含标题、正文与配图</p>
-              <p>支持多张图片上传，可预览与移除</p>
-              <p>浏览免登录，点赞与评论需先登录</p>
+        {/* 宽屏右侧：统一 3D 蓝白小灵氛围卡 */}
+        <aside className="hidden w-[260px] shrink-0 @5xl:block">
+          <div className="sf-card sticky top-24 flex flex-col items-center gap-4 overflow-hidden rounded-2xl p-5 text-center">
+            <div className="flex h-32 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-[#F4F3FF] via-[#FAF7FF] to-[#FEF8E6]">
+              <img
+                src={ASSETS.aiCat.full}
+                alt="小灵 · 活动广场策划伙伴"
+                width={112}
+                height={112}
+                loading="lazy"
+                className="ai-cat-idle h-24 w-24 select-none object-contain"
+              />
+            </div>
+            <p className="font-display text-base font-bold tracking-tight">把活动现场分享出来</p>
+            <div className="flex w-full flex-col gap-2 border-t border-border/60 pt-4 text-left text-xs leading-relaxed text-muted-foreground">
+              <p>· 每条动态需包含标题、正文与配图</p>
+              <p>· 支持多张图片上传，可预览与移除</p>
+              <p>· 浏览免登录，点赞与评论需先登录</p>
             </div>
           </div>
         </aside>

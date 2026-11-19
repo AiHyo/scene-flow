@@ -8,7 +8,32 @@ import { Textarea } from '@/components/ui/textarea';
 import { AiAvatar } from '@/components/auth/Avatars';
 import { PendingImageBar } from '@/components/shared/PendingImageBar';
 import { usePendingImage } from '@/hooks/usePendingImage';
+import { usePageEntrance } from '@/hooks/usePageEntrance';
+import { ASSETS } from '@/data/assets';
 import { createProject, understandImage } from '@/services/api';
+
+const STARTER_PRESETS = [
+  {
+    tag: '公司团建',
+    tone: 'bg-indigo-50 text-indigo-700 border-indigo-200/70 hover:bg-indigo-100/70',
+    text: '下个月想给研发团队办一场轻松的室内外团建，大概 30 人，希望有不尴尬的破冰和互动游戏，大家不想上台表演，预算 1.5 万以内。',
+  },
+  {
+    tag: '温馨生日派对',
+    tone: 'bg-amber-50 text-amber-800 border-amber-200/80 hover:bg-amber-100/70',
+    text: '想给好朋友办一场 15 人的温馨生日聚会，偏奶油风+暖灯拍照氛围，希望有照片回忆墙和惊喜切蛋糕环节，预算 4000 左右。',
+  },
+  {
+    tag: '年度表彰年会',
+    tone: 'bg-rose-50 text-rose-700 border-rose-200/70 hover:bg-rose-100/70',
+    text: '筹备 80 人的企业年度表彰与答谢晚宴，在杭州酒店宴会厅举办，预算 8 万元以内，希望轻松温暖有仪式感，兼顾颁奖、晚宴和压轴抽奖。',
+  },
+  {
+    tag: '户外草坪沙龙',
+    tone: 'bg-emerald-50 text-emerald-700 border-emerald-200/70 hover:bg-emerald-100/70',
+    text: '周末下午办一场 25 人的户外草坪轻沙龙与茶歇交流会，有遮阳天幕、签到台、轻音乐和自由社交分区。',
+  },
+] as const;
 import { extractExplicitFacts } from '@/services/facts';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ChatMessage, ProjectData } from '@/types/types';
@@ -31,6 +56,8 @@ const detectTypeWords = (text: string): string[] => {
 const GREETING = '你好呀！我是小灵，可以陪你一起想活动方向、把想法整理成完整方案、排流程管预算、写邀请函文案，也能根据场地照片生成布置效果图～';
 
 export default function PlanStart() {
+  const pageRef = useRef<HTMLDivElement>(null);
+  usePageEntrance(pageRef);
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
@@ -178,24 +205,47 @@ export default function PlanStart() {
   };
 
   return (
-    <div className="sf-page-body mx-auto flex w-full max-w-4xl flex-col items-center px-4 py-12 md:px-8 md:py-20">
+    <div ref={pageRef} className="sf-page-body mx-auto flex w-full max-w-4xl flex-col items-center px-4 py-10 md:px-8 md:py-16">
       <div className="sf-deco" aria-hidden="true">
-        <span className="sf-blob sf-paper-purple-faint" style={{top: '4%', left: '-14%', width: '24vw', height: '24vw', minWidth: 200, minHeight: 200}} />
-        <span className="sf-blob sf-paper-cream-faint" style={{top: '12%', right: '-14%', width: '20vw', height: '20vw', minWidth: 160, minHeight: 160}} />
+        <span className="sf-blob sf-paper-purple" style={{ top: '2%', left: '-16%', width: '28vw', height: '28vw', minWidth: 220, minHeight: 220 }} />
+        <span className="sf-blob sf-paper-cream" style={{ top: '10%', right: '-16%', width: '24vw', height: '24vw', minWidth: 190, minHeight: 190 }} />
       </div>
-      <span className="mb-5 inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
-        <Sparkles className="h-3.5 w-3.5 text-primary" />
-        无需注册 · 直接开始
-      </span>
 
-      <h1 className="mb-4 text-center text-3xl font-bold tracking-tight text-balance md:text-4xl">
+      {/* 3D 长毛蓝白小灵坐镇页头 */}
+      <div className="sf-reveal-hero mb-3 flex flex-col items-center">
+        <img
+          src={ASSETS.aiCat.full}
+          alt="小灵 · 3D AI 策划伙伴"
+          className="ai-cat-idle h-24 w-24 select-none object-contain"
+        />
+        <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-card/95 px-3.5 py-1 text-xs font-semibold text-primary shadow-2xs">
+          <Sparkles className="h-3.5 w-3.5" />
+          无需注册 · 直接开始 AI 共策
+        </span>
+      </div>
+
+      <h1 className="sf-reveal-hero mb-3 text-center font-display text-3xl font-black tracking-tight text-balance md:text-5xl">
         我们一起，把想法
         <br />
-        变成<span className="gradient-text">一场活动</span>
+        变成<span className="text-primary">一场活动。</span>
       </h1>
-      <p className="mb-10 max-w-xl text-center text-pretty text-sm leading-relaxed text-muted-foreground md:text-base">
-        你准备办什么活动？还没想好也可以——从一个模糊的想法开始就好。
+      <p className="sf-reveal-hero mb-8 max-w-xl text-center text-pretty text-sm leading-relaxed text-muted-foreground md:text-base">
+        你准备办什么活动？还没想好也可以——点下面任意灵感胶囊，或直接写下模糊想法就行。
       </p>
+
+      {/* 一键灵感开场胶囊 */}
+      <div className="sf-reveal-hero mb-5 flex flex-wrap items-center justify-center gap-2">
+        {STARTER_PRESETS.map((preset) => (
+          <button
+            key={preset.tag}
+            type="button"
+            onClick={() => setDesc(preset.text)}
+            className={`cursor-pointer rounded-full border px-3.5 py-1.5 text-xs font-semibold shadow-2xs transition-all hover:-translate-y-0.5 ${preset.tone}`}
+          >
+            + {preset.tag}
+          </button>
+        ))}
+      </div>
 
       {/* 主输入卡：短欢迎 + 一处描述输入 + 照片附件 + 可跳过的补充条件（首屏内可见核心输入） */}
       <div className="sf-card w-full rounded-3xl p-5 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 md:p-6">

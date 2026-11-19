@@ -18,6 +18,7 @@ import {
 import { deleteProject, listProjects, updateProject } from '@/services/api';
 import { CASES } from '@/data/cases';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageEntrance } from '@/hooks/usePageEntrance';
 import type { ProjectListItem } from '@/types/types';
 import { cn } from '@/lib/utils';
 
@@ -114,6 +115,8 @@ function Cover({ p, failedIds, onFail }: { p: ProjectListItem; failedIds: Set<st
 }
 
 export default function Projects() {
+  const pageRef = useRef<HTMLDivElement>(null);
+  usePageEntrance(pageRef);
   const navigate = useNavigate();
   const { ready, userId } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -198,16 +201,17 @@ export default function Projects() {
   }
 
   return (
-    <div className="sf-page-body mx-auto w-full max-w-6xl px-4 py-10 md:px-6 md:py-14">
+    <div ref={pageRef} className="sf-page-body mx-auto w-full max-w-6xl px-4 py-10 md:px-6 md:py-14">
       <div className="sf-deco" aria-hidden="true">
-        <span className="sf-blob sf-paper-purple-faint" style={{top: '-10%', left: '-18%', width: '28vw', height: '28vw', minWidth: 240, minHeight: 240}} />
-        <span className="sf-blob sf-paper-cream-faint" style={{top: '4%', right: '-16%', width: '24vw', height: '24vw', minWidth: 200, minHeight: 200}} />
+        <span className="sf-blob sf-paper-purple" style={{ top: '-10%', left: '-18%', width: '30vw', height: '30vw', minWidth: 240, minHeight: 240 }} />
+        <span className="sf-blob sf-paper-cream" style={{ top: '4%', right: '-16%', width: '26vw', height: '26vw', minWidth: 200, minHeight: 200 }} />
       </div>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-
+      <div className="sf-reveal-hero mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">我的活动</h1>
-          <p className="mt-2 text-sm text-muted-foreground">访客与账号的活动都在这里，自动保存</p>
+          <h1 className="font-display text-3xl font-black tracking-tight md:text-4xl">
+            我的活动<span className="text-primary">。</span>
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground md:text-base">访客与账号的活动都在这里，自动保存</p>
         </div>
         <Button asChild className="sf-pill-cobalt rounded-full border-0 px-5 font-semibold hover:opacity-95">
           <Link to="/plan">

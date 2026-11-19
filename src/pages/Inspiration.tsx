@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight,
@@ -25,6 +25,7 @@ import { CATEGORIES, CONTENT_TYPES, INSPIRATIONS, PREP_NOTES } from '@/data/insp
 import { getMaterialMatches } from '@/data/resources';
 import ReturnBar from '@/components/shared/ReturnBar';
 import { MaterialCard } from '@/components/workbench/ResourceCards';
+import { usePageEntrance } from '@/hooks/usePageEntrance';
 import type { InspirationEntry } from '@/types/types';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,24 @@ const TYPE_COLOR: Record<string, string> = {
   props: 'bg-sky-500',
   food: 'bg-emerald-500',
   copy: 'bg-violet-500',
+};
+
+const TYPE_BADGE: Record<string, string> = {
+  game: 'bg-indigo-50 text-indigo-700 border-indigo-200/70',
+  show: 'bg-amber-50 text-amber-800 border-amber-200/80',
+  decor: 'bg-rose-50 text-rose-700 border-rose-200/70',
+  props: 'bg-sky-50 text-sky-700 border-sky-200/70',
+  food: 'bg-emerald-50 text-emerald-700 border-emerald-200/70',
+  copy: 'bg-violet-50 text-violet-700 border-violet-200/70',
+};
+
+const TYPE_STRIPE: Record<string, string> = {
+  game: 'from-indigo-500/80 to-violet-500/70',
+  show: 'from-amber-400/90 to-orange-400/80',
+  decor: 'from-rose-400/90 to-pink-400/80',
+  props: 'from-sky-400/90 to-cyan-400/80',
+  food: 'from-emerald-400/90 to-teal-400/80',
+  copy: 'from-violet-500/85 to-fuchsia-400/75',
 };
 
 const TYPE_NAME: Record<string, string> = {
@@ -70,6 +89,8 @@ function SceneTags({ scenes }: { scenes: InspirationEntry['scenes'] }) {
 }
 
 export default function Inspiration() {
+  const pageRef = useRef<HTMLDivElement>(null);
+  usePageEntrance(pageRef);
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [type, setType] = useState('all');
@@ -178,25 +199,41 @@ export default function Inspiration() {
   );
 
   return (
-    <div className="sf-page-body mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-12">
-      <ReturnBar />      <div className="sf-deco" aria-hidden="true">
-        <span className="sf-blob sf-paper-purple-faint" style={{top: '-8%', left: '-16%', width: '26vw', height: '26vw', minWidth: 220, minHeight: 220}} />
-        <span className="sf-blob sf-paper-cream-faint" style={{top: '6%', right: '-14%', width: '22vw', height: '22vw', minWidth: 180, minHeight: 180}} />
+    <div ref={pageRef} className="sf-page-body mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-12">
+      <ReturnBar />
+      <div className="sf-deco" aria-hidden="true">
+        <span className="sf-blob sf-paper-purple" style={{ top: '-8%', left: '-16%', width: '30vw', height: '30vw', minWidth: 240, minHeight: 240 }} />
+        <span className="sf-blob sf-paper-cream" style={{ top: '4%', right: '-14%', width: '26vw', height: '26vw', minWidth: 210, minHeight: 210 }} />
       </div>
 
-      {/* 页头 */}
-      <div className="mb-6 flex flex-col gap-1.5">
-        <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-          <Lightbulb className="h-3.5 w-3.5 text-primary" />
-          活动灵感库 · 免登录浏览，点子可直接拿走用
-        </p>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">找灵感</h1>
-        <p className="text-sm text-muted-foreground">
-          浏览即可理解每个点子怎么玩、需要什么；这里只有局部点子，整套方案请看
-          <Link to="/cases" className="ml-1 text-primary hover:underline">
-            案例探索
+      {/* 现代波普页头 */}
+      <div className="sf-reveal-hero mb-7 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="sf-pill-amber inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-bold">
+              <Lightbulb className="h-3.5 w-3.5" />
+              活动灵感墙
+            </span>
+            <span className="rounded-full border border-border/80 bg-card/90 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+              免登录直接拿走用 · 当前 {filtered.length} 条
+            </span>
+          </div>
+          <h1 className="font-display text-3xl font-black tracking-tight text-foreground md:text-4xl">
+            找灵感<span className="text-primary">。</span>
+          </h1>
+          <p className="text-sm text-muted-foreground md:text-base">
+            先挑出好玩的局部玩法与布置点子，一键带进 AI 策划；整套全案请看
+            <Link to="/cases" className="ml-1 font-semibold text-primary hover:underline">
+              案例探索 →
+            </Link>
+          </p>
+        </div>
+        <Button asChild className="sf-pill-cobalt h-10 shrink-0 rounded-full border-0 px-5 text-sm font-semibold hover:opacity-95">
+          <Link to="/plan">
+            <Sparkles className="h-4 w-4" />
+            直接让 AI 帮我凑点子
           </Link>
-        </p>
+        </Button>
       </div>
 
       {/* 统一现代悬浮筛选工具条：场景 + 搜索 + 类型收拢进清爽卡片 */}
@@ -263,7 +300,7 @@ export default function Inspiration() {
         </div>
       </div>
 
-      {/* 点子列表：三列自然高度瀑布流 */}
+      {/* 点子列表：视觉优先三列瀑布流（有图卡大图置顶 + 纯文字卡顶部色条分级） */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
           <Search className="h-8 w-8" />
@@ -271,63 +308,74 @@ export default function Inspiration() {
         </div>
       ) : (
         <div className="columns-1 gap-4 md:columns-3">
-          {filtered.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              onClick={() => setDetailId(entry.id)}
-              className="sf-card sf-card-hover group mb-4 flex w-full flex-col gap-2.5 break-inside-avoid rounded-2xl p-4 text-left md:p-5"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className={cn('h-2 w-2 shrink-0 rounded-full', TYPE_COLOR[entry.contentType])} />
-                  <h3 className="truncate text-sm font-semibold md:text-base">
-                    {entry.title}
-                    {entry.ext && <span className="ml-1.5 text-xs font-normal text-muted-foreground">拓展</span>}
-                  </h3>
+          {filtered.map((entry) => {
+            const hasCover = entry.contentType === 'decor' && Boolean(entry.coverUrl);
+            return (
+              <button
+                key={entry.id}
+                type="button"
+                onClick={() => setDetailId(entry.id)}
+                className="sf-reveal-item sf-card sf-card-hover group mb-4 flex w-full flex-col overflow-hidden break-inside-avoid rounded-2xl text-left"
+              >
+                {/* 有图卡：大图置顶视觉主导；无图卡：顶部轻彩梯度色条区分品类 */}
+                {hasCover ? (
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+                    <img
+                      src={entry.coverUrl}
+                      alt={`${entry.title}参考效果`}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-0.5 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur-sm">
+                      <span className={cn('h-1.5 w-1.5 rounded-full', TYPE_COLOR[entry.contentType])} />
+                      {TYPE_NAME[entry.contentType]}
+                    </span>
+                  </div>
+                ) : (
+                  <div className={cn('h-1.5 w-full bg-gradient-to-r', TYPE_STRIPE[entry.contentType] ?? 'from-primary/70 to-primary/40')} />
+                )}
+
+                <div className="flex flex-col gap-2.5 p-4 md:p-5">
+                  <div className="flex items-start justify-between gap-2.5">
+                    <h3 className="font-display text-base font-bold tracking-tight text-foreground md:text-[17px]">
+                      {entry.title}
+                      {entry.ext && <span className="ml-1.5 text-xs font-normal text-muted-foreground">拓展</span>}
+                    </h3>
+                    {!hasCover && (
+                      <span className={cn('shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold', TYPE_BADGE[entry.contentType])}>
+                        {TYPE_NAME[entry.contentType]}
+                      </span>
+                    )}
+                  </div>
+                  {/* 怎么玩：浏览即理解核心 */}
+                  <p className="text-sm leading-relaxed text-foreground/85">{entry.howTo}</p>
+                  {/* 适用条件 + 关键准备 */}
+                  <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 pt-2.5 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-primary/70" />
+                      {entry.format}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span aria-hidden>·</span>
+                      {entry.needs}
+                    </span>
+                    <SceneTags scenes={entry.scenes} />
+                  </div>
+                  <div className="flex items-center justify-between pt-1 text-xs font-medium text-primary">
+                    <span className="text-muted-foreground transition-colors group-hover:text-primary">查看详情</span>
+                    <Link
+                      to={`/plan?desc=${encodeURIComponent(`${entry.title}：${entry.howTo}`)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#F4F5FF] px-3 py-1 font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+                    >
+                      用到策划中
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </div>
                 </div>
-                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {TYPE_NAME[entry.contentType]}
-                </span>
-              </div>
-              {/* 怎么玩：浏览即理解核心 */}
-              <p className="text-sm leading-relaxed text-foreground/90">{entry.howTo}</p>
-              {/* 适用条件 + 关键准备 */}
-              <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t pt-2.5 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-primary/70" />
-                  {entry.format}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <span aria-hidden>·</span>
-                  {entry.needs}
-                </span>
-                <SceneTags scenes={entry.scenes} />
-              </div>
-              {/* 布置类带小图 */}
-              {entry.contentType === 'decor' && entry.coverUrl && (
-                <div className="aspect-video w-full overflow-hidden rounded-xl">
-                  <img
-                    src={entry.coverUrl}
-                    alt={`${entry.title}参考效果`}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-              )}
-              <div className="flex items-center justify-between pt-1 text-xs font-medium text-primary">
-                <span>点击查看玩法详情</span>
-                <Link
-                  to={`/plan?desc=${encodeURIComponent(`${entry.title}：${entry.howTo}`)}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 transition-colors hover:bg-primary/20"
-                >
-                  用到策划中
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
 

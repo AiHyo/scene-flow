@@ -14,6 +14,7 @@ import {
 import CompareCanvas from '@/components/scene/CompareCanvas';
 import { PendingImageBar } from '@/components/shared/PendingImageBar';
 import { usePendingImage } from '@/hooks/usePendingImage';
+import { usePageEntrance } from '@/hooks/usePageEntrance';
 import { VENUE_SAMPLES } from '@/data/venueSamples';
 import { compressImage, createProject, understandImage, uploadImage } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +25,8 @@ import ReturnBar from '@/components/shared/ReturnBar';
 const GREETING = '你好呀！我是小灵，可以陪你一起想活动方向、把想法整理成完整方案、排流程管预算、写邀请函文案，也能根据场地照片生成布置效果图～';
 
 export default function SceneStart() {
+  const pageRef = useRef<HTMLDivElement>(null);
+  usePageEntrance(pageRef);
   const navigate = useNavigate();
   const { ready, userId, waitForReady } = useAuth();
   /** 用户自己的场地照片（四态状态机） */
@@ -199,32 +202,65 @@ export default function SceneStart() {
   };
 
   return (
-    <div className="sf-page-body mx-auto w-full max-w-6xl px-4 py-16 md:px-8 md:py-24">
-      <ReturnBar />      <div className="sf-deco" aria-hidden="true">
-        <span className="sf-blob sf-paper-purple-faint" style={{top: '-8%', left: '-18%', width: '26vw', height: '26vw', minWidth: 220, minHeight: 220}} />
-        <span className="sf-blob sf-paper-cream-faint" style={{top: '6%', right: '-16%', width: '22vw', height: '22vw', minWidth: 180, minHeight: 180}} />
+    <div ref={pageRef} className="sf-page-body mx-auto w-full max-w-6xl px-4 py-10 md:px-6 md:py-14">
+      <ReturnBar />
+      <div className="sf-deco" aria-hidden="true">
+        <span className="sf-blob sf-paper-purple" style={{ top: '-8%', left: '-18%', width: '30vw', height: '30vw', minWidth: 240, minHeight: 240 }} />
+        <span className="sf-blob sf-paper-cream" style={{ top: '4%', right: '-16%', width: '26vw', height: '26vw', minWidth: 210, minHeight: 210 }} />
       </div>
 
-      <div className="mb-8 flex flex-col items-center gap-4 text-center md:flex-row md:items-end md:justify-between md:text-left">
+      {/* 现代双栏视觉上传主舞台：不用藏在弹窗里，首屏即可拖入/点击上传空场地照片 */}
+      <div className="sf-reveal-hero sf-card mb-10 grid gap-6 overflow-hidden rounded-3xl p-6 md:grid-cols-[1.15fr_0.85fr] md:items-center md:p-8">
         <div className="min-w-0">
-          <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            无需注册 · 上传即用
-          </span>
-          <h1 className="text-3xl font-bold tracking-tight text-balance md:text-4xl">场景布置</h1>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="sf-pill-cobalt inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold">
+              <Sparkles className="h-3.5 w-3.5" />
+              实景空间推演
+            </span>
+            <span className="rounded-full border border-border/80 bg-background/90 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+              免登录上传 · 保留原建筑结构
+            </span>
+          </div>
+          <h1 className="font-display text-3xl font-black tracking-tight text-balance text-foreground md:text-4xl">
+            拍一张空场地，<span className="text-primary">先看见布置效果。</span>
+          </h1>
           <p className="mt-3 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground md:text-base">
-            上传你的场地照片，告诉 AI 想要的感觉——AI 会保留原有空间结构，给出布置方向与效果预览
+            上传你的空场地实拍，告诉 AI 想要的感觉——严格锁定原场地墙面、门窗与透视机位，只添加可落地软装布置。
           </p>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Button
+              size="lg"
+              className="sf-pill-cobalt h-11 shrink-0 rounded-full border-0 px-6 font-semibold hover:opacity-95"
+              onClick={() => setUploadOpen(true)}
+            >
+              <ImagePlus className="h-4.5 w-4.5" />
+              {venue.readyUrl ? '查看 / 更换我的场地' : '上传场地照片开始'}
+            </Button>
+            <span className="text-xs text-muted-foreground">或直接体验下方 3 组同场地可拖拽样板 ↓</span>
+          </div>
         </div>
-        {/* 标题旁显眼主入口：轻量上传弹窗，不必向下寻找 */}
-        <Button
-          size="lg"
-          className="sf-pill-cobalt h-12 shrink-0 rounded-full border-0 px-6 font-semibold hover:opacity-95"
+
+        {/* 右侧直达上传区（点击直选照片并自动弹出补充诉求/开始） */}
+        <button
+          type="button"
           onClick={() => setUploadOpen(true)}
+          className="group relative flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border-2 border-dashed border-primary/30 bg-[#F7F8FF] p-5 text-center transition-all hover:border-primary/60 hover:bg-[#F2F3FF]"
         >
-          <ImagePlus className="h-5 w-5" />
-          {venue.readyUrl ? '查看/更换我的场地' : '上传我的场地'}
-        </Button>
+          {venue.img?.status === 'ok' && venue.img.url ? (
+            <>
+              <img src={venue.img.url} alt="已上传场地" className="h-36 w-full rounded-xl object-cover shadow-sm" />
+              <span className="text-xs font-semibold text-primary">场地照片已就绪 · 点击补充要求并开始 →</span>
+            </>
+          ) : (
+            <>
+              <span className="sf-pill-cobalt flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105">
+                <ImagePlus className="h-6 w-6" />
+              </span>
+              <p className="text-sm font-bold text-foreground">点击上传你的空场地照片</p>
+              <p className="text-xs text-muted-foreground">支持 JPG / PNG / WEBP · 自动无损压缩</p>
+            </>
+          )}
+        </button>
       </div>
 
       {/* 轻量上传弹窗：选择即上传并预览；完成后引导填写想法开始（不自动 AI、不自动生图） */}
@@ -318,7 +354,7 @@ export default function SceneStart() {
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {VENUE_SAMPLES.map((s) => (
-            <div key={s.id} className="sf-card sf-card-hover flex h-full flex-col rounded-2xl p-3.5 md:p-4">
+            <div key={s.id} className="sf-reveal-item sf-card sf-card-hover flex h-full flex-col rounded-2xl p-3.5 md:p-4">
               {/* 卡片内直接拖拽前后对比（默认分割线居中；拖拽在对比组件内部，不触发其他操作） */}
               <CompareCanvas
                 beforeUrl={s.before}
