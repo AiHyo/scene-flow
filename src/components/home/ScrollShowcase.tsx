@@ -220,21 +220,22 @@ export default function ScrollShowcase() {
           .to({}, { duration: 0.45 });
 
         /* ===== 滚动 scrub：面板滑入覆盖 + 幕内序列；反向按同一时间轴回退 ===== */
+        /* 总时长约 1.45s 归一化映射到 4200px 滚动行程，确保第 3 幕底部全部显现后留出约 430px 稳定停留区，不再一划而过 */
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
             start: 'top top',
-            end: '+=3000',
-            scrub: 1,
+            end: '+=4200',
+            scrub: 0.85,
             pin: true,
             anticipatePin: 1,
             onUpdate: (self) => {
               const p = self.progress;
-              const nextAct = p < 0.17 ? 0 : p < 0.52 ? 1 : p < 0.86 ? 2 : 3;
+              const nextAct = p < 0.14 ? 0 : p < 0.44 ? 1 : p < 0.83 ? 2 : 3;
               setActiveAct(nextAct);
 
-              /* 第4幕切幕基本结束 (p >= 0.94)：启动停留 0.4s 后的平滑对比演示 */
-              if (p >= 0.94) {
+              /* 第4幕切幕基本结束 (p >= 0.93)：启动停留 0.4s 后的平滑对比演示 */
+              if (p >= 0.93) {
                 if (!act4InViewRef.current) {
                   act4InViewRef.current = true;
                   tryStartAct4Demo();
@@ -261,35 +262,38 @@ export default function ScrollShowcase() {
           .to('.sf-sticker', { y: -24, scale: 0.92, autoAlpha: 0, duration: 0.09, stagger: 0.02, ease: 'power2.in' }, 0.05)
           .to('.sf-word-aux', { autoAlpha: 0, duration: 0.06, stagger: 0.015 }, 0.06)
           .to('.sf-panel-2', { yPercent: 0, duration: 0.2, ease: 'power2.inOut' }, 0.1)
-          /* 幕2 内部：中心问题建立 → 痛点自上下聚合（紧凑围绕，不围边缘）→ 结论落定 */
+          /* 幕2 内部：中心问题建立 → 痛点聚合 → 结论落定（0.455 落定，留足阅读缓冲至 0.54） */
           .to('.sf-q-line', { yPercent: 0, duration: 0.1, ease: 'power4.out' }, 0.19)
           .to('.sf-q-bar', { scaleX: 1, duration: 0.07, ease: 'power3.inOut' }, 0.26)
           .to('.sf-pain', { autoAlpha: 1, y: 0, duration: 0.12, stagger: 0.016, ease: 'power3.out' }, 0.21)
           .to('.sf-core', { autoAlpha: 1, y: 0, duration: 0.06 }, 0.375)
           .to('.sf-aux', { autoAlpha: 1, y: 0, duration: 0.05 }, 0.405)
           /* 幕2 → 幕3：幕2 收拢让位 */
-          .to('.sf-panel-2 .sf-inner', { yPercent: -14, autoAlpha: 0.2, duration: 0.1, ease: 'power2.in' }, 0.46)
-          .to('.sf-panel-3', { yPercent: 0, duration: 0.2, ease: 'power2.inOut' }, 0.5)
-          /* 幕3 分阶段：① 用户一问 → ② AI 方向与候选 → ③ 用户选择与调整成果（重点放大正在发生的选择） */
-          .to('.sf-conv-user1', { autoAlpha: 1, y: 0, duration: 0.06, ease: 'power3.out' }, 0.53)
-          .to('.sf-conv-ai-lead', { autoAlpha: 1, y: 0, duration: 0.05, ease: 'power3.out' }, 0.615)
-          .to('.sf-conv-dir', { autoAlpha: 1, y: 0, duration: 0.055, stagger: 0.02, ease: 'power3.out' }, 0.635)
-          .to('.sf-conv-user2', { autoAlpha: 1, y: 0, duration: 0.06, ease: 'power3.out' }, 0.72)
-          .to('.sf-conv-badge', { autoAlpha: 1, scale: 1, duration: 0.04, ease: 'back.out(2)' }, 0.755)
-          .to('.sf-conv-dim', { autoAlpha: 0.45, duration: 0.045 }, 0.755)
-          .to('.sf-conv-adjust', { autoAlpha: 1, y: 0, duration: 0.055, ease: 'power3.out' }, 0.79)
-          .to('.sf-conv-row', { autoAlpha: 1, y: 0, duration: 0.045, stagger: 0.014 }, 0.815)
-          /* 幕3 → 幕4：幕3 收拢让位 */
-          .to('.sf-panel-3 .sf-inner', { yPercent: -14, autoAlpha: 0.2, duration: 0.1, ease: 'power2.in' }, 0.865)
-          .to('.sf-panel-4', { yPercent: 0, duration: 0.2, ease: 'power2.inOut' }, 0.88)
+          .to('.sf-panel-2 .sf-inner', { yPercent: -14, autoAlpha: 0.2, duration: 0.1, ease: 'power2.in' }, 0.54)
+          .to('.sf-panel-3', { yPercent: 0, duration: 0.17, ease: 'power2.inOut' }, 0.57)
+          /* 幕3 分阶段：① 用户一问 → ② AI 方向与候选 → ③ 用户选择与调整成果（0.99 全部显现完） */
+          .to('.sf-conv-user1', { autoAlpha: 1, y: 0, duration: 0.06, ease: 'power3.out' }, 0.60)
+          .to('.sf-conv-ai-lead', { autoAlpha: 1, y: 0, duration: 0.05, ease: 'power3.out' }, 0.67)
+          .to('.sf-conv-dir', { autoAlpha: 1, y: 0, duration: 0.055, stagger: 0.02, ease: 'power3.out' }, 0.69)
+          .to('.sf-conv-user2', { autoAlpha: 1, y: 0, duration: 0.06, ease: 'power3.out' }, 0.78)
+          .to('.sf-conv-badge', { autoAlpha: 1, scale: 1, duration: 0.04, ease: 'back.out(2)' }, 0.82)
+          .to('.sf-conv-dim', { autoAlpha: 0.45, duration: 0.045 }, 0.82)
+          .to('.sf-conv-adjust', { autoAlpha: 1, y: 0, duration: 0.055, ease: 'power3.out' }, 0.85)
+          .to('.sf-conv-row', { autoAlpha: 1, y: 0, duration: 0.045, stagger: 0.014 }, 0.875)
+          /* 幕3 底部稳定停留区（0.99 → 1.14，对应约 430px 滚动缓冲，轻松停在第三幕完整阅读） */
+          /* 幕3 → 幕4：幕3 收拢让位，第4幕平滑滑入 */
+          .to('.sf-panel-3 .sf-inner', { yPercent: -14, autoAlpha: 0.2, duration: 0.1, ease: 'power2.in' }, 1.14)
+          .to('.sf-panel-4', { yPercent: 0, duration: 0.18, ease: 'power2.inOut' }, 1.16)
           /* 幕4 收尾：主体与署名同屏 */
-          .to('.sf-final-title', { autoAlpha: 1, y: 0, duration: 0.045 }, 0.925)
-          .to('.sf-final-canvas', { autoAlpha: 1, y: 0, duration: 0.05 }, 0.935)
-          .to('.sf-final-aux', { autoAlpha: 1, y: 0, duration: 0.035 }, 0.95)
-          .to('.sf-final-added', { autoAlpha: 1, y: 0, duration: 0.035 }, 0.957)
-          .to('.sf-final-cycle', { autoAlpha: 1, y: 0, duration: 0.035 }, 0.96)
-          .to('.sf-final-cta', { autoAlpha: 1, y: 0, duration: 0.04 }, 0.97)
-          .to('.sf-final-footer', { autoAlpha: 1, duration: 0.03 }, 0.985);
+          .to('.sf-final-title', { autoAlpha: 1, y: 0, duration: 0.045 }, 1.22)
+          .to('.sf-final-canvas', { autoAlpha: 1, y: 0, duration: 0.05 }, 1.24)
+          .to('.sf-final-aux', { autoAlpha: 1, y: 0, duration: 0.035 }, 1.27)
+          .to('.sf-final-added', { autoAlpha: 1, y: 0, duration: 0.035 }, 1.28)
+          .to('.sf-final-cycle', { autoAlpha: 1, y: 0, duration: 0.035 }, 1.30)
+          .to('.sf-final-cta', { autoAlpha: 1, y: 0, duration: 0.04 }, 1.32)
+          .to('.sf-final-footer', { autoAlpha: 1, duration: 0.03 }, 1.35)
+          /* 末幕轻微停留缓冲，收尾更稳 */
+          .to({}, { duration: 0.07 }, 1.38);
 
         return () => {
           intro.kill();
@@ -721,16 +725,32 @@ export default function ScrollShowcase() {
         </div>
       </div>
 
-      {/* ===== 桌面叠加控件：幕进度点 ===== */}
+      {/* ===== 桌面叠加控件：可点击切换的幕进度点 ===== */}
       <div className="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-2.5 md:motion-safe:flex">
-        {[0, 1, 2, 3].map((i) => (
-          <span
-            key={i}
-            className={cn(
-              'h-2 w-2 rounded-full transition-all duration-300',
-              activeAct === i ? 'scale-125 bg-primary' : 'bg-muted-foreground/30'
-            )}
-          />
+        {[
+          { label: '第 1 幕 · 开场舞台', ratio: 0 },
+          { label: '第 2 幕 · 筹备困扰', ratio: 0.34 },
+          { label: '第 3 幕 · AI 共策', ratio: 0.73 },
+          { label: '第 4 幕 · 实景效果', ratio: 1 },
+        ].map((act, i) => (
+          <button
+            key={act.label}
+            type="button"
+            title={act.label}
+            aria-label={act.label}
+            onClick={() => {
+              const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+              window.scrollTo({ top: Math.round(maxScroll * act.ratio), behavior: 'smooth' });
+            }}
+            className="group flex h-4 w-4 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <span
+              className={cn(
+                'h-2 w-2 rounded-full transition-all duration-300 group-hover:scale-125 group-hover:bg-primary/70',
+                activeAct === i ? 'scale-125 bg-primary' : 'bg-muted-foreground/30'
+              )}
+            />
+          </button>
         ))}
       </div>
     </section>
