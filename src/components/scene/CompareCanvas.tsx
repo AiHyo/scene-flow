@@ -4,7 +4,6 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
-  useState,
 } from 'react';
 import { ChevronsLeftRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -50,12 +49,37 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
     ref
   ) => {
     const isControlled = typeof propPos === 'number';
-    const [internalPos, setInternalPos] = useState(initial);
-    const pos = isControlled ? propPos : internalPos;
+    const initialPos = isControlled ? propPos : initial;
+    const posRef = useRef(initialPos);
 
     const containerRef = useRef<HTMLDivElement>(null);
+    const beforeClipRef = useRef<HTMLDivElement>(null);
+    const dividerRef = useRef<HTMLDivElement>(null);
+    const handleRef = useRef<HTMLButtonElement>(null);
     const dragging = useRef(false);
     const loadedRef = useRef({ before: false, after: false });
+
+    /** 直接更新 DOM 裁切与手柄位置，避免 60/120fps 动画或拖拽时触发整棵 React 树重渲染 */
+    const paintPos = useCallback((p: number) => {
+      posRef.current = p;
+      if (beforeClipRef.current) {
+        beforeClipRef.current.style.clipPath = `inset(0 ${100 - p}% 0 0)`;
+      }
+      if (dividerRef.current) {
+        dividerRef.current.style.left = `${p}%`;
+      }
+      if (handleRef.current) {
+        handleRef.current.style.left = `${p}%`;
+        handleRef.current.setAttribute('aria-valuenow', String(Math.round(p)));
+        handleRef.current.setAttribute('aria-valuetext', `分割位置 ${Math.round(p)}%`);
+      }
+    }, []);
+
+    useEffect(() => {
+      if (isControlled && typeof propPos === 'number') {
+        paintPos(propPos);
+      }
+    }, [isControlled, propPos, paintPos]);
 
     const notifyLoaded = useCallback(() => {
       if (loadedRef.current.before && loadedRef.current.after) {
@@ -78,12 +102,10 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
     const applyPos = useCallback(
       (next: number) => {
         const clamped = Math.min(98, Math.max(2, next));
-        if (!isControlled) {
-          setInternalPos(clamped);
-        }
+        paintPos(clamped);
         onPosChange?.(clamped);
       },
-      [isControlled, onPosChange]
+      [paintPos, onPosChange]
     );
 
     const updateFromClientX = useCallback(
@@ -115,15 +137,17 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
       };
     }, [interactive, updateFromClientX]);
 
-    useImperativeHandle(ref, () => ({
-      setPos: (p: number) => {
-        const clamped = Math.min(98, Math.max(2, p));
-        if (!isControlled) {
-          setInternalPos(clamped);
-        }
-        onPosChange?.(clamped);
-      },
-    }));
+    useImperativeHandle(
+      ref,
+      () => ({
+        setPos: (p: number) => {
+          const clamped = Math.min(98, Math.max(2, p));
+          paintPos(clamped);
+          onPosChange?.(clamped);
+        },
+      }),
+      [paintPos, onPosChange]
+    );
 
     return (
       <div
@@ -159,7 +183,11 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
           }}
         />
         {/* 上层：布置前（clip-path 裁切，只改裁切不动图） */}
-        <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+        <div
+          ref={beforeClipRef}
+          className="absolute inset-0 overflow-hidden will-change-[clip-path]"
+          style={{ clipPath: `inset(0 ${100 - posRef.current}% 0 0)` }}
+        >
           <img
             src={beforeUrl}
             alt={labels[0]}
@@ -181,20 +209,22 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
         </div>
         {/* 分割线 */}
         <div
-          className="pointer-events-none absolute inset-y-0 z-10 w-0.5 bg-white/90 shadow-[0_0_8px_rgba(0,0,0,0.4)]"
-          style={{ left: `${pos}%` }}
+          ref={dividerRef}
+          className="pointer-events-none absolute inset-y-0 z-10 w-0.5 bg-white/90 shadow-[0_0_8px_rgba(0,0,0,0.4)] will-change-[left]"
+          style={{ left: `${posRef.current}%` }}
         />
         {interactive && (
           <button
+            ref={handleRef}
             type="button"
             role="slider"
             aria-label="对比分割线，可用左右方向键调整"
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-valuenow={Math.round(pos)}
-            aria-valuetext={`分割位置 ${Math.round(pos)}%`}
-            className="compare-handle absolute top-1/2 z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full border border-black/10 bg-white/95 text-foreground shadow-lg backdrop-blur transition-transform hover:scale-105 active:scale-95"
-            style={{ left: `${pos}%`, touchAction: 'none' }}
+            aria-valuenow={Math.round(posRef.current)}
+            aria-valuetext={`分割位置 ${Math.round(posRef.current)}%`}
+            className="compare-handle absolute top-1/2 z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full border border-black/10 bg-white/95 text-foreground shadow-lg backdrop-blur transition-transform will-change-[left] hover:scale-105 active:scale-95"
+            style={{ left: `${posRef.current}%`, touchAction: 'none' }}
             onPointerDown={(e) => {
               onUserInteract?.();
               dragging.current = true;
@@ -204,10 +234,10 @@ const CompareCanvas = forwardRef<CompareCanvasHandle, CompareCanvasProps>(
               onUserInteract?.();
               if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                applyPos(Math.max(2, pos - 5));
+                applyPos(Math.max(2, posRef.current - 5));
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                applyPos(Math.min(98, pos + 5));
+                applyPos(Math.min(98, posRef.current + 5));
               }
             }}
           >
