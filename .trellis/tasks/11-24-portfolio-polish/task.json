@@ -1,0 +1,31 @@
+{
+  "id": "portfolio-polish",
+  "name": "portfolio-polish",
+  "title": "SceneFlow 作品集化优化",
+  "description": "把 SceneFlow 打磨成可公开展示的 AI+后端作品：仓库门面、后端安全基座、AI 编排后端化与 Mock 演示模式、前端性能与 UI 细节",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "ahyo",
+  "assignee": "ahyo",
+  "createdAt": "2026-11-24",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "11-24-repo-hygiene",
+    "11-24-backend-hardening",
+    "11-24-ai-orchestration",
+    "11-24-frontend-perf-ux"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
