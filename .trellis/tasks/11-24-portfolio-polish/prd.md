@@ -28,12 +28,13 @@
 
 - [ ] 全新环境 `cp .env.example .env && docker compose up -d --build` 在**不填任何 key** 的情况下可完整体验：AI 共策对话 → 生成方案 → 场地识别 → 布置效果图 → 预览导出。
 - [ ] CI（GitHub Actions）在 PR 上运行：前端 lint + typecheck + build，后端 ruff + pytest，全部通过。
-- [ ] README 包含：一句话定位、演示 GIF/截图、架构图、「我做了什么 / 关键工程决策」、本地与 Docker 运行方式、Mock 与真实 Provider 切换说明。
+- [ ] README 包含：一句话定位、演示 GIF/截图、架构图、关键工程决策、「AI 协作开发方式」、本地与 Docker 运行方式、Mock 与真实 Provider 切换说明。
 - [ ] 不引入功能回退：现有页面（首页、找灵感、案例、场景布置、广场、工作台、预览）在 Mock 模式下可正常使用。
 
 ## Decisions
 
-- （待定）秒哒原型来源在仓库中如何呈现 —— 见 Open Questions。
+- **D1 原型来源（2026-11-24 用户确认）**：秒哒与 Claude 同属开发工具，不单独说明也不刻意隐藏。不改写 git 历史；README 不专门提及秒哒，改设「AI 协作开发方式」章节，如实描述以 AI agent + Trellis（规格 → 任务 → 实现 → 检查）驱动开发；仓库中的秒哒脚手架残留（包名、`.rules` 中的 `miaoda-gg.com`、秒哒 CDN 外链图、旧任务）作为工程卫生项清理。
+- **D2 可讲解性**：项目代码主要由 AI 生成，因此每个子任务的 design.md 必须写清关键取舍（为什么这样做、放弃了什么），作为作者的面试讲解依据。
 - 不在本轮新增通用 Agent / RAG / 论坛类功能；亮点集中在「AI 编排后端化 + 结构化输出 + 评测 + 安全」。
 - 不改写 git 历史以外的任何远程状态；推送与 PR 需用户确认。
 
@@ -45,4 +46,4 @@
 
 ## Open Questions（阻塞规划）
 
-1. 秒哒平台原型来源如何在仓库与 README 中呈现（保留历史并如实说明 / 保留历史不提及 / 重写历史）。
+1. AI 工具目录（`.agent/ .agents/ .claude/ .codex/ .cursor/`，共约 200 个 Trellis 生成文件）是否继续纳入版本控制。

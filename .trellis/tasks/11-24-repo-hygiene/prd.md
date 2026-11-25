@@ -9,7 +9,7 @@
 ### R1 脚手架残留
 - `package.json` 包名 `miaoda-react-admin` → `sceneflow-web`（`package.json:2`）。
 - `.rules/` 中与本项目无关的规则移除：`supabase-google-sso.yml`（含 `miaoda-gg.com`）、`supabase-edge-function-get-body.yml`，并同步更新 `.rules/check.sh` 中对应调用；其余规则保留（仍被 `npm run lint` 使用）。
-- 秒哒来源的呈现方式按父任务决策执行（见父任务 Open Questions）。
+- 按父任务决策 D1：不改写历史、README 不专门提秒哒；清理秒哒脚手架残留（`.trellis/workspace/miaoda/` 日志属于开发过程记录，保留）。
 
 ### R2 遗留与垃圾文件
 - 删除已提交的 10 个备份文件：`src/**/*.bak-prebg`、`src/index.css.bak-prebg`、`public/images/assets/default-avatar.png.bak` 等（`git ls-files | grep .bak`）。
@@ -27,12 +27,12 @@
 ### R5 开源基础设施
 - 新增 `LICENSE`（MIT，署名为作者）。
 - 新增 GitHub Actions：前端 `pnpm install --frozen-lockfile` → lint → typecheck → build（后端部分由 backend-hardening 子任务补充）。
-- README 重写骨架：一句话定位、截图（复用 Playwright 截图脚本生成）、技术栈、运行方式；架构图与「工程亮点」章节在 ai-orchestration 完成后补全。
+- README 重写骨架：一句话定位、截图（复用 Playwright 截图脚本生成）、技术栈、运行方式、「AI 协作开发方式」章节；架构图与「工程亮点」章节在 ai-orchestration 完成后补全。
 
 ## Acceptance Criteria
 
 - [ ] `git ls-files | grep -E '\.bak'` 无输出。
-- [ ] `git grep -i miaoda -- ':!.trellis' ':!pnpm-lock.yaml'` 仅剩父任务决策允许保留的说明性文字。
+- [ ] `git grep -i miaoda -- ':!.trellis'` 无输出（锁文件同步后亦不再含 miaoda 包）。
 - [ ] 全新 clone 后 `pnpm install --frozen-lockfile && pnpm build` 成功。
 - [ ] `npm run lint` 输出 SUCCESS。
 - [ ] `src/` 中无 `bcebos.com` 外链图片。
@@ -41,5 +41,5 @@
 
 ## Out of Scope
 
-- 改写 git 历史（除非父任务决策选择该方案）。
+- 改写 git 历史（父任务决策 D1：不改写）。
 - AI 工具目录（`.agent/ .agents/ .claude/ .codex/ .cursor/`）的去留 —— 待用户决策后再纳入。
