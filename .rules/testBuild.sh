@@ -1,14 +1,11 @@
 #!/bin/bash
+# Smoke-test that the production bundle builds. Output goes to a throwaway
+# directory so the real dist/ is untouched.
 
-VITE_TEMP="node_modules/.vite-temp"
-if [ -L "$VITE_TEMP" ]; then
-    rm "$VITE_TEMP"
-    mkdir -p "$VITE_TEMP"
-elif [ ! -e "$VITE_TEMP" ]; then
-    mkdir -p "$VITE_TEMP"
-fi
+OUT_DIR=$(mktemp -d)
+trap 'rm -rf "$OUT_DIR"' EXIT
 
-OUTPUT=$(npx vite build --minify false --logLevel error --outDir /workspace/.dist 2>&1)
+OUTPUT=$(npx vite build --minify false --logLevel error --outDir "$OUT_DIR" 2>&1)
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
