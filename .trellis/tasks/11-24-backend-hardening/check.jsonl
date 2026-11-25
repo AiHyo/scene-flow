@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "前端改动须通过 pnpm lint 全流程"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "核查接口契约前后端一致"}
