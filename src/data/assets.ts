@@ -45,6 +45,10 @@ export const ASSETS = {
     lighting: '/images/assets/material-lighting.webp',
     photoprops: '/images/assets/material-photoprops.webp',
     awards: '/images/assets/material-awards.webp',
+    /** 以下 3 张来自 Pexels（Pexels License），来源见 CREDITS.md */
+    filmCamera: '/images/assets/material-film-camera.webp',
+    boardGame: '/images/assets/material-board-game.webp',
+    toteBag: '/images/assets/material-tote-bag.webp',
   },
   /** AI 伙伴：3D 长毛蓝白小猫·磨砂护目镜·鸢尾蓝紫星芒围巾（全身透明 PNG = 悬浮助手，面部特写 = 聊天头像 1:1 对应） */
   aiCat: {
