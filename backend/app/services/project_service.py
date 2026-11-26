@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import HTTPException, status
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import Forbidden, NotFound
 from app.models.profile import Profile
 from app.models.project import Project
 from app.schemas.project import ProjectCreateIn, ProjectPatchIn
@@ -43,9 +43,9 @@ async def get_owned_project(db: AsyncSession, user: Profile, project_id: uuid.UU
     result = await db.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+        raise NotFound("项目不存在")
     if project.owner_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权访问该项目")
+        raise Forbidden("无权访问该项目")
     return project
 
 

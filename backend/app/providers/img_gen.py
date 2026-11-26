@@ -6,9 +6,9 @@ import uuid
 from typing import Any
 
 import httpx
-from fastapi import HTTPException, status
 
 from app.core.config import settings
+from app.core.errors import NotFound, ServiceMisconfigured, UpstreamError
 from app.storage.s3 import upload_bytes
 
 # 轻量内存任务表，将同步 /v1/images/edits 接口适配为前端轮询契约
@@ -20,10 +20,7 @@ def _resolve_openai_img_config() -> tuple[str, str, str]:
     api_key = settings.img_gen_api_key or settings.llm_api_key
     model = settings.img_gen_model or "gpt-image-2.6"
     if not base_url or not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="服务端未配置生图服务密钥（IMG_GEN_API_KEY 或 LLM_API_KEY）",
-        )
+        raise ServiceMisconfigured("服务端未配置生图服务密钥（IMG_GEN_API_KEY 或 LLM_API_KEY）")
     return base_url, api_key, model
 
 
@@ -98,10 +95,7 @@ async def submit_scene_gen(
         base_url = settings.img_gen_base_url.rstrip("/")
         api_key = settings.img_gen_api_key
         if not base_url or not api_key:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="服务端未配置 IMG_GEN_BASE_URL 或 IMG_GEN_API_KEY",
-            )
+            raise ServiceMisconfigured("服务端未配置 IMG_GEN_BASE_URL 或 IMG_GEN_API_KEY")
         payload: dict[str, Any] = {"prompt": prompt, "image_list": image_list}
         if resolution:
             payload["resolution"] = resolution
@@ -115,10 +109,7 @@ async def submit_scene_gen(
             )
         body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else None
         if resp.status_code != 200 or not body:
-            raise HTTPException(
-                status_code=resp.status_code,
-                detail=(body or {}).get("message") or resp.text or f"生图服务异常 ({resp.status_code})",
-            )
+            raise UpstreamError((body or {}).get("message") or resp.text or f"生图服务异常 ({resp.status_code})")
         return body.get("data", body)
 
     _resolve_openai_img_config()
@@ -140,10 +131,7 @@ async def query_scene_gen(task_id: str) -> dict[str, Any]:
             )
         body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else None
         if resp.status_code != 200 or not body:
-            raise HTTPException(
-                status_code=resp.status_code,
-                detail=(body or {}).get("message") or resp.text or f"生图查询异常 ({resp.status_code})",
-            )
+            raise UpstreamError((body or {}).get("message") or resp.text or f"生图查询异常 ({resp.status_code})")
         inner: dict[str, Any] = body.get("data", body)
         nested_images = (inner.get("task_result") or {}).get("images")
         if nested_images and not inner.get("images"):
@@ -163,7 +151,7 @@ async def query_scene_gen(task_id: str) -> dict[str, Any]:
 
     task = _SCENE_TASKS.get(task_id)
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="生图任务不存在")
+        raise NotFound("生图任务不存在")
     if task.get("task_status") != "processing":
         _SCENE_TASKS.pop(task_id, None)
     return task

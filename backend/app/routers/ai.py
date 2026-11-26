@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.core.deps import get_current_user
+from app.core.errors import BadRequest
 from app.models.profile import Profile
 from app.providers.img_gen import query_scene_gen, submit_scene_gen
 from app.providers.llm import stream_chat_completions
@@ -93,7 +94,7 @@ async def scene_submit(
     """提交场景布置生图任务"""
     valid_imgs = [it for it in body.image_list if isinstance(it.get("image"), str) and it["image"].startswith("http")]
     if not valid_imgs:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="缺少有效的场地底图 URL")
+        raise BadRequest("缺少有效的场地底图 URL")
     return await submit_scene_gen(
         prompt=body.prompt,
         image_list=valid_imgs,

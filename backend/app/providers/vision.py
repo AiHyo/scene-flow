@@ -6,9 +6,9 @@ import uuid
 from typing import Any
 
 import httpx
-from fastapi import HTTPException, status
 
 from app.core.config import settings
+from app.core.errors import NotFound, ServiceMisconfigured
 
 # 轻量内存任务表，将异步轮询接口适配为单次多模态视觉模型调用
 _VISION_TASKS: dict[str, dict[str, Any]] = {}
@@ -67,10 +67,7 @@ def submit_vision_task(question: str, image_url: str) -> str:
     """提交图像理解任务并后台执行"""
     api_key = settings.vision_api_key or settings.llm_api_key
     if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="服务端未配置 VISION_API_KEY 或 LLM_API_KEY",
-        )
+        raise ServiceMisconfigured("服务端未配置 VISION_API_KEY 或 LLM_API_KEY")
     task_id = uuid.uuid4().hex
     _VISION_TASKS[task_id] = {"retCode": 1, "description": ""}
     asyncio.create_task(_run_vision_task(task_id, question, image_url))
@@ -81,7 +78,7 @@ def query_vision_task(task_id: str) -> dict[str, Any]:
     """查询图像理解任务状态（0 成功，1 处理中，-1 失败）"""
     task = _VISION_TASKS.get(task_id)
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="识图任务不存在")
+        raise NotFound("识图任务不存在")
     if task["retCode"] != 1:
         _VISION_TASKS.pop(task_id, None)
     return task

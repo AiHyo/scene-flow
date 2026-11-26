@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator
 from typing import Any
 
 import httpx
-from fastapi import HTTPException, status
 
 from app.core.config import settings
+from app.core.errors import ServiceMisconfigured, UpstreamError
+from app.core.http import get_http_client
+
+logger = logging.getLogger(__name__)
+
+CHAT_TIMEOUT = httpx.Timeout(connect=15.0, read=120.0, write=30.0, pool=15.0)
 
 
 def _has_image_part(messages: list[dict[str, Any]]) -> bool:
@@ -24,10 +30,7 @@ async def stream_chat_completions(
 ) -> AsyncIterator[bytes]:
     """调用 OpenAI 兼容对话接口并透传 SSE 数据流"""
     if not settings.llm_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="服务端未配置 LLM_API_KEY",
-        )
+        raise ServiceMisconfigured("服务端未配置 LLM_API_KEY")
 
     target_model = model or (settings.llm_vision_model if _has_image_part(messages) else settings.llm_model)
     url = f"{settings.llm_base_url.rstrip('/')}/chat/completions"
@@ -44,17 +47,18 @@ async def stream_chat_completions(
     if enable_thinking:
         payload["enable_thinking"] = True
 
-    client = httpx.AsyncClient(timeout=httpx.Timeout(connect=15.0, read=120.0, write=30.0, pool=15.0))
-    req = client.build_request("POST", url, headers=headers, json=payload)
-    resp = await client.send(req, stream=True)
+    client = get_http_client()
+    req = client.build_request("POST", url, headers=headers, json=payload, timeout=CHAT_TIMEOUT)
+    try:
+        resp = await client.send(req, stream=True)
+    except httpx.RequestError as exc:
+        raise UpstreamError(f"无法连接对话服务：{type(exc).__name__}") from exc
+
     if resp.status_code != 200:
-        err_bytes = await resp.aread()
+        err_text = (await resp.aread()).decode("utf-8", errors="replace")
         await resp.aclose()
-        await client.aclose()
-        raise HTTPException(
-            status_code=resp.status_code,
-            detail=err_bytes.decode("utf-8", errors="replace") or f"上游对话服务异常 ({resp.status_code})",
-        )
+        logger.warning("chat upstream %s: %s", resp.status_code, err_text[:500])
+        raise UpstreamError(f"对话服务异常（HTTP {resp.status_code}）：{err_text[:200]}")
 
     async def _iter() -> AsyncIterator[bytes]:
         try:
@@ -63,6 +67,5 @@ async def stream_chat_completions(
                     yield chunk
         finally:
             await resp.aclose()
-            await client.aclose()
 
     return _iter()

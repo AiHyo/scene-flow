@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.errors import Forbidden, Unauthorized
 from app.core.security import decode_access_token
 from app.models.profile import Profile
 
@@ -37,10 +38,7 @@ async def get_current_user(
 ) -> Profile:
     """强制要求有效登录会话（含匿名访客会话）"""
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="未登录或会话已过期",
-        )
+        raise Unauthorized("未登录或会话已过期")
     return user
 
 
@@ -49,8 +47,5 @@ async def get_current_account_user(
 ) -> Profile:
     """强制要求正式注册账号（拒绝匿名访客）"""
     if user.is_anon:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="请先登录正式账号",
-        )
+        raise Forbidden("请先登录正式账号")
     return user

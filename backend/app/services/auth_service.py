@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import BadRequest, Conflict, Unauthorized
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.profile import AnonCredentialMap, Profile
 from app.models.project import Project
@@ -41,7 +41,7 @@ async def register_account(db: AsyncSession, body: RegisterIn) -> AuthTokenOut:
     email = body.email.strip().lower()
     existing = await db.execute(select(Profile.id).where(Profile.email == email))
     if existing.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="该邮箱已被注册")
+        raise Conflict("该邮箱已被注册")
 
     user = Profile(
         email=email,
@@ -62,7 +62,7 @@ async def login_account(db: AsyncSession, body: LoginIn) -> AuthTokenOut:
     result = await db.execute(select(Profile).where(Profile.email == email))
     user = result.scalar_one_or_none()
     if not user or not user.password_hash or not verify_password(body.password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="邮箱或密码错误")
+        raise Unauthorized("邮箱或密码错误")
     return _build_token_response(user)
 
 
@@ -85,7 +85,7 @@ async def migrate_anon_projects(db: AsyncSession, target_user: Profile, from_use
     src_res = await db.execute(select(Profile).where(Profile.id == from_user_id))
     src_user = src_res.scalar_one_or_none()
     if not src_user or not src_user.is_anon:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="来源用户不是有效的访客会话")
+        raise BadRequest("来源用户不是有效的访客会话")
 
     result = await db.execute(
         update(Project).where(Project.owner_id == from_user_id).values(owner_id=target_user.id).returning(Project.id)

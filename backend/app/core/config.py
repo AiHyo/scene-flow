@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # 优先读取仓库根目录 .env，其次读取 backend/.env
 _ROOT_ENV = Path(__file__).resolve().parents[3] / ".env"
 _LOCAL_ENV = Path(__file__).resolve().parents[2] / ".env"
+
+DEV_JWT_SECRET = "sceneflow-dev-jwt-secret-change-in-prod-32b"
+# 仓库中出现过的示例值，生产环境一律视为未配置
+_KNOWN_WEAK_SECRETS = {DEV_JWT_SECRET, "change-me-in-production", "changeme", "secret"}
+MIN_PROD_SECRET_LENGTH = 32
 
 
 class Settings(BaseSettings):
@@ -15,6 +22,13 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    # 运行环境：dev 允许内置默认密钥以便 clone 即跑；prod 强制安全配置
+    app_env: Literal["dev", "prod"] = "dev"
+    log_level: str = "INFO"
+
+    # 允许跨域的前端来源（逗号分隔）。Docker 部署经 Nginx 同源访问，仅本地开发需要
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:8080,http://localhost:8080"
 
     # 数据库
     database_url: str = "postgresql+asyncpg://sceneflow:sceneflow_dev@127.0.0.1:5432/sceneflow"
@@ -27,7 +41,7 @@ class Settings(BaseSettings):
     minio_bucket: str = "media"
 
     # JWT 鉴权
-    jwt_secret: str = "sceneflow-dev-jwt-secret-change-in-prod-32b"
+    jwt_secret: str = DEV_JWT_SECRET
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 10080
 
@@ -47,6 +61,21 @@ class Settings(BaseSettings):
     img_gen_base_url: str = ""
     img_gen_api_key: str = ""
     img_gen_model: str = "gpt-image-2.6"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @model_validator(mode="after")
+    def _require_strong_secret_in_prod(self) -> Settings:
+        if self.app_env == "prod":
+            secret = self.jwt_secret.strip()
+            if secret in _KNOWN_WEAK_SECRETS or len(secret) < MIN_PROD_SECRET_LENGTH:
+                raise ValueError(
+                    f"APP_ENV=prod 时必须设置 JWT_SECRET 为至少 {MIN_PROD_SECRET_LENGTH} 位的随机字符串，"
+                    "不能使用仓库中的示例值"
+                )
+        return self
 
 
 settings = Settings()

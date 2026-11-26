@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import HTTPException, status
 from sqlalchemy import asc, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import Forbidden, NotFound
 from app.models.plaza import PlazaComment, PlazaLike, PlazaPost
 from app.models.profile import Profile
 from app.schemas.plaza import (
@@ -55,7 +55,7 @@ async def get_post_detail(db: AsyncSession, user: Profile | None, post_id: uuid.
     post_res = await db.execute(select(PlazaPost).where(PlazaPost.id == post_id))
     post = post_res.scalar_one_or_none()
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="动态不存在")
+        raise NotFound("动态不存在")
 
     liked = False
     if user:
@@ -95,9 +95,9 @@ async def delete_post(db: AsyncSession, user: Profile, post_id: uuid.UUID) -> No
     post_res = await db.execute(select(PlazaPost).where(PlazaPost.id == post_id))
     post = post_res.scalar_one_or_none()
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="动态不存在")
+        raise NotFound("动态不存在")
     if post.author_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="仅作者本人可删除动态")
+        raise Forbidden("仅作者本人可删除动态")
 
     imgs = list(post.img_list or [])
     await db.delete(post)
@@ -111,7 +111,7 @@ async def toggle_like(db: AsyncSession, user: Profile, post_id: uuid.UUID) -> Pl
     post_res = await db.execute(select(PlazaPost).where(PlazaPost.id == post_id))
     post = post_res.scalar_one_or_none()
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="动态不存在")
+        raise NotFound("动态不存在")
 
     like_res = await db.execute(select(PlazaLike).where(PlazaLike.post_id == post_id, PlazaLike.user_id == user.id))
     existing = like_res.scalar_one_or_none()
@@ -134,7 +134,7 @@ async def create_comment(
     """发表单级文字评论"""
     post_res = await db.execute(select(PlazaPost.id).where(PlazaPost.id == post_id))
     if post_res.scalar_one_or_none() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="动态不存在")
+        raise NotFound("动态不存在")
 
     comment = PlazaComment(
         post_id=post_id,
@@ -154,9 +154,9 @@ async def delete_comment(db: AsyncSession, user: Profile, comment_id: uuid.UUID)
     comment_res = await db.execute(select(PlazaComment).where(PlazaComment.id == comment_id))
     comment = comment_res.scalar_one_or_none()
     if not comment:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="评论不存在")
+        raise NotFound("评论不存在")
     if comment.author_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="仅作者本人可删除评论")
+        raise Forbidden("仅作者本人可删除评论")
 
     await db.delete(comment)
     await db.commit()
