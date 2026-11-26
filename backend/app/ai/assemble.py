@@ -197,7 +197,9 @@ def derive_time_range(schedule: Any) -> TimeRange | None:
     if end < s:
         cross_day = True
         end += 24 * 60
-    if end - s >= 24 * 60:
+    # Ends at or after midnight → next day (e.g. 23:30 + 90 min ends 01:00 tomorrow).
+    # The original only flagged a 24 h+ span, so 20:00→01:00 was reported as same-day.
+    if end >= 24 * 60:
         cross_day = True
 
     def fmt(minutes: int) -> str:

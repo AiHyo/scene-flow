@@ -60,7 +60,8 @@ export function buildPendings(d: ProjectData): PendingItem[] {
 
 /** 从结构化流程表推导活动起止时间（文案与预览共用同一来源，不让模型猜结束时间）：
  * start=首项开始时间；end=末项开始时间+其时长（无时长按该项开始时间计）；
- * 末项开始时间早于首项（如晚间开场跨到次日凌晨）标记 crossDay；任一环节缺时间则返回 null（时间未定） */
+ * 结束时间跨过午夜即标记 crossDay（末项开始早于首项，或末项开始于当天但加上时长后过了 24 点）；
+ * 任一环节缺时间则返回 null（时间未定） */
 export function deriveTimeRange(
   schedule: Array<{ time?: string | null; duration?: string | null }> | null | undefined
 ): { start: string; end: string; crossDay: boolean } | null {
@@ -85,7 +86,8 @@ export function deriveTimeRange(
     crossDay = true;
     end += 24 * 60;
   }
-  if (end - s >= 24 * 60) crossDay = true;
+  /* 结束分钟数到达 24 点即为次日结束（如 23:30 开始的环节持续 90 分钟，结束于次日 01:00） */
+  if (end >= 24 * 60) crossDay = true;
   const fmt = (min: number) => `${String(Math.floor((min % 1440) / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
   return { start: fmt(s), end: fmt(end), crossDay };
 }

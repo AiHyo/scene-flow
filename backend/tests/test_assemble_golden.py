@@ -39,10 +39,26 @@ def _options(case: dict) -> ChatOptions:
     )
 
 
+# Deliberate behaviour changes relative to the captured original. Each entry is
+# (case, original text, new text) and must be justified; everything else must match exactly.
+INTENTIONAL_CHANGES = {
+    # deriveTimeRange fix: a schedule ending past midnight is now flagged as cross-day,
+    # so the copywriting prompt tells the model the event ends the next day.
+    "cross-day/copies": (
+        "20:00 开始，01:00 结束",
+        "20:00 开始，01:00 结束（跨日流程：次日结束，文案需明确说明跨天）",
+    ),
+}
+
+
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
 def test_matches_original_frontend_assembly(case):
     got = build_messages(LEGACY, case["mode"], case["project"], case["userText"], _options(case))
-    expected = case["expected"]["messages"]
+    expected = [dict(m) for m in case["expected"]["messages"]]
+    if case["name"] in INTENTIONAL_CHANGES:
+        old, new = INTENTIONAL_CHANGES[case["name"]]
+        assert expected[-1]["content"].count(old) == 1
+        expected[-1]["content"] = expected[-1]["content"].replace(old, new)
     assert len(got) == len(expected)
     for g, e in zip(got, expected, strict=True):
         assert g["role"] == e["role"]
@@ -77,8 +93,11 @@ def test_known_total_matches_budget_math(items, total):
     ("schedule", "expected"),
     [
         ([{"time": "13:30"}, {"time": "16:30", "duration": "45 分钟"}], ("13:30", "17:15", False)),
-        # Original deriveTimeRange: ending past midnight is NOT flagged as cross-day (bug, fixed next commit)
-        ([{"time": "20:00"}, {"time": "23:30", "duration": "90 分钟"}], ("20:00", "01:00", False)),
+        # Regression: ending past midnight is cross-day (the original reported same-day)
+        ([{"time": "20:00"}, {"time": "23:30", "duration": "90 分钟"}], ("20:00", "01:00", True)),
+        ([{"time": "22:00"}, {"time": "23:00", "duration": "1 小时"}], ("22:00", "00:00", True)),
+        ([{"time": "21:00"}, {"time": "23:00", "duration": "59 分钟"}], ("21:00", "23:59", False)),
+        ([{"time": "23:00"}, {"time": "01:00", "duration": "30 分钟"}], ("23:00", "01:30", True)),
         ([{"time": "09:00"}, {"time": "10:00", "duration": "半场"}], ("09:00", "10:30", False)),
         ([{"time": "待定"}], None),
     ],
