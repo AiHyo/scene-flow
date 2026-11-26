@@ -19,23 +19,27 @@ export function apiUrl(path: string): string {
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** 解析后的 JSON 错误体（如 409 冲突附带的 currentVersion、code）；非 JSON 时为 undefined */
+  body?: Record<string, unknown>;
+  constructor(status: number, message: string, body?: Record<string, unknown>) {
     super(message);
     this.status = status;
+    this.body = body;
   }
 }
 
-async function parseErrorMessage(res: Response): Promise<string> {
+async function parseError(res: Response): Promise<{ message: string; body?: Record<string, unknown> }> {
   const text = await res.text().catch(() => '');
-  if (!text) return `请求失败（HTTP ${res.status}）`;
+  if (!text) return { message: `请求失败（HTTP ${res.status}）` };
   try {
     const json = JSON.parse(text) as Record<string, unknown>;
     const detail = json.detail ?? json.message ?? json.error;
-    if (typeof detail === 'string' && detail.trim()) return detail;
+    if (typeof detail === 'string' && detail.trim()) return { message: detail, body: json };
+    return { message: text.slice(0, 160), body: json };
   } catch {
     /* 非 JSON 响应直接返回截断文本 */
   }
-  return text.slice(0, 160);
+  return { message: text.slice(0, 160) };
 }
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -50,7 +54,8 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
 
   const res = await fetch(apiUrl(path), { ...init, headers });
   if (!res.ok) {
-    throw new ApiError(res.status, await parseErrorMessage(res));
+    const { message, body } = await parseError(res);
+    throw new ApiError(res.status, message, body);
   }
   if (res.status === 204) {
     return undefined as T;

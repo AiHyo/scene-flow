@@ -14,6 +14,7 @@ from app.schemas.project import (
     ProjectDetailOut,
     ProjectListItemOut,
     ProjectPatchIn,
+    ProjectPatchOut,
 )
 from app.services import project_service
 
@@ -54,16 +55,16 @@ async def get_project(
     return ProjectDetailOut.model_validate(project)
 
 
-@router.patch("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch("/{project_id}", response_model=ProjectPatchOut)
 async def update_project(
     project_id: uuid.UUID,
     body: ProjectPatchIn,
     user: Profile = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> Response:
-    """局部更新活动项目"""
-    await project_service.update_project(db, user, project_id, body)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+) -> ProjectPatchOut:
+    """局部更新活动项目；携带 expectedVersion 时做乐观锁校验，冲突返回 409 与 currentVersion"""
+    version = await project_service.update_project(db, user, project_id, body)
+    return ProjectPatchOut(version=version)
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -1,0 +1,12 @@
+# Keep the frontend build context small and platform-independent:
+# host node_modules contain native binaries for the host OS, not the Linux image.
+node_modules
+dist
+.git
+.env
+.env.*
+!.env.example
+backend
+.claude/worktrees
+**/__pycache__
+**/.DS_Store

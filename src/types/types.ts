@@ -291,6 +291,8 @@ export interface ProjectRow {
   title: string;
   coverUrl: string | null;
   data: ProjectData;
+  /** 乐观锁版本号：保存时作为 expectedVersion 提交 */
+  version: number;
   createTime: string;
   updateTime: string;
 }
@@ -299,6 +301,7 @@ export interface ProjectListItem {
   id: string;
   title: string;
   coverUrl: string | null;
+  version: number;
   updateTime: string;
   createTime: string;
   /** 项目数据（列表页判断进度 / 封面回退 / 类型标签） */

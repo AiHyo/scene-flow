@@ -39,9 +39,19 @@ import AiAssistant from '@/components/workbench/AiAssistant';
 import BudgetModule from '@/components/workbench/BudgetModule';
 import PlanModule from '@/components/workbench/PlanModule';
 import SceneModule from '@/components/workbench/SceneModule';
+import VersionConflictDialog from '@/components/workbench/VersionConflictDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { clearDraft, getDraft, getProject, listProjects, saveDraft, updateProject } from '@/services/api';
+import {
+  clearDraft,
+  getDraft,
+  getProject,
+  listProjects,
+  moveDraftToConflictBackup,
+  saveDraft,
+  updateProject,
+  VersionConflictError,
+} from '@/services/api';
 import { applySchedulePatch, checkOrig, locateKey, normName, normTime } from '@/services/adjustPatch';
 import { extractScope, type ScopeModule } from '@/services/facts';
 import { ensureIds, normalizeListIds } from '@/services/normalize';
@@ -51,7 +61,8 @@ import { normalizeTags, repairSceneData } from '@/services/sceneTags';
 import { knownTotal } from '@/services/budgetMath';
 import type { AdjustCard, ChatMessage, Direction, ProjectData, ReqSource, SceneState } from '@/types/types';
 
-type SaveState = 'saved' | 'saving' | 'error' | 'idle' | 'pending';
+/** conflict：其他窗口已保存更新的版本，写入已暂停，等待用户在冲突弹窗中选择 */
+type SaveState = 'saved' | 'saving' | 'error' | 'idle' | 'pending' | 'conflict';
 
 export default function Workbench() {
   const { id } = useParams<{ id: string }>();
@@ -250,6 +261,11 @@ export default function Workbench() {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirtyRef = useRef(false);
+  /* 乐观锁：当前编辑基于的服务端版本号（undefined = 未知，保存时不做版本校验，兼容旧草稿/直通路径） */
+  const versionRef = useRef<number | undefined>(undefined);
+  /* 版本冲突：弹窗等待用户选择期间暂停向服务端写入（仍写本地草稿），避免防抖保存反复触发冲突 */
+  const [versionConflict, setVersionConflict] = useState<{ currentVersion: number } | null>(null);
+  const conflictRef = useRef(false);
 
   /* ---------- 加载 ---------- */
   useEffect(() => {
@@ -273,6 +289,8 @@ export default function Workbench() {
             void getProject(id)
               .then((row) => {
                 if (!row) return;
+                /* 仅在尚未得知版本时补齐：若对账返回前已保存过，保存响应里的版本更新，不能被旧值覆盖 */
+                if (versionRef.current === undefined) versionRef.current = row.version;
                 const serverTs = new Date(row.updateTime).getTime();
                 /* 本地无草稿且服务端版本新于直通写入（期间他端编辑）才覆盖 */
                 const draft = userId ? getDraft(userId, id) : null;
@@ -298,6 +316,8 @@ export default function Workbench() {
           const draft = userId ? getDraft(userId, id) : null;
           const serverTs = new Date(row.updateTime).getTime();
           if (draft && draft.ts > serverTs) {
+            /* 草稿重发保存以草稿当时基于的版本校验：若期间其他窗口已保存，会走冲突弹窗而不是静默覆盖 */
+            versionRef.current = draft.baseVersion;
             setTitle(draft.title);
             /* 加载边界补列表稳定唯一 id（旧数据缺失/重复 id 的编辑串改修复；保留有效旧 id 与字段顺序） */
             setData(repairSceneData({ ...normalizeListIds(draft.data), id }));
@@ -306,6 +326,7 @@ export default function Workbench() {
             void persist(draft.title, normalizeListIds(draft.data));
           } else {
             if (draft && userId) clearDraft(userId, id);
+            versionRef.current = row.version;
             setTitle(row.title);
             setData(repairSceneData({ ...normalizeListIds(row.data), id }));
             setSaveState('saved');
@@ -338,7 +359,9 @@ export default function Workbench() {
     async (t: string, d: ProjectData): Promise<boolean> => {
       if (!id || !userId) return false;
       /* 请求未确认成功前先落本地草稿（按用户/项目隔离）：刷新后可恢复，防网络中断丢最后编辑 */
-      saveDraft(userId, id, t, d);
+      saveDraft(userId, id, t, d, versionRef.current);
+      /* 版本冲突待用户选择：只保留本地草稿，不向服务端写入 */
+      if (conflictRef.current) return false;
       persistQueueRef.current = { t, d };
       if (persistingRef.current) {
         /* 有请求在飞：等待队列处理到本份并完成再返回（确认类写入需要真实结果；失败队列会保留待写项 → false） */
@@ -360,16 +383,24 @@ export default function Workbench() {
           persistQueueRef.current = null;
           setSaveState('saving');
           try {
-            await updateProject(id, { title: job.t, data: job.d });
+            const res = await updateProject(id, { title: job.t, data: job.d }, versionRef.current);
+            versionRef.current = res.version;
             setSaveState('saved');
             setSavedAt(new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }));
             dirtyRef.current = false;
             clearDraft(userId, id);
           } catch (e) {
             /* 失败即停队列：保留草稿与待写状态，用户可重试（persist 再入队即可） */
-            console.error(e);
-            setSaveState('error');
+            setSaveState(e instanceof VersionConflictError ? 'conflict' : 'error');
             ok = false;
+            if (e instanceof VersionConflictError) {
+              /* 其他窗口已保存过更新的版本：暂停写入，交给用户选择（加载最新 / 覆盖），绝不静默覆盖 */
+              conflictRef.current = true;
+              persistQueueRef.current = null;
+              setVersionConflict({ currentVersion: e.currentVersion });
+            } else {
+              console.error(e);
+            }
             break;
           }
         }
@@ -385,14 +416,51 @@ export default function Workbench() {
     (t: string, d: ProjectData) => {
       dirtyRef.current = true;
       /* 每次编辑立即写本地草稿：防抖窗口内刷新/关闭时草稿仍在，刷新后可恢复 */
-      if (userId && id) saveDraft(userId, id, t, d);
+      if (userId && id) saveDraft(userId, id, t, d, versionRef.current);
       /* 任何编辑立即显示「保存中」：不等待防抖到期才反馈，避免长时间打字时顶栏停留在旧状态 */
-      setSaveState((s) => (s === 'error' ? s : 'saving'));
+      setSaveState((s) => (s === 'error' || s === 'conflict' ? s : 'saving'));
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => persist(t, d), 800);
     },
     [persist, userId, id]
   );
+
+  /* ---------- 版本冲突的两种处理（交互方案 A：由用户显式选择） ---------- */
+  const handleLoadLatest = useCallback(async () => {
+    if (!id || !userId) return;
+    try {
+      const row = await getProject(id);
+      if (!row) {
+        toast.error('这个活动已不存在或已被删除');
+        return;
+      }
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      /* 本窗口改动另存为冲突备份（不参与自动恢复），再以服务端最新版本为准 */
+      moveDraftToConflictBackup(userId, id);
+      versionRef.current = row.version;
+      conflictRef.current = false;
+      dirtyRef.current = false;
+      setVersionConflict(null);
+      setTitle(row.title);
+      setData(repairSceneData({ ...normalizeListIds(row.data), id }));
+      setSaveState('saved');
+      setSavedAt('已加载最新');
+      toast.info('已加载最新版本，你在本窗口的改动已备份在这台设备上');
+    } catch (e) {
+      /* 网络失败时保持弹窗，让用户重试或改选覆盖 */
+      console.error(e);
+      toast.error('加载最新版本失败，请检查网络后重试');
+    }
+  }, [id, userId]);
+
+  const handleOverwrite = useCallback(async () => {
+    if (!versionConflict || !dataRef.current) return;
+    versionRef.current = versionConflict.currentVersion;
+    conflictRef.current = false;
+    setVersionConflict(null);
+    /* 若期间又有第三个窗口保存，persist 会再次进入冲突并重新弹窗 */
+    if (await persist(titleRef.current, dataRef.current)) toast.success('已用本窗口的内容覆盖');
+  }, [versionConflict, persist]);
 
   const patch = useCallback(
     (partial: Partial<ProjectData>) => {
@@ -1573,6 +1641,12 @@ export default function Workbench() {
                 </button>
               </span>
             )}
+            {saveState === 'conflict' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-amber-700">
+                <CloudOff className="h-3 w-3" />
+                其他窗口有更新，已暂停保存
+              </span>
+            )}
             {saveState === 'idle' && <span className="text-muted-foreground">自动保存已开启</span>}
           </span>
 
@@ -1821,6 +1895,7 @@ export default function Workbench() {
           </div>
         </SheetContent>
       </Sheet>
+      <VersionConflictDialog open={!!versionConflict} onLoadLatest={handleLoadLatest} onOverwrite={handleOverwrite} />
     </div>
   );
 }

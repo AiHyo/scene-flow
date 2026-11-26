@@ -6,18 +6,38 @@ export interface ProjectDraft {
   title: string;
   data: ProjectData;
   ts: number;
+  /** 草稿基于的服务端版本号：恢复草稿后重发保存时作为 expectedVersion，避免绕过冲突检测 */
+  baseVersion?: number;
 }
 
 const draftKey = (userId: string, projectId: string) => `sf-draft:${userId}:${projectId}`;
+const conflictBackupKey = (userId: string, projectId: string) => `sf-draft-conflict:${userId}:${projectId}`;
 
-export function saveDraft(userId: string, projectId: string, title: string, data: ProjectData): void {
+export function saveDraft(
+  userId: string,
+  projectId: string,
+  title: string,
+  data: ProjectData,
+  baseVersion?: number
+): void {
   try {
     localStorage.setItem(
       draftKey(userId, projectId),
-      JSON.stringify({ title, data, ts: Date.now() } satisfies ProjectDraft)
+      JSON.stringify({ title, data, ts: Date.now(), baseVersion } satisfies ProjectDraft)
     );
   } catch {
     /* 存储满等异常时静默放弃草稿（不影响主流程） */
+  }
+}
+
+/** 版本冲突时选择「加载最新版本」：把本地草稿另存为冲突备份（不参与自动恢复），再清除常规草稿 */
+export function moveDraftToConflictBackup(userId: string, projectId: string): void {
+  try {
+    const raw = localStorage.getItem(draftKey(userId, projectId));
+    if (raw) localStorage.setItem(conflictBackupKey(userId, projectId), raw);
+    localStorage.removeItem(draftKey(userId, projectId));
+  } catch {
+    /* 存储异常时静默处理 */
   }
 }
 
@@ -76,14 +96,35 @@ export async function listProjects(limit = 24, offset = 0): Promise<ProjectListI
   return await apiRequest<ProjectListItem[]>(`/api/v1/project?limit=${limit}&offset=${offset}`);
 }
 
+/** 服务端版本冲突（其他窗口已保存过更新的版本） */
+export class VersionConflictError extends Error {
+  currentVersion: number;
+  constructor(message: string, currentVersion: number) {
+    super(message);
+    this.currentVersion = currentVersion;
+  }
+}
+
+/**
+ * 局部更新项目，返回新版本号。
+ * 传入 expectedVersion 时做乐观锁校验：服务端版本不一致则抛出 VersionConflictError。
+ */
 export async function updateProject(
   id: string,
-  patch: { title?: string; coverUrl?: string | null; data?: ProjectData }
-): Promise<void> {
-  await apiRequest<void>(`/api/v1/project/${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(patch),
-  });
+  patch: { title?: string; coverUrl?: string | null; data?: ProjectData },
+  expectedVersion?: number
+): Promise<{ version: number }> {
+  try {
+    return await apiRequest<{ version: number }>(`/api/v1/project/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(expectedVersion ? { ...patch, expectedVersion } : patch),
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 409 && typeof e.body?.currentVersion === 'number') {
+      throw new VersionConflictError(e.message, e.body.currentVersion);
+    }
+    throw e;
+  }
 }
 
 export async function deleteProject(id: string): Promise<void> {
