@@ -22,6 +22,7 @@ dependencies = [
 dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.25",
+    "pytest-timeout>=2.3",
     "respx>=0.22",
     "ruff>=0.8",
 ]
@@ -49,3 +50,5 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]
+# 任一用例超过 60 秒即失败并打印所有线程栈，避免 CI 无限挂起
+timeout = 60

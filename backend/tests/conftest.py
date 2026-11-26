@@ -31,6 +31,7 @@ os.environ.setdefault("APP_ENV", "dev")
 import httpx  # noqa: E402
 from sqlalchemy import text  # noqa: E402
 
+from app.ai.tasks import runner  # noqa: E402
 from app.core.database import Base, engine  # noqa: E402
 from app.main import app  # noqa: E402
 from app.storage import set_storage  # noqa: E402
@@ -65,6 +66,7 @@ async def migrated_db() -> AsyncIterator[None]:
 @pytest.fixture(autouse=True)
 async def clean_tables(migrated_db: None) -> AsyncIterator[None]:
     yield
+    await runner.wait_idle()  # background AI tasks write to the DB; let them finish first
     tables = ", ".join(f'"{t.name}"' for t in Base.metadata.sorted_tables)
     async with engine.begin() as conn:
         await conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))

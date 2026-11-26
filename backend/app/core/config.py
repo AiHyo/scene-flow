@@ -65,6 +65,14 @@ class Settings(BaseSettings):
     img_gen_api_key: str = ""
     img_gen_model: str = "gpt-image-2.6"
 
+    # AI 调用限流（每小时次数；访客更严格）
+    quota_chat_guest_per_hour: int = 30
+    quota_chat_account_per_hour: int = 120
+    quota_vision_guest_per_hour: int = 10
+    quota_vision_account_per_hour: int = 40
+    quota_scene_guest_per_hour: int = 5
+    quota_scene_account_per_hour: int = 20
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

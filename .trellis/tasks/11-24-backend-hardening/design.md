@@ -105,7 +105,11 @@ routers ──► services ──► models (SQLAlchemy)
 
 - 超限返回 429 `RateLimited`，并带 `Retry-After`（窗口内最早一条记录过期所需的秒数）。
 
-取舍：不引入 Redis 令牌桶；多实例下天然一致，每次多一条索引计数查询。并发突发时可能多放行一两次（先查后写的竞争），对「防滥用」场景可以接受，需要严格时可加 `pg_advisory_xact_lock(owner)`。
+- 实现时直接加了 `pg_advisory_xact_lock(hashtext('ai-quota:<user>:<kind>'))`，让「计数 + 写入」在同一事务内原子完成，并发突发也不会超额（测试：8 个并发请求、阈值 3，恰好 3 个成功）。锁等待用 `SET LOCAL lock_timeout = 5s` 限时，超时返回 429，绝不无限挂起。
+
+取舍：不引入 Redis 令牌桶；多实例下天然一致，代价是每次多一条索引计数查询和一次按用户粒度的短锁（不同用户互不阻塞）。
+
+> 实施记录：开发中观察到两次测试套件挂起，约 250 次定向重复未能复现、未找到根因。因此统一加了「不可无限等待」的护栏：咨询锁 `lock_timeout`、连接池 `pool_timeout=10`、`TaskRunner.wait_idle` 30 秒超时、`pytest-timeout` 单例 60 秒。之后再出现会以失败 + 调用栈的形式暴露，而不是挂住 CI。
 
 ## 8. 访客项目迁移越权修复（S6）
 

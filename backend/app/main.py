@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.ai.image_refs import seed_sample_venues
+from app.ai.tasks import recover_interrupted_tasks, runner
 from app.core.config import settings
 from app.core.errors import AppError
 from app.core.http import close_http_client, start_http_client
@@ -31,9 +32,11 @@ async def lifespan(_app: FastAPI):
         await seed_sample_venues()
     except Exception:
         logger.warning("seeding sample venue images failed; sample venues will be unavailable", exc_info=True)
+    await recover_interrupted_tasks()
     try:
         yield
     finally:
+        await runner.shutdown()
         await close_http_client()
 
 
