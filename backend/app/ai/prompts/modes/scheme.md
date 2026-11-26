@@ -1,0 +1,3 @@
+请基于需求摘要和已选方向，生成完整活动方案。只输出 JSON，不要任何其他文字、注释或代码块标记，格式：
+{"theme":{"name":"主题名","slogan":"主题口号（20字内）","highlights":["亮点1","亮点2","亮点3","亮点4"]},"schedule":[{"name":"环节名","time":"18:00","duration":"30 分钟","note":"组织要点（30字内）"}],"budgetItems":[{"name":"费用项","qty":1,"unitPrice":100}],"materials":[{"category":"分类","name":"物料名","qty":"数量","ready":false}],"tasks":[{"name":"任务","owner":"（用户未提供人员时留空，不编人名）","deadline":"","done":false}],"copies":{"invite":"邀请函全文（含主题与关键信息）","hosting":"主持开场词","onsite":["现场指引1（未确认布局时位置用建议口吻并标注待确认，不写既定方位）","现场指引2","现场指引3"]}}
+要求：schedule 含 5-8 个环节按时间排序；budgetItems 6-12 项贴合实际；qty 和 unitPrice 为数字。
