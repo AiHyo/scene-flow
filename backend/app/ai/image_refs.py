@@ -30,6 +30,11 @@ SAMPLE_VENUES: dict[str, str] = {
     "/images/layout-reference/03-courtyard-before.png": "samples/03-courtyard-before.png",
 }
 
+# 样例场地「布置前 → 布置后」：演示模式生图只对样例场地返回对应的预置效果图
+SAMPLE_AFTER_KEYS: dict[str, str] = {
+    before: before.replace("-before.png", "-after.png") for before in SAMPLE_VENUES.values()
+}
+
 MAX_REFERENCED_IMAGE_BYTES = 15 * 1024 * 1024
 
 
@@ -78,10 +83,12 @@ async def seed_sample_venues(source_dir: str | Path | None = None) -> int:
     base = Path(source_dir or settings.sample_assets_dir)
     storage = get_storage()
     seeded = 0
-    for rel_path, key in SAMPLE_VENUES.items():
+    # before 图供生图读取；after 图供演示模式返回预置效果
+    keys = [*SAMPLE_VENUES.values(), *SAMPLE_AFTER_KEYS.values()]
+    for key in keys:
         if await storage.exists(key):
             continue
-        src = base / Path(rel_path).name
+        src = base / Path(key).name
         if not src.is_file():
             logger.warning("sample venue image not found: %s", src)
             continue

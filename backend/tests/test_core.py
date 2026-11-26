@@ -92,7 +92,9 @@ async def test_chat_upstream_401_is_reported_as_502(client, make_guest, monkeypa
     assert resp.json()["code"] == "upstream_error"
 
 
-async def test_chat_without_key_is_service_misconfigured(client, make_guest, monkeypatch):
+async def test_chat_forced_live_without_key_is_service_misconfigured(client, make_guest, monkeypatch):
+    """AI_PROVIDER=openai is an explicit choice: no silent fallback to demo mode."""
+    monkeypatch.setattr(settings, "ai_provider", "openai")
     monkeypatch.setattr(settings, "llm_api_key", "")
     guest = await make_guest()
     resp = await client.post(

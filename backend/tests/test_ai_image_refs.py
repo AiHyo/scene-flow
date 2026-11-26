@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import respx
 
-from app.ai.image_refs import SAMPLE_VENUES, seed_sample_venues
+from app.ai.image_refs import SAMPLE_AFTER_KEYS, SAMPLE_VENUES, seed_sample_venues
 from app.core.config import settings
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2] / "public" / "images" / "layout-reference"
@@ -107,9 +107,10 @@ async def test_vision_reads_own_bucket_image_from_storage_not_http(client, make_
 
 
 async def test_seed_sample_venues_is_idempotent(storage):
-    assert await seed_sample_venues(SAMPLE_DIR) == len(SAMPLE_VENUES)
+    """Seeds each sample's before image (for generation) and after image (for demo mode)."""
+    assert await seed_sample_venues(SAMPLE_DIR) == len(SAMPLE_VENUES) + len(SAMPLE_AFTER_KEYS)
     assert await seed_sample_venues(SAMPLE_DIR) == 0
-    for key in SAMPLE_VENUES.values():
+    for key in [*SAMPLE_VENUES.values(), *SAMPLE_AFTER_KEYS.values()]:
         assert await storage.exists(key)
 
 

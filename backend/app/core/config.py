@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -16,9 +17,17 @@ _KNOWN_WEAK_SECRETS = {DEV_JWT_SECRET, "change-me-in-production", "changeme", "s
 MIN_PROD_SECRET_LENGTH = 32
 
 
+def _env_files() -> list[str]:
+    # 测试设置 SCENEFLOW_IGNORE_DOTENV=1：不读开发者本机 .env，测试结果不受本地配置影响，
+    # 也绝不会拿到真实模型密钥（CI 与测试不调用模型）
+    if os.environ.get("SCENEFLOW_IGNORE_DOTENV"):
+        return []
+    return [str(_ROOT_ENV), str(_LOCAL_ENV)]
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=[str(_ROOT_ENV), str(_LOCAL_ENV)],
+        env_file=_env_files(),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -64,6 +73,13 @@ class Settings(BaseSettings):
     img_gen_base_url: str = ""
     img_gen_api_key: str = ""
     img_gen_model: str = "gpt-image-2.6"
+
+    # 模型来源：auto = 配置了 LLM_API_KEY 用真实模型，否则进入演示模式（mock）
+    ai_provider: Literal["auto", "openai", "mock"] = "auto"
+    # 结构化输出方式：json_schema = 服务端强约束（推荐）；prompt = 仅靠提示词约束（兼容不支持的服务商）
+    llm_structured_output: Literal["json_schema", "prompt"] = "json_schema"
+    # 演示模式流式输出的逐帧间隔（毫秒），让打字效果自然
+    mock_stream_delay_ms: int = 15
 
     # AI 调用限流（每小时次数；访客更严格）
     quota_chat_guest_per_hour: int = 30

@@ -27,6 +27,10 @@ if not TEST_DATABASE_URL:
 # Must happen before any `app` import: the engine is created at import time.
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ.setdefault("APP_ENV", "dev")
+# Hermetic tests: never read the developer's .env (it may hold a real model key).
+os.environ["SCENEFLOW_IGNORE_DOTENV"] = "1"
+for _var in ("LLM_API_KEY", "VISION_API_KEY", "IMG_GEN_API_KEY", "AI_PROVIDER"):
+    os.environ.pop(_var, None)
 
 import httpx  # noqa: E402
 from sqlalchemy import text  # noqa: E402
