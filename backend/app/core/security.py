@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
+
 import bcrypt
 import jwt
 
@@ -20,7 +20,7 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 def create_access_token(user_id: str, is_anon: bool) -> str:
     """签发访问 JWT"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": user_id,
         "is_anon": is_anon,
@@ -30,7 +30,7 @@ def create_access_token(user_id: str, is_anon: bool) -> str:
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
-def decode_access_token(token: str) -> Optional[dict]:
+def decode_access_token(token: str) -> dict | None:
     """解码并校验 JWT，无效或过期返回 None"""
     try:
         return jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])

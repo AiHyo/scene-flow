@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
+
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,9 +12,9 @@ from app.models.profile import Profile
 
 
 async def get_optional_user(
-    authorization: Optional[str] = Header(default=None),
+    authorization: str | None = Header(default=None),
     db: AsyncSession = Depends(get_db),
-) -> Optional[Profile]:
+) -> Profile | None:
     """解析可选的 Bearer JWT，未携带或无效时返回 None"""
     if not authorization or not authorization.startswith("Bearer "):
         return None
@@ -33,7 +33,7 @@ async def get_optional_user(
 
 
 async def get_current_user(
-    user: Optional[Profile] = Depends(get_optional_user),
+    user: Profile | None = Depends(get_optional_user),
 ) -> Profile:
     """强制要求有效登录会话（含匿名访客会话）"""
     if not user:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+
 from fastapi import HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,9 +19,7 @@ def _build_token_response(user: Profile) -> AuthTokenOut:
 
 async def anon_login(db: AsyncSession, credential_id: str) -> AuthTokenOut:
     """按本地访客凭证登录，不存在时自动创建匿名档案"""
-    result = await db.execute(
-        select(AnonCredentialMap).where(AnonCredentialMap.credential_id == credential_id)
-    )
+    result = await db.execute(select(AnonCredentialMap).where(AnonCredentialMap.credential_id == credential_id))
     mapping = result.scalar_one_or_none()
     if mapping:
         user_res = await db.execute(select(Profile).where(Profile.id == mapping.user_id))
@@ -89,10 +88,7 @@ async def migrate_anon_projects(db: AsyncSession, target_user: Profile, from_use
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="来源用户不是有效的访客会话")
 
     result = await db.execute(
-        update(Project)
-        .where(Project.owner_id == from_user_id)
-        .values(owner_id=target_user.id)
-        .returning(Project.id)
+        update(Project).where(Project.owner_id == from_user_id).values(owner_id=target_user.id).returning(Project.id)
     )
     migrated_ids = result.scalars().all()
     await db.commit()

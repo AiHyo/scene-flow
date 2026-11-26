@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from fastapi import HTTPException, status
@@ -59,7 +59,7 @@ async def _run_openai_edit_task(task_id: str, prompt: str, before_url: str) -> N
 
         body = resp.json()
         item = (body.get("data") or [{}])[0]
-        img_bytes: Optional[bytes] = None
+        img_bytes: bytes | None = None
         if item.get("b64_json"):
             img_bytes = base64.b64decode(item["b64_json"])
         elif item.get("url"):
@@ -90,8 +90,8 @@ async def _run_openai_edit_task(task_id: str, prompt: str, before_url: str) -> N
 async def submit_scene_gen(
     prompt: str,
     image_list: list[dict[str, str]],
-    resolution: Optional[str] = None,
-    aspect_ratio: Optional[str] = None,
+    resolution: str | None = None,
+    aspect_ratio: str | None = None,
 ) -> dict[str, Any]:
     """提交场景布置生图任务"""
     if settings.img_gen_provider == "kling":
@@ -155,7 +155,9 @@ async def query_scene_gen(task_id: str) -> dict[str, Any]:
                     img_resp = await client.get(origin_url)
                 if img_resp.status_code == 200:
                     ct = img_resp.headers.get("content-type", "image/jpeg")
-                    public_url, _ = await upload_bytes(img_resp.content, folder="generated", ext=".jpg", content_type=ct)
+                    public_url, _ = await upload_bytes(
+                        img_resp.content, folder="generated", ext=".jpg", content_type=ct
+                    )
                     inner["images"] = [{"url": public_url}]
         return inner
 

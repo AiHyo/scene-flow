@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+
 from fastapi import HTTPException, status
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,9 +11,7 @@ from app.models.project import Project
 from app.schemas.project import ProjectCreateIn, ProjectPatchIn
 
 
-async def list_projects(
-    db: AsyncSession, user: Profile, limit: int = 24, offset: int = 0
-) -> list[Project]:
+async def list_projects(db: AsyncSession, user: Profile, limit: int = 24, offset: int = 0) -> list[Project]:
     """查询当前用户名下的活动项目列表"""
     result = await db.execute(
         select(Project)
@@ -50,9 +49,7 @@ async def get_owned_project(db: AsyncSession, user: Profile, project_id: uuid.UU
     return project
 
 
-async def update_project(
-    db: AsyncSession, user: Profile, project_id: uuid.UUID, body: ProjectPatchIn
-) -> Project:
+async def update_project(db: AsyncSession, user: Profile, project_id: uuid.UUID, body: ProjectPatchIn) -> Project:
     """更新活动项目"""
     project = await get_owned_project(db, user, project_id)
     patch = body.model_dump(exclude_unset=True)

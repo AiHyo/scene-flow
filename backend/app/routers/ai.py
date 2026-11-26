@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
 
 class ChatIn(BaseModel):
     messages: list[dict[str, Any]] = Field(min_length=1)
-    model: Optional[str] = None
+    model: str | None = None
     enable_thinking: bool = False
 
 
@@ -43,8 +43,8 @@ class VisionResultOut(CamelModel):
 class SceneSubmitIn(BaseModel):
     prompt: str = Field(min_length=1)
     image_list: list[dict[str, str]] = Field(min_length=1)
-    resolution: Optional[str] = None
-    aspect_ratio: Optional[str] = None
+    resolution: str | None = None
+    aspect_ratio: str | None = None
 
 
 class SceneQueryIn(BaseModel):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
 from app.core.deps import get_current_user

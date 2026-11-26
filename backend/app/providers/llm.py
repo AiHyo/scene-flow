@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from fastapi import HTTPException, status
@@ -12,16 +12,14 @@ from app.core.config import settings
 def _has_image_part(messages: list[dict[str, Any]]) -> bool:
     for msg in messages:
         content = msg.get("content")
-        if isinstance(content, list) and any(
-            isinstance(p, dict) and p.get("type") == "image_url" for p in content
-        ):
+        if isinstance(content, list) and any(isinstance(p, dict) and p.get("type") == "image_url" for p in content):
             return True
     return False
 
 
 async def stream_chat_completions(
     messages: list[dict[str, Any]],
-    model: Optional[str] = None,
+    model: str | None = None,
     enable_thinking: bool = False,
 ) -> AsyncIterator[bytes]:
     """调用 OpenAI 兼容对话接口并透传 SSE 数据流"""
@@ -31,9 +29,7 @@ async def stream_chat_completions(
             detail="服务端未配置 LLM_API_KEY",
         )
 
-    target_model = model or (
-        settings.llm_vision_model if _has_image_part(messages) else settings.llm_model
-    )
+    target_model = model or (settings.llm_vision_model if _has_image_part(messages) else settings.llm_model)
     url = f"{settings.llm_base_url.rstrip('/')}/chat/completions"
     headers = {
         "Content-Type": "application/json",

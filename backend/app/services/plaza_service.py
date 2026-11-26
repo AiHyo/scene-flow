@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import asc, desc, select
@@ -36,30 +35,22 @@ def _to_post_out(post: PlazaPost, liked: bool) -> PlazaPostOut:
     )
 
 
-async def list_posts(
-    db: AsyncSession, user: Optional[Profile], limit: int = 24, offset: int = 0
-) -> list[PlazaPostOut]:
+async def list_posts(db: AsyncSession, user: Profile | None, limit: int = 24, offset: int = 0) -> list[PlazaPostOut]:
     """按发布时间倒序获取活动广场动态"""
-    result = await db.execute(
-        select(PlazaPost).order_by(desc(PlazaPost.create_time)).limit(limit).offset(offset)
-    )
+    result = await db.execute(select(PlazaPost).order_by(desc(PlazaPost.create_time)).limit(limit).offset(offset))
     posts = list(result.scalars().all())
     if not posts or not user:
         return [_to_post_out(p, False) for p in posts]
 
     post_ids = [p.id for p in posts]
     like_res = await db.execute(
-        select(PlazaLike.post_id).where(
-            PlazaLike.user_id == user.id, PlazaLike.post_id.in_(post_ids)
-        )
+        select(PlazaLike.post_id).where(PlazaLike.user_id == user.id, PlazaLike.post_id.in_(post_ids))
     )
     liked_set = set(like_res.scalars().all())
     return [_to_post_out(p, p.id in liked_set) for p in posts]
 
 
-async def get_post_detail(
-    db: AsyncSession, user: Optional[Profile], post_id: uuid.UUID
-) -> PlazaPostDetailOut:
+async def get_post_detail(db: AsyncSession, user: Profile | None, post_id: uuid.UUID) -> PlazaPostDetailOut:
     """获取动态详情与按时间正序排列的评论列表"""
     post_res = await db.execute(select(PlazaPost).where(PlazaPost.id == post_id))
     post = post_res.scalar_one_or_none()
@@ -69,16 +60,12 @@ async def get_post_detail(
     liked = False
     if user:
         like_res = await db.execute(
-            select(PlazaLike.post_id).where(
-                PlazaLike.post_id == post_id, PlazaLike.user_id == user.id
-            )
+            select(PlazaLike.post_id).where(PlazaLike.post_id == post_id, PlazaLike.user_id == user.id)
         )
         liked = like_res.scalar_one_or_none() is not None
 
     comments_res = await db.execute(
-        select(PlazaComment)
-        .where(PlazaComment.post_id == post_id)
-        .order_by(asc(PlazaComment.create_time))
+        select(PlazaComment).where(PlazaComment.post_id == post_id).order_by(asc(PlazaComment.create_time))
     )
     comment_list = [PlazaCommentOut.model_validate(c) for c in comments_res.scalars().all()]
 
@@ -126,9 +113,7 @@ async def toggle_like(db: AsyncSession, user: Profile, post_id: uuid.UUID) -> Pl
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="动态不存在")
 
-    like_res = await db.execute(
-        select(PlazaLike).where(PlazaLike.post_id == post_id, PlazaLike.user_id == user.id)
-    )
+    like_res = await db.execute(select(PlazaLike).where(PlazaLike.post_id == post_id, PlazaLike.user_id == user.id))
     existing = like_res.scalar_one_or_none()
     if existing:
         await db.delete(existing)

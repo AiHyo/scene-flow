@@ -37,7 +37,7 @@ def extract_object_key(url: str) -> str | None:
     prefix = f"/{settings.minio_bucket}/"
     if not parsed.path.startswith(prefix):
         return None
-    return parsed.path[len(prefix):]
+    return parsed.path[len(prefix) :]
 
 
 def _put_object_sync(object_key: str, data: bytes, content_type: str) -> None:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
+
 from pydantic import EmailStr, Field
 
 from app.schemas.common import CamelModel
@@ -14,7 +14,7 @@ class AnonLoginIn(CamelModel):
 class RegisterIn(CamelModel):
     email: EmailStr
     password: str = Field(min_length=6, max_length=128)
-    nickname: Optional[str] = Field(default=None, max_length=80)
+    nickname: str | None = Field(default=None, max_length=80)
 
 
 class LoginIn(CamelModel):
@@ -23,8 +23,8 @@ class LoginIn(CamelModel):
 
 
 class ProfilePatchIn(CamelModel):
-    nickname: Optional[str] = Field(default=None, max_length=80)
-    avatar_url: Optional[str] = None
+    nickname: str | None = Field(default=None, max_length=80)
+    avatar_url: str | None = None
 
 
 class MigrateProjectIn(CamelModel):
@@ -33,9 +33,9 @@ class MigrateProjectIn(CamelModel):
 
 class UserOut(CamelModel):
     id: uuid.UUID
-    email: Optional[str] = None
-    nickname: Optional[str] = None
-    avatar_url: Optional[str] = None
+    email: str | None = None
+    nickname: str | None = None
+    avatar_url: str | None = None
     role: str
     is_anon: bool
 

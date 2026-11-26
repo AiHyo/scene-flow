@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +25,7 @@ router = APIRouter(prefix="/api/v1", tags=["plaza"])
 async def list_posts(
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    user: Optional[Profile] = Depends(get_optional_user),
+    user: Profile | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[PlazaPostOut]:
     """公开浏览活动广场动态列表"""
@@ -46,7 +45,7 @@ async def create_post(
 @router.get("/plaza-post/{post_id}", response_model=PlazaPostDetailOut)
 async def get_post_detail(
     post_id: uuid.UUID,
-    user: Optional[Profile] = Depends(get_optional_user),
+    user: Profile | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ) -> PlazaPostDetailOut:
     """获取动态详情及评论"""
