@@ -62,5 +62,5 @@ async def migrate_project(
     db: AsyncSession = Depends(get_db),
 ) -> MigrateProjectOut:
     """登录后把本机访客会话名下项目迁移至当前账号"""
-    count = await auth_service.migrate_anon_projects(db, user, body.from_user_id)
+    count = await auth_service.migrate_anon_projects(db, user, body.credential_id)
     return MigrateProjectOut(migrated_count=count)

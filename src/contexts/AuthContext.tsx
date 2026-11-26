@@ -52,8 +52,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (p: Partial<UserProfile>) => Promise<void>;
-  /** 把访客名下项目转到当前账号（需登录态） */
-  migrateAnonProjects: (anonId: string) => Promise<number>;
+  /** 把本机访客名下项目转到当前账号（需登录态；以本机访客凭证证明身份） */
+  migrateAnonProjects: () => Promise<number>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -217,10 +217,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, profile]
   );
 
-  const migrateAnonProjects = useCallback(async (anonId: string) => {
+  const migrateAnonProjects = useCallback(async () => {
+    /* 以本机保存的访客凭证证明访客身份（后端不再接受裸用户 ID）；
+     * 直接读取而不是 getCredentialId()，后者在缺失时会新建一个无效凭证 */
+    const credentialId = localStorage.getItem(CRED_KEY);
+    if (!credentialId) return 0;
     const data = await apiRequest<{ migratedCount: number }>('/api/v1/auth/migrate-project', {
       method: 'POST',
-      body: JSON.stringify({ fromUserId: anonId }),
+      body: JSON.stringify({ credentialId }),
     });
     return data.migratedCount ?? 0;
   }, []);

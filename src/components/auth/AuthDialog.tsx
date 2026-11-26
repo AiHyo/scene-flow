@@ -93,7 +93,7 @@ export default function AuthDialog({ open, onOpenChange, initialMode = 'login' }
     }
     setMerging(true);
     try {
-      const n = await migrateAnonProjects(prevAnonUserId);
+      const n = await migrateAnonProjects();
       if (n > 0) toast.success(`已将 ${n} 个访客活动保存到当前账号`);
       else toast.info('本机没有待保存的访客活动');
     } catch (e) {

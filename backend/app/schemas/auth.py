@@ -28,7 +28,9 @@ class ProfilePatchIn(CamelModel):
 
 
 class MigrateProjectIn(CamelModel):
-    from_user_id: uuid.UUID
+    # 访客凭证（浏览器本地保存的 anon_credential_id）。持有凭证即证明拥有该访客身份；
+    # 不再接受裸用户 ID，否则任何知道访客 UUID 的人都能转走其项目。
+    credential_id: str = Field(min_length=8, max_length=128)
 
 
 class UserOut(CamelModel):

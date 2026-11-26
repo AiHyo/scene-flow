@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import uuid
-
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import BadRequest, Conflict, Unauthorized
+from app.core.errors import Conflict, Forbidden, Unauthorized
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.profile import AnonCredentialMap, Profile
 from app.models.project import Project
@@ -78,17 +76,24 @@ async def update_profile(db: AsyncSession, user: Profile, body: ProfilePatchIn) 
     return UserOut.model_validate(user)
 
 
-async def migrate_anon_projects(db: AsyncSession, target_user: Profile, from_user_id: uuid.UUID) -> int:
-    """将访客名下的活动项目迁移到当前正式账号"""
-    if from_user_id == target_user.id:
-        return 0
-    src_res = await db.execute(select(Profile).where(Profile.id == from_user_id))
-    src_user = src_res.scalar_one_or_none()
+async def migrate_anon_projects(db: AsyncSession, target_user: Profile, credential_id: str) -> int:
+    """将访客名下的活动项目迁移到当前正式账号。
+
+    所有权证明是访客凭证本身（只保存在该访客的浏览器里），而不是可能泄露的用户 ID。
+    凭证无效、或对应的不是访客账号时统一返回 403，不区分原因，避免被用来探测。
+    """
+    src_user = await db.scalar(
+        select(Profile)
+        .join(AnonCredentialMap, AnonCredentialMap.user_id == Profile.id)
+        .where(AnonCredentialMap.credential_id == credential_id)
+    )
     if not src_user or not src_user.is_anon:
-        raise BadRequest("来源用户不是有效的访客会话")
+        raise Forbidden("无法验证访客身份，项目未迁移")
+    if src_user.id == target_user.id:
+        return 0
 
     result = await db.execute(
-        update(Project).where(Project.owner_id == from_user_id).values(owner_id=target_user.id).returning(Project.id)
+        update(Project).where(Project.owner_id == src_user.id).values(owner_id=target_user.id).returning(Project.id)
     )
     migrated_ids = result.scalars().all()
     await db.commit()
