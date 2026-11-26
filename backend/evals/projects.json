@@ -1,0 +1,475 @@
+{
+ "empty": {
+  "description": "",
+  "requirements": {},
+  "directions": [],
+  "schedule": [],
+  "budget": {
+   "limit": null,
+   "items": []
+  },
+  "materials": [],
+  "tasks": [],
+  "copies": {},
+  "scene": {},
+  "chatLog": []
+ },
+ "rich": {
+  "description": "想给部门办一场轻松的团建",
+  "requirements": {
+   "goal": "促进跨部门交流",
+   "type": "这是公司团建",
+   "visualTheme": {
+    "value": "森系绿白",
+    "source": "user"
+   },
+   "headcount": {
+    "value": 30,
+    "source": "ai"
+   },
+   "budget": {
+    "value": "5000",
+    "source": "user"
+   },
+   "region": {
+    "value": "杭州",
+    "source": "user"
+   },
+   "date": {
+    "value": "下周六",
+    "source": "user"
+   },
+   "venueType": {
+    "value": "户外草坪",
+    "source": "ai"
+   },
+   "style": {
+    "value": "轻松自然",
+    "source": "user"
+   },
+   "story": "团队刚完成一个大项目",
+   "orgIntro": "产品研发部",
+   "achievements": "季度目标超额完成",
+   "keyPeople": "部门负责人",
+   "tone": "轻松幽默",
+   "avoid": "不要提加班",
+   "otherNeeds": "需要有素食选项"
+  },
+  "directions": [
+   {
+    "id": "d1",
+    "name": "户外野餐",
+    "style": "自然",
+    "highlights": [
+     "a"
+    ],
+    "note": "n"
+   }
+  ],
+  "schedule": [
+   {
+    "id": "s1",
+    "name": "签到",
+    "time": "13:30",
+    "duration": "30 分钟",
+    "note": "发名牌"
+   },
+   {
+    "id": "s2",
+    "name": "破冰游戏",
+    "time": "14:00",
+    "duration": "1 小时",
+    "note": ""
+   },
+   {
+    "id": "s3",
+    "name": "野餐",
+    "time": "16:30",
+    "duration": "45 分钟",
+    "note": "素食区分开"
+   }
+  ],
+  "budget": {
+   "limit": 5000,
+   "items": [
+    {
+     "id": "b1",
+     "name": "场地",
+     "qty": 1,
+     "unitPrice": 1200
+    },
+    {
+     "id": "b2",
+     "name": "餐饮",
+     "qty": 30,
+     "unitPrice": 68.5
+    },
+    {
+     "id": "b3",
+     "name": "音响",
+     "qty": 1,
+     "unitPrice": 0,
+     "priceUnknown": true
+    },
+    {
+     "id": "b4",
+     "name": "自带桌布",
+     "qty": 4,
+     "unitPrice": 0
+    }
+   ]
+  },
+  "materials": [
+   {
+    "id": "m1",
+    "category": "布置",
+    "name": "气球拱门",
+    "qty": "1",
+    "ready": false
+   },
+   {
+    "id": "m2",
+    "category": "签到",
+    "name": "签到板",
+    "qty": "1",
+    "ready": true
+   }
+  ],
+  "tasks": [],
+  "copies": {},
+  "scene": {
+   "afterUrl": "http://x/after.png",
+   "stale": true,
+   "style": "森系",
+   "tags": [
+    "绿植",
+    "灯串"
+   ],
+   "extra": "入口要醒目"
+  },
+  "chatLog": [],
+  "theme": {
+   "name": "草地合伙人",
+   "slogan": "走出工位",
+   "highlights": [
+    "破冰",
+    "野餐"
+   ]
+  },
+  "selectedDirectionId": "d1"
+ },
+ "overspent": {
+  "description": "想给部门办一场轻松的团建",
+  "requirements": {
+   "goal": "促进跨部门交流",
+   "type": "这是公司团建",
+   "visualTheme": {
+    "value": "森系绿白",
+    "source": "user"
+   },
+   "headcount": {
+    "value": 30,
+    "source": "ai"
+   },
+   "budget": {
+    "value": "5000",
+    "source": "user"
+   },
+   "region": {
+    "value": "杭州",
+    "source": "user"
+   },
+   "date": {
+    "value": "下周六",
+    "source": "user"
+   },
+   "venueType": {
+    "value": "户外草坪",
+    "source": "ai"
+   },
+   "style": {
+    "value": "轻松自然",
+    "source": "user"
+   },
+   "story": "团队刚完成一个大项目",
+   "orgIntro": "产品研发部",
+   "achievements": "季度目标超额完成",
+   "keyPeople": "部门负责人",
+   "tone": "轻松幽默",
+   "avoid": "不要提加班",
+   "otherNeeds": "需要有素食选项"
+  },
+  "directions": [
+   {
+    "id": "d1",
+    "name": "户外野餐",
+    "style": "自然",
+    "highlights": [
+     "a"
+    ],
+    "note": "n"
+   }
+  ],
+  "schedule": [
+   {
+    "id": "s1",
+    "name": "签到",
+    "time": "13:30",
+    "duration": "30 分钟",
+    "note": "发名牌"
+   },
+   {
+    "id": "s2",
+    "name": "破冰游戏",
+    "time": "14:00",
+    "duration": "1 小时",
+    "note": ""
+   },
+   {
+    "id": "s3",
+    "name": "野餐",
+    "time": "16:30",
+    "duration": "45 分钟",
+    "note": "素食区分开"
+   }
+  ],
+  "budget": {
+   "limit": 1000,
+   "items": [
+    {
+     "id": "b1",
+     "name": "场地",
+     "qty": 1,
+     "unitPrice": 1500.255
+    }
+   ]
+  },
+  "materials": [
+   {
+    "id": "m1",
+    "category": "布置",
+    "name": "气球拱门",
+    "qty": "1",
+    "ready": false
+   },
+   {
+    "id": "m2",
+    "category": "签到",
+    "name": "签到板",
+    "qty": "1",
+    "ready": true
+   }
+  ],
+  "tasks": [],
+  "copies": {},
+  "scene": {
+   "afterUrl": "http://x/after.png",
+   "stale": true,
+   "style": "森系",
+   "tags": [
+    "绿植",
+    "灯串"
+   ],
+   "extra": "入口要醒目"
+  },
+  "chatLog": [],
+  "theme": {
+   "name": "草地合伙人",
+   "slogan": "走出工位",
+   "highlights": [
+    "破冰",
+    "野餐"
+   ]
+  },
+  "selectedDirectionId": "d1"
+ },
+ "items-no-limit": {
+  "description": "",
+  "requirements": {},
+  "directions": [],
+  "schedule": [],
+  "budget": {
+   "limit": null,
+   "items": [
+    {
+     "id": "b1",
+     "name": "茶歇",
+     "qty": 20,
+     "unitPrice": 15
+    },
+    {
+     "id": "b2",
+     "name": "摄影",
+     "qty": 1,
+     "unitPrice": 0,
+     "priceUnknown": true
+    }
+   ]
+  },
+  "materials": [],
+  "tasks": [],
+  "copies": {},
+  "scene": {},
+  "chatLog": []
+ },
+ "cross-day": {
+  "description": "想给部门办一场轻松的团建",
+  "requirements": {
+   "goal": "促进跨部门交流",
+   "type": "这是公司团建",
+   "visualTheme": {
+    "value": "森系绿白",
+    "source": "user"
+   },
+   "headcount": {
+    "value": 30,
+    "source": "ai"
+   },
+   "budget": {
+    "value": "5000",
+    "source": "user"
+   },
+   "region": {
+    "value": "杭州",
+    "source": "user"
+   },
+   "date": {
+    "value": "下周六",
+    "source": "user"
+   },
+   "venueType": {
+    "value": "户外草坪",
+    "source": "ai"
+   },
+   "style": {
+    "value": "轻松自然",
+    "source": "user"
+   },
+   "story": "团队刚完成一个大项目",
+   "orgIntro": "产品研发部",
+   "achievements": "季度目标超额完成",
+   "keyPeople": "部门负责人",
+   "tone": "轻松幽默",
+   "avoid": "不要提加班",
+   "otherNeeds": "需要有素食选项"
+  },
+  "directions": [
+   {
+    "id": "d1",
+    "name": "户外野餐",
+    "style": "自然",
+    "highlights": [
+     "a"
+    ],
+    "note": "n"
+   }
+  ],
+  "schedule": [
+   {
+    "id": "s1",
+    "name": "晚会",
+    "time": "20:00",
+    "duration": "2 小时",
+    "note": ""
+   },
+   {
+    "id": "s2",
+    "name": "跨年",
+    "time": "23:30",
+    "duration": "90 分钟",
+    "note": ""
+   }
+  ],
+  "budget": {
+   "limit": 5000,
+   "items": [
+    {
+     "id": "b1",
+     "name": "场地",
+     "qty": 1,
+     "unitPrice": 1200
+    },
+    {
+     "id": "b2",
+     "name": "餐饮",
+     "qty": 30,
+     "unitPrice": 68.5
+    },
+    {
+     "id": "b3",
+     "name": "音响",
+     "qty": 1,
+     "unitPrice": 0,
+     "priceUnknown": true
+    },
+    {
+     "id": "b4",
+     "name": "自带桌布",
+     "qty": 4,
+     "unitPrice": 0
+    }
+   ]
+  },
+  "materials": [
+   {
+    "id": "m1",
+    "category": "布置",
+    "name": "气球拱门",
+    "qty": "1",
+    "ready": false
+   },
+   {
+    "id": "m2",
+    "category": "签到",
+    "name": "签到板",
+    "qty": "1",
+    "ready": true
+   }
+  ],
+  "tasks": [],
+  "copies": {},
+  "scene": {
+   "afterUrl": "http://x/after.png",
+   "stale": true,
+   "style": "森系",
+   "tags": [
+    "绿植",
+    "灯串"
+   ],
+   "extra": "入口要醒目"
+  },
+  "chatLog": [],
+  "theme": {
+   "name": "草地合伙人",
+   "slogan": "走出工位",
+   "highlights": [
+    "破冰",
+    "野餐"
+   ]
+  },
+  "selectedDirectionId": "d1"
+ },
+ "type-pending": {
+  "description": "",
+  "requirements": {
+   "typePending": {
+    "options": [
+     "生日派对",
+     "公司团建",
+     "还没想好"
+    ]
+   }
+  },
+  "directions": [],
+  "schedule": [],
+  "budget": {
+   "limit": null,
+   "items": []
+  },
+  "materials": [],
+  "tasks": [],
+  "copies": {},
+  "scene": {},
+  "chatLog": []
+ }
+}

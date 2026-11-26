@@ -35,11 +35,12 @@ def test_no_legacy_rule_was_dropped():
     assert len(_rules(production)) >= len(_rules(LEGACY.system))
 
 
-def test_role_and_untouched_intro_preserved():
-    prod = current()
-    assert prod.role == LEGACY.role
-    intro_end = LEGACY.system.index("核心准则：")
-    assert prod.system.startswith(LEGACY.system[:intro_end])
+def test_role_keeps_identity_and_safety_rule():
+    """Wording may evolve (version hash + live eval guard that); these must not be lost."""
+    role = current().role
+    assert "「小灵」" in role
+    assert "绝不把角色名或昵称写进正式活动方案" in role
+    assert "核心准则：" in current().system
 
 
 def test_rules_are_numbered_sequentially():

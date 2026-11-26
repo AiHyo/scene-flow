@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from dataclasses import dataclass
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -20,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.assemble import ChatOptions, Mode, build_messages
 from app.ai.prompts import PROMPT_VERSION, current
 from app.ai.providers import get_providers
+from app.ai.providers.base import LLMProvider
 from app.ai.quota import enforce_quota
 from app.ai.schemas import OUTPUT_MODELS, strict_json_schema
 from app.ai.tasks import create_task_row, set_task_state
@@ -88,28 +90,37 @@ async def generate(
     db: AsyncSession, user: Profile, mode: Mode, project: dict[str, Any], user_text: str, nickname: str | None
 ) -> dict[str, Any]:
     llm = get_providers().llm
-    model = OUTPUT_MODELS[mode]
-    schema = strict_json_schema(model) if settings.llm_structured_output == "json_schema" else None
     messages = build_messages(current(), mode, project, user_text, ChatOptions(nickname=nickname))
     row = await _record(db, user, mode, llm.name)
-
     try:
-        raw = await llm.complete_json(messages, mode, schema)
-        parsed, errors = _validate(model, raw)
-        repaired = False
-        if parsed is None:
-            logger.info("structured output invalid for %s, retrying once: %s", mode, errors.replace("\n", " | "))
-            repaired = True
-            retry = [*messages, {"role": "assistant", "content": raw}]
-            retry.append({"role": "user", "content": REPAIR_INSTRUCTION.format(errors=errors)})
-            raw = await llm.complete_json(retry, mode, schema)
-            parsed, errors = _validate(model, raw)
-        if parsed is None:
-            raise StructuredOutputInvalid("AI 返回的内容格式不正确，请重试", extra={"errors": errors.splitlines()[:5]})
+        result = await structured_completion(llm, mode, messages)
     except Exception as exc:
         await set_task_state(row.id, status="failed", error=str(exc)[:500])
         raise
+    await set_task_state(row.id, status="succeeded", result={"repaired": result.repaired})
+    return {"mode": mode, "data": result.data, "promptVersion": PROMPT_VERSION}
 
-    data = parsed.model_dump()
-    await set_task_state(row.id, status="succeeded", result={"repaired": repaired})
-    return {"mode": mode, "data": data, "promptVersion": PROMPT_VERSION}
+
+@dataclass(frozen=True)
+class StructuredResult:
+    data: dict[str, Any]
+    repaired: bool
+    raw_outputs: list[str]  # every model response, in order (kept for evaluation recordings)
+
+
+async def structured_completion(llm: LLMProvider, mode: Mode, messages: list[dict[str, Any]]) -> StructuredResult:
+    """json_schema strict → validate → one repair retry → StructuredOutputInvalid.
+    Shared by the API and the offline evaluation so both exercise the same path."""
+    model = OUTPUT_MODELS[mode]
+    schema = strict_json_schema(model) if settings.llm_structured_output == "json_schema" else None
+    raws = [await llm.complete_json(messages, mode, schema)]
+    parsed, errors = _validate(model, raws[-1])
+    if parsed is None:
+        logger.info("structured output invalid for %s, retrying once: %s", mode, errors.replace("\n", " | "))
+        retry = [*messages, {"role": "assistant", "content": raws[-1]}]
+        retry.append({"role": "user", "content": REPAIR_INSTRUCTION.format(errors=errors)})
+        raws.append(await llm.complete_json(retry, mode, schema))
+        parsed, errors = _validate(model, raws[-1])
+    if parsed is None:
+        raise StructuredOutputInvalid("AI 返回的内容格式不正确，请重试", extra={"errors": errors.splitlines()[:5]})
+    return StructuredResult(data=parsed.model_dump(), repaired=len(raws) > 1, raw_outputs=raws)

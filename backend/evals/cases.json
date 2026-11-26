@@ -1,0 +1,224 @@
+{
+  "patterns": {
+    "affirm_remaining": "(结余|剩余|还剩|余额|余下)[^。\\n，,；;：:]{0,8}?\\d",
+    "invented_people": "小王|小李|小张|小刘|小陈|小赵|张三|李四|王五",
+    "claims_done": "已(经)?(重新生成|生成了|更新了|完成了|同步|为你更新|帮你更新)"
+  },
+  "cases": [
+    {
+      "id": "chat-overspent",
+      "rule": "11 预算状态：超出上限必须说超支，绝不把差额说成余额",
+      "mode": "chat",
+      "project": "overspent",
+      "userText": "现在预算还剩多少？",
+      "checks": [
+        { "type": "regex_present", "pattern": "超支|超出" },
+        { "type": "regex_absent", "pattern": "$affirm_remaining" }
+      ]
+    },
+    {
+      "id": "chat-under-budget",
+      "rule": "11 预算状态：低于上限时给出正确结余（上限 5000 − 已知 3255 = 1745）",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "预算还够吗？还剩多少？",
+      "checks": [
+        { "type": "regex_present", "pattern": "1,?745" },
+        { "type": "regex_absent", "pattern": "超支" }
+      ]
+    },
+    {
+      "id": "chat-budget-undecided",
+      "rule": "11/12 预算上限未设定时没有余额概念，不得报出结余数字",
+      "mode": "chat",
+      "project": "items-no-limit",
+      "userText": "预算还剩多少？",
+      "checks": [
+        { "type": "regex_present", "pattern": "未(确定|设定|定)|没有(设定|确定|定)|尚未" },
+        { "type": "regex_absent", "pattern": "$affirm_remaining" }
+      ]
+    },
+    {
+      "id": "chat-unpriced-not-counted",
+      "rule": "11 价格待询的项目不计入合计（已知合计 3255，音响待询价）",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "现在费用合计是多少？",
+      "checks": [
+        { "type": "regex_present", "pattern": "3,?255" },
+        { "type": "regex_present", "pattern": "待询|未计入|没(有)?报价|未报价|还没定价|未定价" }
+      ]
+    },
+    {
+      "id": "chat-mem-only",
+      "rule": "只记条件时不输出方向 / 主题协议行，不宣称已生成或已更新",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "帮我记一下，人数改成 40 人",
+      "options": { "memOnly": true },
+      "checks": [
+        { "type": "regex_absent", "pattern": "^建议方向[：:]" },
+        { "type": "regex_absent", "pattern": "^建议主题[：:]" },
+        { "type": "regex_absent", "pattern": "$claims_done" }
+      ]
+    },
+    {
+      "id": "chat-ideas-directions",
+      "rule": "10/20 没想好时给出 2–3 个可一键采纳的方向行，字段长度符合协议",
+      "mode": "chat",
+      "project": "empty",
+      "userText": "想给团队办一场团建，还没想好方向",
+      "checks": [
+        { "type": "count_between", "pattern": "^建议方向[：:]", "min": 2, "max": 4 },
+        {
+          "type": "count_between",
+          "pattern": "^建议方向[：:][^|｜\\n]{1,10}[|｜][^|｜\\n]{1,6}[|｜][^|｜\\n]{1,30}$",
+          "min": 2,
+          "max": 4
+        }
+      ]
+    },
+    {
+      "id": "chat-no-scene",
+      "rule": "用户明确不要图片时，只做文字内容，不提议生成图片",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "重新整理一下方案思路，不要生成图片",
+      "options": { "noScene": true },
+      "checks": [{ "type": "regex_absent", "pattern": "(帮你|为你|我来|马上|这就)(去)?生成.{0,8}(效果图|图片|布置图)" }]
+    },
+    {
+      "id": "chat-color-only-adjust",
+      "rule": "19/22 只改配色：调整建议只包含配色，不动流程与费用",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "只把配色改成浅蓝与白色，流程和费用都不要动",
+      "checks": [
+        {
+          "type": "adjust_card",
+          "required": true,
+          "requireKeys": ["visualTheme"],
+          "forbidKeys": ["budgetAdd", "budgetRemoveNames", "schedulePatch", "scheduleAdd", "scheduleRemoveNames", "materialsAdd", "materialsRemoveNames"],
+          "valuePatterns": { "visualTheme": "浅蓝" }
+        }
+      ]
+    },
+    {
+      "id": "chat-no-phantom-removal",
+      "rule": "19 费用明细里没有舞台，就绝不写「删除舞台」",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "不要舞台，把省下的预算留给茶歇，其他不变",
+      "checks": [
+        { "type": "adjust_card", "required": false, "valuePatterns": {}, "forbidValuePatterns": { "budgetRemoveNames": "舞台" } },
+        { "type": "regex_absent", "pattern": "已(经)?(删除|去掉|移除)(了)?舞台" }
+      ]
+    },
+    {
+      "id": "chat-nickname-greeting",
+      "rule": "16 带昵称时亲切称呼，并以小灵自我介绍",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "你好呀",
+      "options": { "nickname": "小雨" },
+      "checks": [
+        { "type": "regex_present", "pattern": "小雨" },
+        { "type": "regex_present", "pattern": "小灵" }
+      ]
+    },
+    {
+      "id": "chat-no-invented-staff",
+      "rule": "24 没有提供人员时负责人写待分配，不编造人名",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "帮我把签到、主持、摄影这些活分给工作人员",
+      "checks": [{ "type": "regex_absent", "pattern": "$invented_people" }]
+    },
+    {
+      "id": "chat-vision-no-dimensions",
+      "rule": "9 单张照片不推断面积与尺寸",
+      "mode": "chat",
+      "project": "rich",
+      "userText": "根据这张照片给点布置建议",
+      "options": { "vision": "室内宴会厅，几张圆桌铺着米色桌布，前方有投影幕和音响，左侧是落地窗" },
+      "checks": [
+        { "type": "regex_absent", "pattern": "\\d+\\s*(平方米|平米|㎡)" },
+        { "type": "regex_absent", "pattern": "\\d+(\\.\\d+)?\\s*米(宽|长|高|深)" }
+      ]
+    },
+    {
+      "id": "directions-from-scratch",
+      "rule": "20 方向生成：恰好 3 个，名称与风格长度符合要求",
+      "mode": "directions",
+      "project": "empty",
+      "userText": "",
+      "checks": [
+        { "type": "count_between", "path": "directions", "min": 3, "max": 3 },
+        { "type": "max_len", "path": "directions", "key": "name", "max": 10 },
+        { "type": "max_len", "path": "directions", "key": "style", "max": 6 }
+      ]
+    },
+    {
+      "id": "theme-verbatim",
+      "rule": "21 用户指定的主题名与口号必须逐字采用",
+      "mode": "theme",
+      "project": "rich",
+      "userText": "主题就叫「森林野餐会」，口号用「把工位搬到草地上」",
+      "checks": [
+        { "type": "equals", "path": "theme.name", "value": "森林野餐会" },
+        { "type": "equals", "path": "theme.slogan", "value": "把工位搬到草地上" }
+      ]
+    },
+    {
+      "id": "scheme-structure",
+      "rule": "方案：5–8 个环节按时间排序，6–12 个费用项，负责人不编造",
+      "mode": "scheme",
+      "project": "rich",
+      "userText": "已选定方向：「户外野餐」（自然）",
+      "checks": [
+        { "type": "count_between", "path": "schedule", "min": 5, "max": 8 },
+        { "type": "times_sorted", "path": "schedule", "key": "time" },
+        { "type": "count_between", "path": "budgetItems", "min": 6, "max": 12 },
+        { "type": "all_match", "path": "tasks", "key": "owner", "pattern": "^(|待分配|待定|未分配)$" }
+      ]
+    },
+    {
+      "id": "scheme-no-invented-staff",
+      "rule": "24 从零生成方案时同样不编造人名",
+      "mode": "scheme",
+      "project": "empty",
+      "userText": "已选定方向：「轻松交流会」（自然）",
+      "checks": [
+        { "type": "all_match", "path": "tasks", "key": "owner", "pattern": "^(|待分配|待定|未分配)$" },
+        { "type": "regex_absent", "pattern": "$invented_people" }
+      ]
+    },
+    {
+      "id": "copies-cross-day",
+      "rule": "文案时间与流程推导一致，跨日时明确说明次日结束",
+      "mode": "copies",
+      "project": "cross-day",
+      "userText": "",
+      "checks": [
+        { "type": "regex_present", "path": "invite", "pattern": "20[:：]00" },
+        { "type": "regex_present", "path": "invite", "pattern": "次日|凌晨|跨(天|日|夜)|第二天" }
+      ]
+    },
+    {
+      "id": "copies-start-time",
+      "rule": "文案开始时间必须与流程表一致（13:30）",
+      "mode": "copies",
+      "project": "rich",
+      "userText": "",
+      "checks": [{ "type": "regex_present", "path": "invite", "pattern": "13[:：]30" }]
+    },
+    {
+      "id": "copies-no-invented-time",
+      "rule": "流程没有时间时不编造具体钟点",
+      "mode": "copies",
+      "project": "empty",
+      "userText": "",
+      "checks": [{ "type": "regex_absent", "path": "invite", "pattern": "\\d{1,2}[:：]\\d{2}" }]
+    }
+  ]
+}
