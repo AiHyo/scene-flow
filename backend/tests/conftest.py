@@ -11,7 +11,7 @@ import os
 import subprocess
 import sys
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 
 import pytest
@@ -33,6 +33,8 @@ from sqlalchemy import text  # noqa: E402
 
 from app.core.database import Base, engine  # noqa: E402
 from app.main import app  # noqa: E402
+from app.storage import set_storage  # noqa: E402
+from app.storage.memory import MemoryStorage  # noqa: E402
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
@@ -66,6 +68,15 @@ async def clean_tables(migrated_db: None) -> AsyncIterator[None]:
     tables = ", ".join(f'"{t.name}"' for t in Base.metadata.sorted_tables)
     async with engine.begin() as conn:
         await conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+
+
+@pytest.fixture(autouse=True)
+def storage() -> Iterator[MemoryStorage]:
+    """Every test gets a fresh in-memory object store instead of MinIO."""
+    mem = MemoryStorage(bucket="media", public_base_url="http://minio.test")
+    set_storage(mem)
+    yield mem
+    set_storage(None)
 
 
 @pytest.fixture

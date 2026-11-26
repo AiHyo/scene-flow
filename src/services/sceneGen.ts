@@ -1,5 +1,8 @@
+import { VENUE_SAMPLES } from '@/data/venueSamples';
 import { apiRequest } from '@/lib/apiClient';
 import type { ProjectData } from '@/types/types';
+
+const SAMPLE_BEFORE_PATHS = new Set<string>(VENUE_SAMPLES.map((s) => s.before));
 
 export interface SceneGenOptions {
   style?: string;
@@ -84,7 +87,8 @@ export async function submitSceneGeneration(
    * 缺失时明确报错并停止本次生成，绝不静默退化为纯文字概念生图
    * （纯文字生图无底图约束，必然产出结构完全不同的另一个空间）。 */
   const beforeUrl = scene.beforeUrl?.trim();
-  if (!beforeUrl || !/^https?:\/\//.test(beforeUrl)) {
+  /* 允许：本站上传图片（http/https）或内置样例场地的相对路径（后端已预置到对象存储，并做最终白名单校验） */
+  if (!beforeUrl || !(/^https?:\/\//.test(beforeUrl) || SAMPLE_BEFORE_PATHS.has(beforeUrl))) {
     throw new Error('缺少有效的场地原图，已停止本次生成。请先上传或选择场地照片作为底图后再试。');
   }
 

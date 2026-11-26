@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.ai.image_refs import seed_sample_venues
 from app.core.config import settings
 from app.core.errors import AppError
 from app.core.http import close_http_client, start_http_client
@@ -16,7 +17,7 @@ from app.routers.auth import router as auth_router
 from app.routers.media import router as media_router
 from app.routers.plaza import router as plaza_router
 from app.routers.project import router as project_router
-from app.storage.s3 import ensure_bucket
+from app.storage import get_storage
 
 configure_logging(settings.log_level)
 logger = logging.getLogger("app")
@@ -25,7 +26,11 @@ logger = logging.getLogger("app")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await start_http_client()
-    await ensure_bucket()
+    await get_storage().ensure_ready()
+    try:
+        await seed_sample_venues()
+    except Exception:
+        logger.warning("seeding sample venue images failed; sample venues will be unavailable", exc_info=True)
     try:
         yield
     finally:

@@ -16,7 +16,8 @@ from app.schemas.plaza import (
     PlazaPostDetailOut,
     PlazaPostOut,
 )
-from app.storage.s3 import delete_by_urls
+from app.storage import get_storage
+from app.storage.base import delete_by_urls
 
 
 def _to_post_out(post: PlazaPost, liked: bool) -> PlazaPostOut:
@@ -103,7 +104,7 @@ async def delete_post(db: AsyncSession, user: Profile, post_id: uuid.UUID) -> No
     await db.delete(post)
     await db.commit()
     if imgs:
-        await delete_by_urls(imgs)
+        await delete_by_urls(get_storage(), imgs)
 
 
 async def toggle_like(db: AsyncSession, user: Profile, post_id: uuid.UUID) -> PlazaLikeOut:

@@ -91,13 +91,13 @@ async def scene_submit(
     body: SceneSubmitIn,
     _user: Profile = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """提交场景布置生图任务"""
-    valid_imgs = [it for it in body.image_list if isinstance(it.get("image"), str) and it["image"].startswith("http")]
-    if not valid_imgs:
-        raise BadRequest("缺少有效的场地底图 URL")
+    """提交场景布置生图任务（底图须为本站上传图片或内置样例场地，由 image_refs 校验）"""
+    refs = [it["image"].strip() for it in body.image_list if isinstance(it.get("image"), str) and it["image"].strip()]
+    if not refs:
+        raise BadRequest("缺少有效的场地底图")
     return await submit_scene_gen(
         prompt=body.prompt,
-        image_list=valid_imgs,
+        image_refs=refs,
         resolution=body.resolution,
         aspect_ratio=body.aspect_ratio,
     )

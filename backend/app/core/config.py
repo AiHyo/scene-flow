@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     minio_secret_key: str = "minioadmin123"
     minio_bucket: str = "media"
 
+    # 样例场地底图来源目录：启动时幂等预置到对象存储 samples/（Docker 中经只读挂载提供）
+    sample_assets_dir: str = str(Path(__file__).resolve().parents[3] / "public" / "images" / "layout-reference")
+
     # JWT 鉴权
     jwt_secret: str = DEV_JWT_SECRET
     jwt_algorithm: str = "HS256"

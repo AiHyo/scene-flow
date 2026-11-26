@@ -30,13 +30,14 @@ async def test_like_toggles(client, make_account):
     assert second.json()["liked"] is False
 
 
-async def test_only_author_can_delete_post(client, make_account, monkeypatch):
-    async def _no_storage(urls):  # storage is out of scope for this test
-        return None
-
-    monkeypatch.setattr("app.services.plaza_service.delete_by_urls", _no_storage)
+async def test_only_author_can_delete_post_and_its_images(client, make_account, storage):
+    await storage.put("plaza/a.jpg", b"img", "image/jpeg")
     author, other = await make_account(), await make_account()
-    post_id = (await client.post("/api/v1/plaza-post", json=POST, headers=author.headers)).json()["id"]
+    post = {**POST, "imgList": ["http://minio.test/media/plaza/a.jpg", "https://elsewhere.example/b.jpg"]}
+    post_id = (await client.post("/api/v1/plaza-post", json=post, headers=author.headers)).json()["id"]
 
     assert (await client.delete(f"/api/v1/plaza-post/{post_id}", headers=other.headers)).status_code == 403
+    assert await storage.exists("plaza/a.jpg")
+
     assert (await client.delete(f"/api/v1/plaza-post/{post_id}", headers=author.headers)).status_code == 204
+    assert not await storage.exists("plaza/a.jpg")

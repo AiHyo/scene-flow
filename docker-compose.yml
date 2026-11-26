@@ -63,6 +63,10 @@ services:
       IMG_GEN_BASE_URL: ${IMG_GEN_BASE_URL:-}
       IMG_GEN_API_KEY: ${IMG_GEN_API_KEY:-}
       IMG_GEN_MODEL: ${IMG_GEN_MODEL:-gpt-image-2.6}
+      SAMPLE_ASSETS_DIR: /app/seed/samples
+    volumes:
+      # 样例场地底图：后端启动时幂等预置到对象存储 samples/
+      - ./public/images/layout-reference:/app/seed/samples:ro
     ports:
       - "8000:8000"
 

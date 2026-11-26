@@ -2,98 +2,102 @@ from __future__ import annotations
 
 import asyncio
 import json
-import uuid
-from functools import lru_cache
-from urllib.parse import urlparse
+from functools import cached_property
 
 import boto3
 from botocore.client import Config as BotoConfig
 from botocore.exceptions import ClientError
 
 from app.core.config import settings
+from app.storage.base import StoredObject
 
 
-@lru_cache(maxsize=1)
-def _get_s3_client():
-    return boto3.client(
-        "s3",
-        endpoint_url=settings.minio_endpoint,
-        aws_access_key_id=settings.minio_access_key,
-        aws_secret_access_key=settings.minio_secret_key,
-        config=BotoConfig(signature_version="s3v4"),
-        region_name="us-east-1",
-    )
+class S3Storage:
+    """MinIO / S3 implementation. boto3 is blocking, so calls run in a thread."""
 
+    def __init__(self, *, endpoint: str, public_base_url: str, access_key: str, secret_key: str, bucket: str):
+        self.endpoint = endpoint
+        self.public_base_url = public_base_url
+        self.bucket = bucket
+        self._access_key = access_key
+        self._secret_key = secret_key
 
-def build_public_url(object_key: str) -> str:
-    """拼接对外可访问的对象存储 URL"""
-    base = settings.minio_public_url.rstrip("/")
-    return f"{base}/{settings.minio_bucket}/{object_key.lstrip('/')}"
+    @cached_property
+    def _client(self):
+        return boto3.client(
+            "s3",
+            endpoint_url=self.endpoint,
+            aws_access_key_id=self._access_key,
+            aws_secret_access_key=self._secret_key,
+            config=BotoConfig(signature_version="s3v4"),
+            region_name="us-east-1",
+        )
 
+    async def put(self, key: str, data: bytes, content_type: str) -> None:
+        await asyncio.to_thread(
+            self._client.put_object, Bucket=self.bucket, Key=key, Body=data, ContentType=content_type
+        )
 
-def extract_object_key(url: str) -> str | None:
-    """从公开 URL 提取当前 bucket 对应的对象键，外部链接返回 None"""
-    parsed = urlparse(url)
-    prefix = f"/{settings.minio_bucket}/"
-    if not parsed.path.startswith(prefix):
-        return None
-    return parsed.path[len(prefix) :]
+    async def get(self, key: str) -> StoredObject | None:
+        def _get() -> StoredObject | None:
+            try:
+                obj = self._client.get_object(Bucket=self.bucket, Key=key)
+            except ClientError as exc:
+                if exc.response.get("Error", {}).get("Code") in ("NoSuchKey", "404"):
+                    return None
+                raise
+            return StoredObject(key, obj["Body"].read(), obj.get("ContentType") or "application/octet-stream")
 
+        return await asyncio.to_thread(_get)
 
-def _put_object_sync(object_key: str, data: bytes, content_type: str) -> None:
-    _get_s3_client().put_object(
-        Bucket=settings.minio_bucket,
-        Key=object_key,
-        Body=data,
-        ContentType=content_type,
-    )
+    async def exists(self, key: str) -> bool:
+        def _head() -> bool:
+            try:
+                self._client.head_object(Bucket=self.bucket, Key=key)
+                return True
+            except ClientError:
+                return False
 
+        return await asyncio.to_thread(_head)
 
-def _delete_objects_sync(keys: list[str]) -> None:
-    if not keys:
-        return
-    _get_s3_client().delete_objects(
-        Bucket=settings.minio_bucket,
-        Delete={"Objects": [{"Key": k} for k in keys]},
-    )
+    async def delete_many(self, keys: list[str]) -> None:
+        if not keys:
+            return
+        await asyncio.to_thread(
+            self._client.delete_objects,
+            Bucket=self.bucket,
+            Delete={"Objects": [{"Key": k} for k in keys]},
+        )
 
+    async def ensure_ready(self) -> None:
+        """Create the bucket if needed and allow anonymous reads (images are shown by URL)."""
 
-def _ensure_bucket_sync() -> None:
-    client = _get_s3_client()
-    try:
-        client.head_bucket(Bucket=settings.minio_bucket)
-    except ClientError:
-        client.create_bucket(Bucket=settings.minio_bucket)
-    policy = {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Principal": {"AWS": ["*"]},
-                "Action": ["s3:GetObject"],
-                "Resource": [f"arn:aws:s3:::{settings.minio_bucket}/*"],
+        def _ensure() -> None:
+            try:
+                self._client.head_bucket(Bucket=self.bucket)
+            except ClientError:
+                self._client.create_bucket(Bucket=self.bucket)
+            policy = {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {"AWS": ["*"]},
+                        "Action": ["s3:GetObject"],
+                        "Resource": [f"arn:aws:s3:::{self.bucket}/*"],
+                    }
+                ],
             }
-        ],
-    }
-    client.put_bucket_policy(Bucket=settings.minio_bucket, Policy=json.dumps(policy))
+            self._client.put_bucket_policy(Bucket=self.bucket, Policy=json.dumps(policy))
+
+        await asyncio.to_thread(_ensure)
 
 
-async def ensure_bucket() -> None:
-    """确保存储桶存在并开启公开读权限"""
-    await asyncio.to_thread(_ensure_bucket_sync)
-
-
-async def upload_bytes(data: bytes, folder: str, ext: str, content_type: str) -> tuple[str, str]:
-    """上传字节流到 MinIO，返回 (public_url, object_key)"""
-    clean_folder = folder.strip("/ ") or "misc"
-    clean_ext = ext if ext.startswith(".") else f".{ext}"
-    object_key = f"{clean_folder}/{uuid.uuid4().hex}{clean_ext.lower()}"
-    await asyncio.to_thread(_put_object_sync, object_key, data, content_type)
-    return build_public_url(object_key), object_key
-
-
-async def delete_by_urls(urls: list[str]) -> None:
-    """按公开 URL 批量清理 MinIO 中的对象（跳过非本桶外部链接）"""
-    keys = [k for u in urls if (k := extract_object_key(u))]
-    if keys:
-        await asyncio.to_thread(_delete_objects_sync, keys)
+def storage_from_settings() -> S3Storage:
+    return S3Storage(
+        endpoint=settings.minio_endpoint,
+        public_base_url=settings.minio_public_url,
+        access_key=settings.minio_access_key,
+        secret_key=settings.minio_secret_key,
+        bucket=settings.minio_bucket,
+    )
