@@ -72,6 +72,31 @@ class OpenAICompatLLM:
 
         return _iter()
 
+    async def complete_json(
+        self, messages: list[dict[str, Any]], schema_name: str, schema: dict[str, Any] | None
+    ) -> str:
+        payload: dict[str, Any] = {"model": self.model, "messages": messages}
+        if schema is not None:
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": schema_name, "strict": True, "schema": schema},
+            }
+        try:
+            resp = await get_http_client().post(
+                f"{self.base_url}/chat/completions",
+                headers={"Content-Type": "application/json", **_auth(self.api_key)},
+                json=payload,
+                timeout=CHAT_TIMEOUT,
+            )
+        except httpx.RequestError as exc:
+            raise UpstreamError(f"无法连接对话服务：{type(exc).__name__}") from exc
+        if resp.status_code != 200:
+            raise UpstreamError(f"对话服务异常（HTTP {resp.status_code}）：{resp.text[:200]}")
+        content = (resp.json().get("choices") or [{}])[0].get("message", {}).get("content") or ""
+        if not content.strip():
+            raise UpstreamError("对话服务未返回内容")
+        return content
+
 
 class OpenAICompatVision:
     name = "openai"

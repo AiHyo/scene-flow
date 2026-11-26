@@ -1,0 +1,42 @@
+{
+  "theme": {
+    "name": "草地合伙人",
+    "slogan": "走出工位，一起晒晒太阳",
+    "highlights": ["跨部门混搭分桌", "森系野餐布置", "趣味协作小游戏", "合影墙留住笑脸"]
+  },
+  "schedule": [
+    { "name": "签到与领取名牌", "time": "14:00", "duration": "20 分钟", "note": "按分组卡就座（演示示例）" },
+    { "name": "开场与破冰", "time": "14:20", "duration": "25 分钟", "note": "混搭分组，互相认识" },
+    { "name": "协作小游戏", "time": "14:45", "duration": "45 分钟", "note": "分组积分，轻松为主" },
+    { "name": "野餐自由交流", "time": "15:30", "duration": "60 分钟", "note": "茶歇与自由聊天" },
+    { "name": "合影与收尾", "time": "16:30", "duration": "20 分钟", "note": "合影墙集体照" }
+  ],
+  "budgetItems": [
+    { "name": "野餐垫与桌椅租赁", "qty": 6, "unitPrice": 80 },
+    { "name": "茶歇点心", "qty": 30, "unitPrice": 25 },
+    { "name": "饮品", "qty": 30, "unitPrice": 8 },
+    { "name": "游戏道具", "qty": 1, "unitPrice": 150 },
+    { "name": "合影墙背景布", "qty": 1, "unitPrice": 120 },
+    { "name": "名牌与分组卡", "qty": 30, "unitPrice": 2 }
+  ],
+  "materials": [
+    { "category": "布置", "name": "野餐垫", "qty": "6", "ready": false },
+    { "category": "布置", "name": "合影墙背景布", "qty": "1", "ready": false },
+    { "category": "签到", "name": "名牌与分组卡", "qty": "30", "ready": false },
+    { "category": "互动", "name": "游戏道具套装", "qty": "1", "ready": false }
+  ],
+  "tasks": [
+    { "name": "确认场地与时间", "owner": "", "deadline": "", "done": false },
+    { "name": "统计人数与饮食偏好", "owner": "", "deadline": "", "done": false },
+    { "name": "采购茶歇与物料", "owner": "", "deadline": "", "done": false }
+  ],
+  "copies": {
+    "invite": "（演示模式示例文案）亲爱的伙伴们：我们将举办一场轻松的草地交流活动，主题是「草地合伙人」，14:00 开始，16:50 结束，地点待确认。欢迎带上好心情！",
+    "hosting": "（演示模式示例文案）大家好！欢迎来到「草地合伙人」，今天我们只聊彼此，先来一个破冰小游戏吧！",
+    "onsite": [
+      "签到处（位置待确认，建议入口附近）领取名牌",
+      "按分组卡找到对应野餐桌",
+      "合影墙全程开放"
+    ]
+  }
+}

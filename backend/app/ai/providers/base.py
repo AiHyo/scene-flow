@@ -21,6 +21,13 @@ class LLMProvider(Protocol):
         """Return an OpenAI-format SSE byte stream (`data: {chat.completion.chunk}` lines)."""
         ...
 
+    async def complete_json(
+        self, messages: list[dict[str, Any]], schema_name: str, schema: dict[str, Any] | None
+    ) -> str:
+        """Return the model's raw text. With `schema`, ask for strict JSON-schema output;
+        without it, rely on the prompt alone (for providers lacking structured output)."""
+        ...
+
 
 class VisionProvider(Protocol):
     name: str

@@ -14,6 +14,7 @@ from app.core.errors import AppError
 from app.core.http import close_http_client, start_http_client
 from app.core.logging import RequestIdMiddleware, configure_logging
 from app.routers.ai import router as ai_router
+from app.routers.ai_plan import router as ai_plan_router
 from app.routers.auth import router as auth_router
 from app.routers.media import router as media_router
 from app.routers.plaza import router as plaza_router
@@ -75,6 +76,7 @@ app.include_router(project_router)
 app.include_router(plaza_router)
 app.include_router(media_router)
 app.include_router(ai_router)
+app.include_router(ai_plan_router)
 
 
 @app.get("/health")

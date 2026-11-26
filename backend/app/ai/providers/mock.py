@@ -7,11 +7,14 @@ import asyncio
 import json
 import uuid
 from collections.abc import AsyncIterator
+from pathlib import Path
 from typing import Any
 
 from app.ai.image_refs import SAMPLE_AFTER_KEYS, ResolvedImage
 from app.core.errors import BadRequest
 from app.storage import get_storage
+
+FIXTURES = Path(__file__).resolve().parent / "mock_fixtures"
 
 DEMO_VISION_DESCRIPTION = (
     "（演示模式示例识别结果）画面是一处开阔的活动空间：地面平整，主要区域空旷，"
@@ -58,6 +61,12 @@ class MockLLM:
                 yield frame
 
         return _iter()
+
+    async def complete_json(
+        self, messages: list[dict[str, Any]], schema_name: str, schema: dict[str, Any] | None
+    ) -> str:
+        """Prepared example output for each generation mode (validated like real output)."""
+        return (FIXTURES / f"{schema_name}.json").read_text(encoding="utf-8")
 
 
 class MockVision:
