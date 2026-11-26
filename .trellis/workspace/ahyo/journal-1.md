@@ -61,3 +61,33 @@ ruff 与真实 Postgres 测试基座（81 测试）+ 后端 CI；AppError 统一
 ### Status
 
 [OK] **Completed**
+
+
+## Session 3: ai-orchestration：AI 编排后端化、演示模式与离线评测
+<!-- trellis-session: v=2 fp=43f5e3d64159f951 -->
+
+**Date**: 2026-11-26
+**Task**: ai-orchestration：AI 编排后端化、演示模式与离线评测
+**Branch**: `worktree-portfolio-polish`
+
+### Summary
+
+Provider 抽象（OpenAI 兼容 / 可灵 / Mock）与无密钥演示模式；提示词与组装逻辑迁到后端，golden 测试证明与原前端 45 例逐字一致，规则重新编号并以版本哈希约束；/ai/plan/chat 与 /ai/plan/{mode} 接口，json_schema strict + 校验 + 一次修复重试，拒绝客户端 messages/model；前端删除全部提示词，旧透传接口 404；演示模式协议行完整，无密钥 Docker 全栈 Playwright 13/13；19 条离线评测真实模型 19/19，CI 回放录制结果并逐用例比对消息哈希（改一字即 21 个测试失败）。修复原 deriveTimeRange 跨午夜未标记跨日。后端测试 94→230，GitHub CI 前后端均绿。遗留：场景页刚生成即提示效果图对应旧要求（前端老问题，待 frontend 子任务排查）。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `73e0428` | feat(ai): Provider 抽象与演示模式基座，测试不再读取本机 .env |
+| `81e50ce` | feat(ai): 提示词组装逻辑移植到后端，golden 测试证明与原前端逐字一致 |
+| `e2bdd93` | fix: 流程结束时间跨过午夜时正确标记为跨日 |
+| `0df9a98` | refactor(ai): 系统提示词规则连续编号，并以测试约束版本与无损 |
+| `26d1f32` | feat(ai): 共策接口由后端组装提示词，结构化输出加校验与一次修复重试 |
+| `8304e5e` | feat: 前端切换到后端共策接口，删除前端提示词与旧透传接口 |
+| `588dfba` | feat(ai): 演示模式可完整走通共策流程，并以无密钥端到端测试验证 |
+| `20355b8` | feat(ai): 提示词离线评测——真实模型录制、CI 回放，提示词改动必须实测 |
+| `fe5be6e` | docs: AI 编排工程要点、演示模式与提示词修改流程，新增 AI 编排规范 |
+
+### Status
+
+[OK] **Completed**

@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 2
-- **Last Active**: 2026-11-25
+- **Total Sessions**: 3
+- **Last Active**: 2026-11-26
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~63 | Active |
+| `journal-1.md` | ~93 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 3 | 2026-11-26 | ai-orchestration：AI 编排后端化、演示模式与离线评测 | `73e0428`, `81e50ce`, `e2bdd93`, `0df9a98`, `26d1f32`, `8304e5e`, `588dfba`, `20355b8`, `fe5be6e` | `worktree-portfolio-polish` |
 | 2 | 2026-11-25 | backend-hardening：后端安全与工程基座 | `6ffa662`, `4f30a40`, `e3a3eae`, `c33d0ee`, `a306456`, `7cb40dc`, `3174327`, `f493373`, `faced2f` | `worktree-portfolio-polish` |
 | 1 | 2026-11-25 | repo-hygiene：仓库门面与工程卫生清理 | `b7db469`, `54a2fa9`, `f1a5259`, `aa9a0d6`, `e43ae93` | `worktree-portfolio-polish` |
 <!-- @@@/auto:session-history -->
