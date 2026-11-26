@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.image_refs import resolve_image_ref, validate_image_ref
 from app.ai.providers import get_providers
 from app.ai.quota import enforce_quota
-from app.ai.tasks import create_task_row, get_owned_task, runner, set_task_state
+from app.ai.tasks import create_task_row, get_owned_task, runner
 from app.models.profile import Profile
 from app.storage import get_storage
 from app.storage.base import public_url, upload
@@ -123,22 +123,3 @@ async def query_scene(db: AsyncSession, user: Profile, task_id: str) -> dict[str
     if row.status == "failed":
         return {"task_status": "failed", "task_status_msg": f"生图失败：{row.error}"}
     return {"task_status": "processing"}
-
-
-# ---- chat (streamed; recorded for quota) ----
-
-
-async def open_chat_stream(db: AsyncSession, user: Profile, messages: list[dict[str, Any]]):
-    llm = get_providers().llm
-    await enforce_quota(db, user, "chat")
-    row = await create_task_row(
-        db, user, kind="chat", provider=llm.name, input={"messages": len(messages)}, status="running"
-    )
-    await db.commit()
-    try:
-        stream = await llm.stream_chat(messages)
-    except Exception as exc:
-        await set_task_state(row.id, status="failed", error=str(exc)[:500])
-        raise
-    await set_task_state(row.id, status="succeeded")
-    return stream

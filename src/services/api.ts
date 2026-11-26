@@ -83,6 +83,11 @@ export async function createProject(
   return res.id;
 }
 
+/** AI 运行模式：live = 真实模型；demo = 未配置模型密钥，AI 内容为预置示例 */
+export async function getAiStatus(): Promise<{ mode: 'live' | 'demo' }> {
+  return await apiRequest<{ mode: 'live' | 'demo' }>('/api/v1/ai/status');
+}
+
 export async function getProject(id: string): Promise<ProjectRow | null> {
   try {
     return await apiRequest<ProjectRow>(`/api/v1/project/${encodeURIComponent(id)}`);

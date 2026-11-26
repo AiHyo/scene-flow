@@ -84,9 +84,7 @@ async def test_chat_upstream_401_is_reported_as_502(client, make_guest, monkeypa
 
     with respx.mock(assert_all_called=True) as mock:
         mock.post("https://llm.test/v1/chat/completions").respond(401, json={"error": "invalid key"})
-        resp = await client.post(
-            "/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "hi"}]}, headers=guest.headers
-        )
+        resp = await client.post("/api/v1/ai/plan/chat", json={"project": {}, "userText": "hi"}, headers=guest.headers)
 
     assert resp.status_code == 502
     assert resp.json()["code"] == "upstream_error"
@@ -97,8 +95,6 @@ async def test_chat_forced_live_without_key_is_service_misconfigured(client, mak
     monkeypatch.setattr(settings, "ai_provider", "openai")
     monkeypatch.setattr(settings, "llm_api_key", "")
     guest = await make_guest()
-    resp = await client.post(
-        "/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "hi"}]}, headers=guest.headers
-    )
+    resp = await client.post("/api/v1/ai/plan/chat", json={"project": {}, "userText": "hi"}, headers=guest.headers)
     assert resp.status_code == 503
     assert resp.json()["code"] == "service_misconfigured"

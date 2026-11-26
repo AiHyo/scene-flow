@@ -222,15 +222,15 @@ async def test_quota_holds_under_concurrent_burst(client, make_guest, ai_configu
 async def test_chat_is_rate_limited_and_recorded(client, make_guest, ai_configured, monkeypatch):
     monkeypatch.setattr(settings, "quota_chat_guest_per_hour", 1)
     guest = await make_guest()
-    body = {"messages": [{"role": "user", "content": "hi"}]}
+    body = {"project": {}, "userText": "hi"}
     with respx.mock(assert_all_mocked=True) as mock:
         mock.post("https://llm.test/v1/chat/completions").respond(
             200,
             content=b'data: {"choices":[{"delta":{"content":"hi"}}]}\n\n',
             headers={"content-type": "text/event-stream"},
         )
-        first = await client.post("/api/v1/ai/chat", json=body, headers=guest.headers)
-        second = await client.post("/api/v1/ai/chat", json=body, headers=guest.headers)
+        first = await client.post("/api/v1/ai/plan/chat", json=body, headers=guest.headers)
+        second = await client.post("/api/v1/ai/plan/chat", json=body, headers=guest.headers)
 
     assert first.status_code == 200 and "hi" in first.text
     assert second.status_code == 429

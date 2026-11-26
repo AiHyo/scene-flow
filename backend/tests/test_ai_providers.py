@@ -81,7 +81,7 @@ async def test_demo_chat_streams_without_any_network(client, make_guest, demo):
     with respx.mock(assert_all_mocked=True, assert_all_called=False) as mock:
         anything = mock.route().respond(500)
         resp = await client.post(
-            "/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "你好"}]}, headers=guest.headers
+            "/api/v1/ai/plan/chat", json={"project": {}, "userText": "你好"}, headers=guest.headers
         )
     assert resp.status_code == 200
     assert resp.text.rstrip().endswith("data: [DONE]")
@@ -145,9 +145,9 @@ async def test_demo_scene_refuses_user_photos_instead_of_faking(client, make_gue
 async def test_demo_chat_is_still_rate_limited(client, make_guest, demo, monkeypatch):
     monkeypatch.setattr(settings, "quota_chat_guest_per_hour", 1)
     guest = await make_guest()
-    body = {"messages": [{"role": "user", "content": "你好"}]}
+    body = {"project": {}, "userText": "你好"}
     first, second = await asyncio.gather(
-        client.post("/api/v1/ai/chat", json=body, headers=guest.headers),
-        client.post("/api/v1/ai/chat", json=body, headers=guest.headers),
+        client.post("/api/v1/ai/plan/chat", json=body, headers=guest.headers),
+        client.post("/api/v1/ai/plan/chat", json=body, headers=guest.headers),
     )
     assert sorted([first.status_code, second.status_code]) == [200, 429]

@@ -44,6 +44,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import {
   clearDraft,
+  getAiStatus,
   getDraft,
   getProject,
   listProjects,
@@ -266,6 +267,17 @@ export default function Workbench() {
   /* 版本冲突：弹窗等待用户选择期间暂停向服务端写入（仍写本地草稿），避免防抖保存反复触发冲突 */
   const [versionConflict, setVersionConflict] = useState<{ currentVersion: number } | null>(null);
   const conflictRef = useRef(false);
+  /* AI 运行模式：demo = 后端未配置模型密钥，AI 内容为预置示例（顶栏标注） */
+  const [aiMode, setAiMode] = useState<'live' | 'demo' | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void getAiStatus()
+      .then((s) => alive && setAiMode(s.mode))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   /* ---------- 加载 ---------- */
   useEffect(() => {
@@ -1649,6 +1661,16 @@ export default function Workbench() {
             )}
             {saveState === 'idle' && <span className="text-muted-foreground">自动保存已开启</span>}
           </span>
+
+          {/* 演示模式：后端未配置模型密钥时 AI 返回预置示例，明确告知而不冒充真实生成 */}
+          {aiMode === 'demo' && (
+            <span
+              className="inline-flex shrink-0 items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-700"
+              title="未配置模型密钥：AI 回复与生成内容为预置示例，效果图仅支持样例场地。配置 LLM_API_KEY 后即使用真实模型。"
+            >
+              演示模式
+            </span>
+          )}
 
           {/* 桌面宽屏居中分段胶囊切换（与效果图一致，一目了然切换三大成果模块） */}
           <div className="mx-auto hidden items-center rounded-full border border-border/70 bg-muted/70 p-1 lg:inline-flex">

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,12 +15,6 @@ from app.models.profile import Profile
 from app.schemas.common import CamelModel
 
 router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
-
-
-class ChatIn(BaseModel):
-    messages: list[dict[str, Any]] = Field(min_length=1)
-    model: str | None = None
-    enable_thinking: bool = False
 
 
 class VisionRequestIn(CamelModel):
@@ -61,18 +54,6 @@ class AIStatusOut(CamelModel):
 async def ai_status() -> AIStatusOut:
     """当前 AI 运行模式：live（真实模型）/ demo（未配置密钥，使用预置示例）"""
     return AIStatusOut(mode=ai_mode())
-
-
-@router.post("/chat")
-async def ai_chat(
-    body: ChatIn,
-    user: Profile = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> StreamingResponse:
-    """AI 策划对话 SSE 流式代理"""
-    # 模型由服务端配置决定，忽略客户端传入的 model（该旧接口将在前端切换后删除）
-    stream = await service.open_chat_stream(db, user, body.messages)
-    return StreamingResponse(stream, media_type="text/event-stream")
 
 
 @router.post("/vision/request", response_model=VisionRequestOut)

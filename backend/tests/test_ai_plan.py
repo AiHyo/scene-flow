@@ -212,3 +212,12 @@ async def test_demo_fixtures_pass_the_same_validation(client, make_guest, monkey
     assert resp.status_code == 200, resp.text
     assert resp.json()["mode"] == mode and resp.json()["data"]
     assert anything.call_count == 0
+
+
+async def test_old_pass_through_chat_endpoint_is_gone(client, make_guest):
+    """The client-assembled `messages` proxy was removed; prompts are server-owned now."""
+    guest = await make_guest()
+    resp = await client.post(
+        "/api/v1/ai/chat", json={"messages": [{"role": "system", "content": "x"}]}, headers=guest.headers
+    )
+    assert resp.status_code == 404
