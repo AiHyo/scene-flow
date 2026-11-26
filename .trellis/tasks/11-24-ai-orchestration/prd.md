@@ -29,7 +29,9 @@
 - [ ] 配置 CPA 时同一流程使用真实模型可走通。
 - [ ] 每个结构化模式有 schema 与单元测试；非法输出触发一次修复重试，仍失败返回可读错误而非前端崩溃。
 - [ ] 提示词无损测试与组装逻辑 golden 测试通过。
-- [ ] 评测在 Mock 下于 CI 通过；真实模型评测报告提交到 `docs/evals/`。
+- [ ] 评测在 Mock 下于 CI 通过；CI 不发起任何模型调用。
+- [ ] 真实模型（CPA）live 评测报告提交到 `docs/evals/`，记录提示词版本、模型名与逐条结果。
+- [ ] CI 校验 `PROMPT_VERSION` 与最新 live 报告一致：只改提示词版本而不更新报告时 CI 失败（本地演示一次）。
 - [ ] README「AI 编排」工程要点（问题 / 做法 / 验证）与架构图更新。
 
 ## Out of Scope
@@ -38,6 +40,7 @@
 - 合作资源 / 灵感目录迁为前后端共享 JSON。
 - 前端性能与 UI 改动（属于 frontend-perf-ux）。
 
-## Open Questions（阻塞规划）
+## Decisions
 
-1. 真实模型评测是否进入 CI（需把 CPA key 放入 GitHub Secrets，每次推送消耗额度）。
+- **AO1 评测与 CI（2026-11-26 用户确认：方案 A）**：CI 不做任何模型调用，只运行 Mock 评测；CPA key 不进入 GitHub。凡涉及提示词、组装逻辑或结构化 schema 的改动，**在修改时用真实模型跑 live 评测**，报告随同一批提交进入 `docs/evals/`。
+- **AO2 用机制保证 AO1**：每份评测报告记录 `promptVersion`；CI 检查当前 `PROMPT_VERSION` 与 `docs/evals/` 中最新 live 报告的版本一致（纯文件比对，不调用模型）。改了提示词却没跑真实评测时，CI 失败。

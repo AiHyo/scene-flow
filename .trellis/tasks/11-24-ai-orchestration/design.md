@@ -95,7 +95,8 @@ class ImageGenProvider(Protocol):
 - `backend/evals/`：`cases/*.json`（≥ 15 条）+ `run.py`。
 - 用例 = 项目快照 + 模式 + 用户话语 + 断言列表。断言类型：`schema_valid`、`count_between`、`schedule_sorted`、`verbatim_field`（用户指定的主题名逐字保留）、`regex_absent`（不编造「小王 / 小李」类人名、零新增采购时不出现「采购 / 购买」）、`budget_direction`（超支时说「超支」而非「结余」）、`no_claimed_done`（未执行不说「已更新 / 已生成」）。
 - 运行：`python -m evals.run --provider mock|live --out docs/evals/<date>.md`，输出 Markdown 报告（每条用例通过 / 失败、耗时、提示词版本、模型名）。
-- **CI 只跑 mock**（验证评测框架与提示词组装、确定性）；模型质量结论来自 live 运行的报告。live 是否进入 CI 见 PRD 待定项。
+- **CI 只跑 mock，不发起任何模型调用**（PRD 决策 AO1）；模型质量结论来自 live 报告。
+- **用机制保证「改提示词必须实测」**（AO2）：报告头部记录 `promptVersion`；CI 检查 `PROMPT_VERSION` 等于 `docs/evals/` 中最新 live 报告的版本。改模板必须提升版本号（提示词无损测试会对模板内容做哈希，内容变了而版本号没变时测试失败），提升版本号又要求有对应的 live 报告——三者连成一条链，CI 全程只读文件。
 
 ## 8. 兼容与回滚
 

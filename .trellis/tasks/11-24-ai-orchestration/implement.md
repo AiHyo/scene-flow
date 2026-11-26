@@ -44,8 +44,10 @@ pnpm lint
 
 ### 6. 离线评测
 - [ ] `backend/evals/` 框架、≥ 15 条用例、Markdown 报告。
-- [ ] CI 运行 mock 评测（作为 pytest 用例）。
-- [ ] 用 CPA 真实模型运行一次 live 评测，报告提交到 `docs/evals/`（是否进 CI 见 PRD 待定项）。
+- [ ] CI 运行 mock 评测（作为 pytest 用例）；CI 不发起任何模型调用（PRD 决策 AO1）。
+- [ ] 报告头部写入 `promptVersion`、模型名、时间；CI 新增检查：`PROMPT_VERSION` 必须等于 `docs/evals/` 最新 live 报告的版本（AO2）。
+- [ ] 用 CPA 真实模型运行 live 评测并提交报告；本地演示「只改版本号不更新报告 → 检查失败」。
+- [ ] 步骤 2、3 中每次改动提示词或组装逻辑后，当场用真实模型冒烟（不必等到本步），发现问题当场修。
 
 ### 7. 文档与合并
 - [ ] README：架构图更新、「AI 编排」工程要点（问题 / 做法 / 验证）、演示模式与真实模型切换、评测结果摘要。
