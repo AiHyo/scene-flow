@@ -50,6 +50,19 @@ flowchart LR
 - 前端只调用自有后端，模型密钥只存在于服务端环境变量。
 - 生图与识图为异步任务：提交后返回任务 ID，前端轮询结果，生成的图片转存到 MinIO，避免上游临时链接过期。
 
+### 后端工程要点
+
+| 问题 | 做法 | 验证 |
+|---|---|---|
+| **SSRF**：识图 / 生图要读取用户指定的图片 | 所有图片引用经唯一入口 `app/ai/image_refs.py` 解析，只接受本桶对象与登记过的样例场地，通过存储客户端读取，服务端从不按用户给的 URL 发请求 | 9 类恶意地址（云元数据、内网 MinIO、相似域名、`data:`、路径穿越等）全部 400；用两种故意植入的漏洞做变异测试，确认测试能抓到 |
+| **任务丢失 / 无法多实例**：异步任务原先存在进程内存 | `ai_task` 表持久化状态，任意实例都能响应轮询；查询按归属过滤；重启时把中断的任务标记失败，前端不会无限轮询 | 他人任务 ID 返回 404；模拟重启后状态正确 |
+| **AI 接口被刷** | 以 `ai_task` 作为用量账本按小时计数，访客更严格；Postgres 咨询锁让「计数 + 写入」原子化，锁等待限时 5 秒 | 8 个并发请求、阈值 3，恰好放行 3 个；超限返回 429 + `Retry-After` |
+| **多窗口互相覆盖** | 项目乐观锁：版本校验与写入在同一条 `UPDATE ... WHERE version = ?` 中完成；冲突时前端弹窗让用户选择「加载最新」或「覆盖」，本地改动先备份 | 5 个并发写入者仅 1 个成功；Playwright 双窗口端到端验证两种选择 |
+| **越权** | 访客项目迁移改为出示本机访客凭证，不再接受可能泄露的用户 ID | 只知道 UUID 的请求被拒，项目归属不变 |
+| **可观测** | 统一错误体 `{detail, code}`；`X-Request-ID` 贯穿请求与后台任务日志；上游错误统一 502，不把服务商的 401 误报成会话过期 | 错误格式与请求 ID 回传均有测试 |
+
+后端共 81 个测试，使用真实 PostgreSQL 与真实 Alembic 迁移（不用 SQLite 替身），外部 HTTP 由 respx 严格拦截。
+
 ## 快速开始
 
 ### 方式一：Docker Compose 一键启动
@@ -63,7 +76,7 @@ docker compose up -d --build
 
 ### 方式二：本地开发
 
-需要 Node.js 24+、pnpm 12、Python 3.9+、Docker（用于数据库与对象存储）。
+需要 Node.js 24+、pnpm 12、Python 3.11+、Docker（用于数据库与对象存储）。
 
 ```bash
 # 1. 启动 PostgreSQL 与 MinIO
@@ -115,12 +128,32 @@ pnpm lint     # tsgo 类型检查 + Biome + ast-grep 规则 + Tailwind 校验 + 
 pnpm build    # 生产构建
 ```
 
+后端测试需要一个可随意清空的 PostgreSQL 数据库：
+
+```bash
+docker run -d --name sceneflow-test-pg -e POSTGRES_USER=sceneflow -e POSTGRES_PASSWORD=sceneflow_test \
+  -e POSTGRES_DB=sceneflow_test -p 127.0.0.1:55432:5432 postgres:17
+
+cd backend
+uv venv && uv pip install -e ".[dev]"
+uv run ruff check . && uv run ruff format --check .
+TEST_DATABASE_URL=postgresql+asyncpg://sceneflow:sceneflow_test@127.0.0.1:55432/sceneflow_test uv run pytest
+```
+
+多窗口冲突的端到端测试在隔离的全栈环境中运行（独立容器名与端口，不影响本地环境）：
+
+```bash
+docker compose -p sf-e2e -f docker-compose.yml -f e2e/compose.e2e.yml up -d --build
+pnpm e2e:conflict        # 使用本机 Chrome：E2E_CHANNEL=chrome pnpm e2e:conflict
+docker compose -p sf-e2e -f docker-compose.yml -f e2e/compose.e2e.yml down -v --rmi local
+```
+
 ## 路线图
 
 - [ ] **AI 编排后端化**：提示词与模式编排从前端迁到后端，结构化输出 + Pydantic 校验，Provider 抽象
 - [ ] **无密钥演示模式**：内置 Mock Provider，clone 后无需任何 API key 即可体验完整流程
 - [ ] **离线评测**：固定用例集校验输出结构与业务规则（预算方向、零新增采购、不编造人名等），在 CI 中运行
-- [ ] **后端安全加固**：外部 URL 抓取白名单、AI 任务持久化与归属校验、按用户限流、后端测试
+- [x] **后端安全加固**：SSRF 白名单、AI 任务持久化与归属校验、按用户限流、乐观锁、后端测试（见「后端工程要点」）
 - [ ] **前端性能**：路由懒加载、字体与图片瘦身
 
 ## AI 协作开发方式

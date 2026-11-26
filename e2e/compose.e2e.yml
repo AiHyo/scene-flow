@@ -1,0 +1,21 @@
+# Isolated end-to-end stack: different container names and host ports, so it never
+# collides with the developer's own `docker compose up`. Usage: see e2e/version-conflict.mjs.
+services:
+  postgres:
+    container_name: sf-e2e-postgres
+    ports: !override
+      - "127.0.0.1:55433:5432"
+  minio:
+    container_name: sf-e2e-minio
+    ports: !override
+      - "127.0.0.1:59100:9000"
+  backend:
+    container_name: sf-e2e-backend
+    environment:
+      MINIO_PUBLIC_URL: http://127.0.0.1:59100
+    ports: !override
+      - "127.0.0.1:58000:8000"
+  frontend:
+    container_name: sf-e2e-frontend
+    ports: !override
+      - "127.0.0.1:58080:80"
