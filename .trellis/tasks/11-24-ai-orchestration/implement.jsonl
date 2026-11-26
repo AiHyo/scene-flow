@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/backend/conventions.md", "reason": "错误、存储、图片引用、AI 任务与限流约定"}
+{"file": ".trellis/spec/backend/testing.md", "reason": "真实 Postgres、respx 严格拦截、变异验证"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "前后端契约迁移（aiChat 签名、SSE 格式）"}
