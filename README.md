@@ -24,6 +24,7 @@
 - **案例、灵感与资源库**：整套案例一键复制到工作台继续改；灵感布置参考与物料资源。
 - **活动广场**：动态发布、多图上传、点赞与评论。
 - **访客即用**：无需注册即可开始策划；登录后可选择把访客期间的项目归入账号。
+- **无密钥演示**：不配置任何模型密钥也能走通完整流程，界面明确标注「演示模式」。
 
 ## 技术栈
 
@@ -39,16 +40,33 @@
 
 ```mermaid
 flowchart LR
-    B[浏览器 React SPA] -->|/api| N[Nginx]
+    B["浏览器 React SPA<br/>只发送数据：项目快照 / 用户话语 / 选项"] -->|/api| N[Nginx]
     N --> A[FastAPI]
-    A --> P[(PostgreSQL)]
+    subgraph AI["AI 编排（backend/app/ai）"]
+        T["版本化提示词模板<br/>+ 组装逻辑"] --> S["结构化输出<br/>json_schema → 校验 → 修复重试"]
+        S --> PR{"Provider"}
+    end
+    A --> AI
+    PR -->|有密钥| L["OpenAI 兼容模型<br/>对话 / 识图 / 生图"]
+    PR -->|无密钥| D["演示模式 Mock"]
+    A --> P[(PostgreSQL<br/>业务数据 + ai_task)]
     A --> M[(MinIO 对象存储)]
-    A -->|SSE 流式| L[LLM 对话 / 视觉模型]
-    A -->|异步任务 + 轮询| G[生图服务]
 ```
 
-- 前端只调用自有后端，模型密钥只存在于服务端环境变量。
-- 生图与识图为异步任务：提交后返回任务 ID，前端轮询结果，生成的图片转存到 MinIO，避免上游临时链接过期。
+- **提示词归后端所有**：前端不再包含任何提示词，请求里不能携带 `messages` / `model`；后端按模式组装提示词并选择模型，密钥只存在于服务端。
+- 生图与识图为异步任务：状态落库（`ai_task`），前端轮询，生成的图片转存到 MinIO，避免上游临时链接过期。
+
+### AI 编排工程要点
+
+| 问题 | 做法 | 验证 |
+|---|---|---|
+| **提示词在前端**：约 400 行系统提示词由浏览器拼装，后端透传任意 `messages` 与 `model` | 提示词与组装逻辑迁到后端（`app/ai/prompts`、`assemble.py`），接口只接收数据 | **golden 测试**：在 vitest 中运行原 TS 实现截获 45 种场景的完整请求，Python 移植逐字一致；携带 `messages` / `model` 的请求返回 422 |
+| **结构化结果靠正则截取**：从自由文本里 `slice` 出 JSON | 4 个生成模式定义 Pydantic schema，以 `json_schema strict` 约束输出，校验失败带错误信息修复重试一次，仍失败返回可读的 502 | 修复成功、两次失败、枚举与数量越界均有测试；真实模型 19 个用例修复重试 0 次 |
+| **提示词无版本、无测试**：规则编号重复乱序 | 模板版本化，`VERSION` 记录全部模板的内容哈希；规则按顺序重新编号，正文逐字保留 | 无损测试保证原有 25 条规则全部在；改模板不升版本即失败 |
+| **改了提示词怎么知道变好还是变坏** | 19 条离线评测用例对应具体规则（超支说法、只改配色不越界、不编造人名、主题逐字采用、文案跨日……）；用真实模型运行时**录制原始输出与请求哈希** | **CI 不调用模型**：回放录制结果，任一用例的请求变了就精确指出需要重新实测；反例对照证明断言能失败。[最新报告](docs/evals/report.md)：19/19 |
+| **没有密钥就无法体验** | Provider 抽象（OpenAI 兼容 / 可灵 / Mock），未配置密钥自动进入演示模式；预置回复使用与真实模型相同的协议行，界面标注「演示模式」，自传照片不冒充生成效果 | 无密钥 Docker 全栈中 Playwright 走通 对话 → 方向 → 方案 → 主题 → 文案 → 调整确认 → 样例场地生图（13 项检查） |
+
+移植中还发现并修复了原实现的一个问题：流程结束时间跨过午夜（如 23:30 开始持续 90 分钟）未被标记为跨日，文案会写成「20:00 开始，01:00 结束」；修复后真实模型写出「活动跨夜至次日 01:00 结束」。
 
 ### 后端工程要点
 
@@ -103,19 +121,23 @@ pnpm dev --host 127.0.0.1
 | `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` / `LLM_VISION_MODEL` | OpenAI 兼容协议的对话与识图模型 |
 | `IMG_GEN_PROVIDER` / `IMG_GEN_MODEL` | 生图配置，默认 `openai`（`/v1/images/edits`）；未单独设置 `IMG_GEN_BASE_URL` / `IMG_GEN_API_KEY` 时复用 `LLM_*`；设为 `kling` 时需填写可灵端点与密钥 |
 | `JWT_SECRET` | 生产环境务必替换为 32 位以上随机字符串 |
+| `AI_PROVIDER` | `auto`（默认）：配置了 `LLM_API_KEY` 用真实模型，否则进入演示模式；也可显式设为 `openai` / `mock` |
+| `LLM_STRUCTURED_OUTPUT` | `json_schema`（默认，服务端强约束）；服务商不支持时设为 `prompt` |
 
-完整列表见 [`.env.example`](./.env.example)。目前 AI 相关功能需要配置可用的模型密钥；无密钥的演示模式正在开发中（见路线图）。
+完整列表见 [`.env.example`](./.env.example)。**不配置任何密钥也能运行**：后端自动进入演示模式，AI 回复与生成内容为预置示例（界面顶部会标注「演示模式」），效果图仅支持样例场地。
 
 ## 项目结构
 
 ```
-├── backend/          # FastAPI 服务：routers → services → models，providers 封装模型调用，storage 封装 MinIO
+├── backend/          # FastAPI 服务：routers → services → models；ai/ 为 AI 编排（提示词、Provider、任务、限流），storage 封装 MinIO
+│   ├── evals/        # 提示词离线评测用例与运行器（结果见 docs/evals/）
 │   └── alembic/      # 数据库迁移
 ├── src/
 │   ├── pages/        # 路由页面（首页、共策、工作台、场景布置、案例、广场等）
 │   ├── components/   # 业务组件与 ui/ 基础组件
-│   ├── services/     # API 调用、AI 编排、预算计算、方案补丁等领域逻辑
+│   ├── services/     # API 调用、预算计算、方案补丁、对话协议行解析等领域逻辑
 │   └── data/         # 案例、灵感、合作资源等预置数据
+├── e2e/              # Playwright 端到端脚本（在隔离的 Docker 全栈中运行）
 ├── docker/           # Nginx 配置
 ├── .rules/           # ast-grep 自定义 lint 规则
 └── .trellis/         # AI 协作开发的规格、任务与开发日志（见下文）
@@ -148,13 +170,34 @@ pnpm e2e:conflict        # 使用本机 Chrome：E2E_CHANNEL=chrome pnpm e2e:con
 docker compose -p sf-e2e -f docker-compose.yml -f e2e/compose.e2e.yml down -v --rmi local
 ```
 
+无密钥演示模式的完整流程（即使本机 `.env` 配置了密钥，`compose.demo.yml` 也会强制演示模式）：
+
+```bash
+docker compose -p sf-e2e -f docker-compose.yml -f e2e/compose.e2e.yml -f e2e/compose.demo.yml up -d --build
+pnpm e2e:demo
+docker compose -p sf-e2e -f docker-compose.yml -f e2e/compose.e2e.yml -f e2e/compose.demo.yml down -v --rmi local
+```
+
+### 修改提示词
+
+改动 `backend/app/ai/prompts/`、组装逻辑或评测用例后：
+
+```bash
+cd backend
+# 1. 升级 prompts/VERSION（测试失败信息会给出新的内容哈希）
+# 2. 用 .env 中的真实模型跑评测，结果写入 docs/evals/
+uv run python -m evals.run --live          # 只重跑部分用例：--only chat-overspent theme-verbatim
+# 3. 连同 docs/evals/ 一起提交；CI 回放录制结果，不调用模型
+```
+
 ## 路线图
 
-- [ ] **AI 编排后端化**：提示词与模式编排从前端迁到后端，结构化输出 + Pydantic 校验，Provider 抽象
-- [ ] **无密钥演示模式**：内置 Mock Provider，clone 后无需任何 API key 即可体验完整流程
-- [ ] **离线评测**：固定用例集校验输出结构与业务规则（预算方向、零新增采购、不编造人名等），在 CI 中运行
+- [x] **AI 编排后端化**：提示词与模式编排迁到后端，结构化输出 + Pydantic 校验，Provider 抽象（见「AI 编排工程要点」）
+- [x] **无密钥演示模式**：clone 后无需任何 API key 即可体验完整流程
+- [x] **离线评测**：19 条规则用例，真实模型录制 + CI 回放（[报告](docs/evals/report.md)）
 - [x] **后端安全加固**：SSRF 白名单、AI 任务持久化与归属校验、按用户限流、乐观锁、后端测试（见「后端工程要点」）
-- [ ] **前端性能**：路由懒加载、字体与图片瘦身
+- [ ] **前端性能与体验**：路由懒加载、字体与图片瘦身、拆分巨型组件
+- [ ] **对话协议结构化**：把对话中的「建议方向 / 调整建议」等协议行改为结构化事件流
 
 ## AI 协作开发方式
 

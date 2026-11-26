@@ -32,9 +32,8 @@ Learned while making the repo work from a fresh clone (task `11-24-repo-hygiene`
 
 ## Forbidden Patterns
 
-<!-- Patterns that should never be used and why -->
-
-(To be filled by the team)
+- **No AI prompt text in the frontend.** Prompts, mode instructions and the requirement summary are assembled by the backend (`backend/app/ai/`). Call AI only through `aiChat()` in `src/services/ai.ts`, which sends data (project snapshot, user text, options, catalog hints) to `/api/v1/ai/plan/*`. The backend rejects `messages` / `model` fields with 422. Rules: `.trellis/spec/backend/ai-orchestration.md`.
+- **Don't classify API errors by message text alone.** `ApiError` carries `status` and the parsed `body` (`code`, `retryAfter`, `currentVersion`); backend messages are user-facing Chinese and may not contain "429".
 
 ---
 

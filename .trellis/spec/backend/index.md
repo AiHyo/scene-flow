@@ -7,8 +7,8 @@
 ```
 routers/    HTTP only: parse input, call a service, shape the response
 services/   business rules (project, plaza, auth)
-ai/         AI orchestration: image_refs (SSRF guard), tasks (ai_task + runner), quota, service
-providers/  upstream API calls only (LLM, vision, image generation); no task state, no URL fetching
+ai/         AI orchestration: prompts + assemble, plan (co-planning + structured output), providers,
+            image_refs (SSRF guard), tasks (ai_task + runner), quota, service
 storage/    ObjectStorage protocol; S3Storage (MinIO) and MemoryStorage (tests)
 core/       config, database, errors, logging (request id), http (shared client), deps
 ```
@@ -19,6 +19,7 @@ core/       config, database, errors, logging (request id), http (shared client)
 |---|---|
 | [Conventions](./conventions.md) | Errors, storage, image references, AI tasks, quota, optimistic locking |
 | [Testing](./testing.md) | Test database, fixtures, mocking outbound HTTP, what to assert |
+| [AI Orchestration](./ai-orchestration.md) | Server-owned prompts, changing prompts with live eval, structured output, providers, demo mode |
 
 ## Pre-commit Checklist
 
@@ -32,3 +33,4 @@ TEST_DATABASE_URL=postgresql+asyncpg://sceneflow:sceneflow_test@127.0.0.1:55432/
 - [ ] Schema change → new Alembic revision with a working `downgrade`; run `alembic downgrade -1 && alembic upgrade head`.
 - [ ] New outbound HTTP goes through `core.http.get_http_client()` with an explicit timeout.
 - [ ] Any image a user references is resolved via `ai.image_refs`, never fetched by URL.
+- [ ] Prompt, assembly or eval-case change → bump `prompts/VERSION`, run `python -m evals.run --live`, commit `docs/evals/`.
