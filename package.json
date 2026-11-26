@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": ".rules/lint.sh",
-    "e2e:conflict": "node e2e/version-conflict.mjs"
+    "e2e:conflict": "node e2e/version-conflict.mjs",
+    "e2e:demo": "node e2e/demo-flow.mjs"
   },
   "dependencies": {
     "@fontsource/noto-sans-sc": "^5.3.1",

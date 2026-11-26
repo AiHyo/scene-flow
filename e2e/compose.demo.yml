@@ -1,0 +1,8 @@
+# Force demo mode for the e2e stack, even if the developer's .env holds a real key.
+# Usage: docker compose -p sf-e2e -f docker-compose.yml -f e2e/compose.e2e.yml -f e2e/compose.demo.yml up -d --build
+services:
+  backend:
+    environment:
+      AI_PROVIDER: mock
+      LLM_API_KEY: ""
+      MOCK_STREAM_DELAY_MS: "5"

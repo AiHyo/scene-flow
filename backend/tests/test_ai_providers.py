@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -151,3 +152,54 @@ async def test_demo_chat_is_still_rate_limited(client, make_guest, demo, monkeyp
         client.post("/api/v1/ai/plan/chat", json=body, headers=guest.headers),
     )
     assert sorted([first.status_code, second.status_code]) == [200, 429]
+
+
+# ---------------------------------------------------------------- scripted demo replies
+
+
+async def _demo_chat(client, guest, text: str, **extra) -> str:
+    resp = await client.post(
+        "/api/v1/ai/plan/chat", json={"project": {}, "userText": text, **extra}, headers=guest.headers
+    )
+    assert resp.status_code == 200, resp.text
+    return sse_text(resp.text)
+
+
+# Same patterns the frontend uses (src/services/ai.ts, src/components/workbench/AiAssistant.tsx)
+DIRECTION_LINE = re.compile(r"^建议方向[：:]\s*([^|｜]+)[|｜]([^|｜]+)[|｜](.+)$", re.M)
+THEME_LINE = re.compile(r"建议主题[：:]\s*([^\n（()，,。；;]{2,24})")
+ADJUST_BLOCK = re.compile(r"```调整建议\s*\n([\s\S]*?)```")
+
+
+async def test_demo_idea_reply_emits_parseable_directions_and_theme(client, make_guest, demo):
+    guest = await make_guest()
+    reply = await _demo_chat(client, guest, "想办一场团建，还没想好")
+    directions = DIRECTION_LINE.findall(reply)
+    assert [d[0] for d in directions] == ["草地野餐交流会", "小组协作挑战赛", "城市漫步寻宝"]
+    assert all(len(name) <= 10 and len(style) <= 6 and len(note) <= 30 for name, style, note in directions)
+    assert THEME_LINE.search(reply).group(1) == "草地合伙人"
+    assert "演示模式" in reply
+
+
+async def test_demo_color_change_emits_valid_adjust_card(client, make_guest, demo):
+    guest = await make_guest()
+    reply = await _demo_chat(client, guest, "只把配色改成薄荷绿与米白，其他不动")
+    card = json.loads(ADJUST_BLOCK.search(reply).group(1).strip())
+    assert card["plan"] == {"visualTheme": "薄荷绿与米白"}
+    assert set(card) == {"change", "affects", "keep", "pending", "manualWarn", "plan"}
+
+
+@pytest.mark.parametrize(
+    ("text", "extra", "expect"),
+    [
+        ("你好呀", {}, "我是小灵"),
+        ("预算还够吗", {}, "有符号差值"),
+        ("帮我看看场地布置", {}, "样例场地"),
+        ("记一下人数 40", {"memOnly": True}, "已记下"),
+    ],
+)
+async def test_demo_reply_routing(client, make_guest, demo, text, extra, expect):
+    guest = await make_guest()
+    reply = await _demo_chat(client, guest, text, **extra)
+    assert expect in reply and "演示模式" in reply
+    assert not DIRECTION_LINE.search(reply) or expect == "我是小灵"

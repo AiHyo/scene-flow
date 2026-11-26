@@ -18,6 +18,7 @@ from app.ai.providers.base import (
 )
 from app.ai.providers.kling import KlingImageGen
 from app.ai.providers.mock import MockImageGen, MockLLM, MockVision
+from app.ai.providers.mock_chat import demo_reply
 from app.ai.providers.openai_compat import OpenAICompatImageEdit, OpenAICompatLLM, OpenAICompatVision
 from app.core.config import settings
 from app.core.errors import ServiceMisconfigured
@@ -45,7 +46,7 @@ def get_providers() -> Providers:
     if ai_mode() == "demo":
         return Providers(
             mode="demo",
-            llm=MockLLM(delay_ms=settings.mock_stream_delay_ms),
+            llm=MockLLM(delay_ms=settings.mock_stream_delay_ms, reply_for=demo_reply),
             vision=MockVision(),
             image=MockImageGen(),
         )
